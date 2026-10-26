@@ -890,6 +890,10 @@
                         <span class="skill-ico" style="background:rgba(217,119,87,.16);color:#d8b4fe"><i class="fa-solid fa-pen-nib"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Editor Novel AI</span><span class="skill-dsc block">Tulis dan sunting novelmu dibantu AI: lanjutkan adegan, perbaiki bab, cek kontinuitas.</span></span>
                     </button>
+                    <button type="button" class="skill-card" onclick="pickSkill('ebook')">
+                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#c084fc"><i class="fa-solid fa-book-open"></i></span>
+                        <span class="min-w-0"><span class="skill-ttl block">Buat eBook AI</span><span class="skill-dsc block">Dari topik jadi buku non-fiksi: kerangka bab, lalu isi bab demi bab yang jelas dan praktis.</span></span>
+                    </button>
                 </div>
                 <label class="toggle-row"><span>Ingat pilihan saya <span class="text-slate-500 text-[11px]">(tidak tanya lagi saat dibuka)</span></span><input type="checkbox" id="skill-remember"></label>
                 <p class="text-[11px] text-slate-500">Bisa ganti kapan saja lewat menu titik tiga, "Ganti AI Skill".</p>
@@ -901,7 +905,7 @@
     <div id="gen-modal" class="overlay hidden">
         <div class="modal-card max-w-lg" role="dialog" aria-label="Buat Novel AI">
             <div class="modal-head">
-                <div class="modal-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Buat Novel AI</div>
+                <div class="modal-title" id="gen-modal-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Buat Novel AI</div>
                 <button onclick="closeGenModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <!-- Langkah 1: form ide -->
@@ -943,7 +947,7 @@
             <div id="gen-step-2" class="modal-body hidden">
                 <div><label class="label" for="gen-o-title">Judul</label><input type="text" id="gen-o-title" class="field" maxlength="120"></div>
                 <div><label class="label" for="gen-o-syn">Sinopsis</label><textarea id="gen-o-syn" rows="4" class="field"></textarea></div>
-                <div><label class="label">Tokoh</label><div id="gen-o-chars" class="flex flex-col gap-2"></div></div>
+                <div><label class="label" id="gen-o-chars-label">Tokoh</label><div id="gen-o-chars" class="flex flex-col gap-2"></div></div>
                 <div><label class="label" for="gen-batch">Tulis berapa bab per sesi</label>
                     <select id="gen-batch" class="field" onchange="genSetBatch(this.value)">
                         <option value="0">Semua sekaligus</option><option value="2">2 bab, lalu jeda</option><option value="3">3 bab, lalu jeda</option><option value="5">5 bab, lalu jeda</option><option value="10">10 bab, lalu jeda</option>
@@ -972,7 +976,7 @@
                     </select>
                 </div>
                 <div id="gen-list" class="gen-list"></div>
-                <p class="text-[11px] text-slate-500">Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat Novel AI.</p>
+                <p class="text-[11px] text-slate-500" id="gen-step3-note">Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat Novel AI.</p>
             </div>
             <div class="modal-foot">
                 <span id="gen-status" class="text-xs text-slate-400 mr-auto truncate"></span>
@@ -9120,15 +9124,16 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             } catch (e) {}
             document.getElementById('skill-modal').classList.add('hidden');
             if (kind === 'generator') openGenModal();
+            else if (kind === 'ebook') openGenModal('ebook');
             else setTimeout(maybeAutoStartTour, 400);
         }
         function showSkillOnOpen() {
             let saved = '';
             try { saved = localStorage.getItem(SKILL_KEY) || ''; } catch (e) {}
-            if (saved === 'generator') {
+            if (saved === 'generator' || saved === 'ebook') {
                 // Wizard hanya dibuka otomatis bila ada bab generator yang belum selesai atau naskahnya masih kosong.
                 const empty = !novelData.chapters.some(c => (c.content || '').trim());
-                if (genUnfinished() || empty) openGenModal();
+                if (genUnfinished() || empty) openGenModal(saved === 'ebook' ? 'ebook' : undefined);
                 return;
             }
             if (saved === 'editor') return;
@@ -9142,6 +9147,54 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         let genRunning = false, genAbort = null, genStep = 1, genBusy = false;
         let genOutlineAbort = null;   // permintaan kerangka yang sedang berjalan (bisa dihentikan)
         let genEnded = null;          // hasil proses terakhir (berhenti/gagal) yang ditampilkan di langkah 3
+
+        // ===== Mode generator: 'novel' atau 'ebook' (non-fiksi) =====
+        // genKind hanya mengatur wizard Buat Novel/eBook AI (langkah 1-2):
+        // label, opsi kategori/gaya, dan prompt AI. Jenis proyek yang
+        // dihasilkan disimpan di novelData.gen.kind supaya penulisan bab
+        // (genChapterPrompt, genRun) memakai jalur yang sama.
+        let genKind = 'novel';
+        let genGenreNovelHtml = null, genToneNovelHtml = null;
+        const EBOOK_CATEGORIES = ['Pengembangan diri', 'Bisnis & karier', 'Keuangan', 'Kesehatan', 'Pendidikan', 'Teknologi', 'Parenting & keluarga', 'Hobi & keterampilan', 'Spiritualitas', 'Lainnya'];
+        const EBOOK_STYLES = ['Praktis & jelas', 'Santai & bersahabat', 'Formal & mendalam', 'Inspiratif & motivasional'];
+        function genApplyMode() {
+            const ebook = genKind === 'ebook';
+            const titleEl = document.getElementById('gen-modal-title');
+            if (titleEl) {
+                titleEl.innerHTML = ebook ? '<i class="fa-solid fa-book-open"></i> Buat eBook AI' : '<i class="fa-solid fa-wand-magic-sparkles"></i> Buat Novel AI';
+                const card = titleEl.closest('.modal-card');
+                if (card) card.setAttribute('aria-label', ebook ? 'Buat eBook AI' : 'Buat Novel AI');
+            }
+            const setLabel = (forId, text) => { const lb = document.querySelector('label[for="' + forId + '"]'); if (lb) lb.textContent = text; };
+            setLabel('gen-idea', ebook ? 'Topik / ide buku' : 'Ide cerita');
+            const ideaEl = genEl('gen-idea');
+            if (ideaEl) ideaEl.placeholder = ebook
+                ? 'Contoh: Panduan praktis mengatur keuangan untuk keluarga muda: budgeting, dana darurat, dan investasi pertama.'
+                : 'Contoh: Seorang arsiparis muda menemukan surat dari ibunya yang sudah meninggal 20 tahun, dan surat itu menunjuk ke sebuah desa yang tidak ada di peta.';
+            setLabel('gen-genre', ebook ? 'Kategori' : 'Genre');
+            setLabel('gen-tone', ebook ? 'Gaya bahasa' : 'Nuansa');
+            const genreSel = genEl('gen-genre');
+            if (genreSel) {
+                if (genGenreNovelHtml === null) genGenreNovelHtml = genreSel.innerHTML;
+                genreSel.innerHTML = ebook ? EBOOK_CATEGORIES.map(c => '<option>' + c + '</option>').join('') : genGenreNovelHtml;
+            }
+            const toneSel = genEl('gen-tone');
+            if (toneSel) {
+                if (genToneNovelHtml === null) genToneNovelHtml = toneSel.innerHTML;
+                toneSel.innerHTML = ebook ? EBOOK_STYLES.map(c => '<option>' + c + '</option>').join('') : genToneNovelHtml;
+            }
+            const povWrap = genEl('gen-pov') ? genEl('gen-pov').closest('div') : null;
+            if (povWrap) povWrap.classList.toggle('hidden', ebook);
+            setLabel('gen-o-syn', ebook ? 'Deskripsi' : 'Sinopsis');
+            const charsLabel = document.getElementById('gen-o-chars-label');
+            if (charsLabel) charsLabel.classList.toggle('hidden', ebook);
+            const charsBox = genEl('gen-o-chars');
+            if (charsBox) charsBox.classList.toggle('hidden', ebook);
+            const note3 = document.getElementById('gen-step3-note');
+            if (note3) note3.textContent = ebook
+                ? 'Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat eBook AI.'
+                : 'Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat Novel AI.';
+        }
 
         function genEl(id) { return document.getElementById(id); }
         function genOutlining() { return !!genOutlineAbort; }
@@ -9178,7 +9231,11 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const total = novelData.chapters.length;
             genEl('gen-float-txt').textContent = genCur >= 0 ? `Menulis bab ${genCur + 1} dari ${total}` : 'Menulis naskah...';
         }
-        function openGenModal() {
+        function openGenModal(kind) {
+            if (kind) genKind = kind;
+            else if (novelData.gen && novelData.gen.kind) genKind = novelData.gen.kind;
+            else genKind = 'novel';
+            genApplyMode();
             if (genRunning || (genEnded && genUnfinished())) {
                 genShowStep(3); genPaint();
                 genEl('gen-modal').classList.remove('hidden');
@@ -9247,7 +9304,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         async function genBuildOutline() {
             if (genBusy || genOutlining()) return;
             const o = genOptions();
-            if (o.idea.length < 10) { genEl('gen-status').textContent = 'Tulis ide ceritanya dulu (minimal satu-dua kalimat).'; genEl('gen-idea').focus(); return; }
+            if (o.idea.length < 10) { genEl('gen-status').textContent = genKind === 'ebook' ? 'Tulis topik bukunya dulu (minimal satu-dua kalimat).' : 'Tulis ide ceritanya dulu (minimal satu-dua kalimat).'; genEl('gen-idea').focus(); return; }
             if (!getApiKey()) { genEl('gen-no-key').classList.remove('hidden'); genEl('gen-status').textContent = 'API key belum diisi.'; return; }
             genBusy = true;
             genOutlineAbort = new AbortController();
@@ -9257,8 +9314,12 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             genShowStep(1);   // memunculkan tombol Hentikan
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyusun kerangka...';
             genEl('gen-status').textContent = 'AI menyusun kerangka, tunggu sebentar...';
-            const systemPrompt = 'Kamu adalah perencana novel profesional. Balas HANYA dengan satu objek JSON valid, tanpa teks lain dan tanpa blok kode.';
-            const userPrompt = `Buat kerangka novel berbahasa ${o.lang}.\nIde: ${o.idea}\nGenre: ${o.genre}\nNuansa: ${o.tone}\nSudut pandang: ${o.pov}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul novel","synopsis":"sinopsis 3-5 kalimat","characters":[{"name":"","role":"","desc":"1-2 kalimat"}],"chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat peristiwa utama bab ini"}]}\n\nBuat 3-6 tokoh. Alur harus punya pembuka, konflik yang meningkat, klimaks, dan penutup yang memuaskan. Setiap bab harus memajukan cerita.`;
+            const systemPrompt = genKind === 'ebook'
+                ? 'Kamu adalah perencana buku non-fiksi profesional. Balas HANYA dengan satu objek JSON valid, tanpa teks lain dan tanpa blok kode.'
+                : 'Kamu adalah perencana novel profesional. Balas HANYA dengan satu objek JSON valid, tanpa teks lain dan tanpa blok kode.';
+            const userPrompt = genKind === 'ebook'
+                ? `Buat kerangka buku non-fiksi berbahasa ${o.lang}.\nTopik: ${o.idea}\nKategori: ${o.genre}\nGaya bahasa: ${o.tone}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul buku","synopsis":"deskripsi 3-5 kalimat","chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat: subtopik dan poin utama yang dibahas bab ini"}]}\n\nStruktur harus logis dan runtut: mulai dari dasar, lanjut ke penerapan, tutup dengan rangkuman dan langkah selanjutnya. Setiap bab membahas satu topik yang jelas, tanpa tokoh fiksi.`
+                : `Buat kerangka novel berbahasa ${o.lang}.\nIde: ${o.idea}\nGenre: ${o.genre}\nNuansa: ${o.tone}\nSudut pandang: ${o.pov}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul novel","synopsis":"sinopsis 3-5 kalimat","characters":[{"name":"","role":"","desc":"1-2 kalimat"}],"chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat peristiwa utama bab ini"}]}\n\nBuat 3-6 tokoh. Alur harus punya pembuka, konflik yang meningkat, klimaks, dan penutup yang memuaskan. Setiap bab harus memajukan cerita.`;
             let stoppedByUser = false;
             try {
                 let j = null;
@@ -9344,7 +9405,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 title: ol.title, author: novelData.author || 'Anonim', synopsis: ol.synopsis,
                 chapters: ol.chapters.map((c, i) => ({ id: i + 1, title: `Bab ${i + 1}${c.title ? ': ' + c.title : ''}`, content: '' })),
                 characters: ol.characters.map((c, i) => ({ id: i + 1, name: c.name, role: c.role, desc: c.desc, alias: '' })),
-                gen: { idea: o.idea, genre: o.genre, tone: o.tone, pov: o.pov, lang: o.lang, words: o.words, batch: parseInt(genEl('gen-batch').value, 10) || 0, outline: ol.chapters.map(c => c.summary || '') }
+                gen: { kind: genKind, idea: o.idea, genre: o.genre, tone: o.tone, pov: o.pov, lang: o.lang, words: o.words, batch: parseInt(genEl('gen-batch').value, 10) || 0, outline: ol.chapters.map(c => c.summary || '') }
             });
             let ok = false;
             try { ok = await genCreateProject(d); }
@@ -9374,6 +9435,16 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
 
         function genChapterPrompt(idx) {
             const g = novelData.gen, chs = novelData.chapters, total = chs.length;
+            if (g && g.kind === 'ebook') {
+                const outline = chs.map((c, i) => `${i + 1}. ${c.title} :: ${g.outline[i] || ''}`).join('\n');
+                const prev = idx > 0 ? (chs[idx - 1].content || '').slice(-1500) : '';
+                const system = `Kamu adalah penulis buku non-fiksi profesional yang menulis dalam bahasa ${g.lang}. Kategori ${g.genre}, gaya bahasa ${g.tone}. Tulis penjelasan yang jelas, terstruktur, dan praktis: pakai subjudul markdown (##) untuk membagi pembahasan, beri contoh konkret dan langkah yang bisa langsung diterapkan bila relevan. Jangan mengarang cerita fiksi, tokoh, atau dialog khayalan. Jangan mengarang data, angka, atau kutipan ahli; kalau tidak yakin, sampaikan secara umum tanpa angka spesifik. Keluarkan HANYA isi bab dalam markdown: tanpa judul bab, tanpa nomor bab, tanpa komentar pembuka atau penutup.`;
+                const user = `JUDUL BUKU: ${novelData.title}\nDESKRIPSI: ${novelData.synopsis}\n\nKERANGKA SELURUH BUKU:\n${outline}\n\n` +
+                    (prev ? `AKHIR BAB SEBELUMNYA (lanjutkan dengan mulus, jangan diulang):\n"""${prev}"""\n\n` : '') +
+                    `TUGAS: Tulis Bab ${idx + 1} dari ${total}, "${chs[idx].title}". Materi bab ini: ${g.outline[idx] || '(kembangkan sesuai kerangka)'}.\nPanjang minimal ${Math.round(g.words * 0.9)} kata, idealnya sekitar ${g.words} kata. Jangan berhenti sebelum panjang minimal tercapai. ` +
+                    (idx === total - 1 ? 'Ini bab terakhir: tutup dengan rangkuman dan langkah selanjutnya yang jelas bagi pembaca.' : 'Akhiri dengan transisi singkat ke bab berikutnya, jangan menutup buku.');
+                return { system, user };
+            }
             const chars = novelData.characters.map(c => `- ${c.name}${c.role ? ' (' + c.role + ')' : ''}: ${c.desc}`).join('\n') || '(bebas)';
             const outline = chs.map((c, i) => `${i + 1}. ${c.title} :: ${g.outline[i] || ''}`).join('\n');
             const prev = idx > 0 ? (chs[idx - 1].content || '').slice(-1500) : '';
@@ -9603,7 +9674,8 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                 const m = text.match(/^[\s\S]*[.!?…”"')](?=\s|$)/);
                 if (m && m[0].length > text.length * 0.6) text = m[0];
             }
-            return text.replace(/^#+\s.*\n+/, '').trim();
+            const isEbook = novelData.gen && novelData.gen.kind === 'ebook';
+            return (isEbook ? text : text.replace(/^#+\s.*\n+/, '')).trim();
         }
 
         async function genRun() {
@@ -9646,7 +9718,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                     const chId = ch.id;
                     genCur = i; genFrac = 0; genPaint();
                     // Menambal catatan memori bab sebelumnya yang belum ada (mis. proyek lama atau catatan yang gagal).
-                    await genEnsureMemos(i, signal, pid);
+                    if ((novelData.gen && novelData.gen.kind) !== 'ebook') await genEnsureMemos(i, signal, pid);
                     if (signal.aborted || currentProjectId !== pid) { stopped = true; break; }
                     const text = await genWriteChapter(i, signal);
                     if (currentProjectId !== pid) { stopped = true; break; }
@@ -9660,14 +9732,16 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                     await saveToLocalStorage();
                     genLive.i = -1; genLiveRender(true);
                     // Catat memori bab ini segera, supaya bab berikutnya (dan sesi berikutnya) memakainya.
-                    genMemoing = i; genPaint();
-                    try {
-                        if (await genMakeMemo(target, i, signal)) await saveToLocalStorage();
-                    } catch (e) {
-                        if (e && (e.name === 'AbortError' || e.allKeysExhausted)) { genMemoing = -1; written++; throw e; }
-                        console.warn('Memori bab ' + (i + 1) + ' gagal dicatat:', e);
+                    if ((novelData.gen && novelData.gen.kind) !== 'ebook') {
+                        genMemoing = i; genPaint();
+                        try {
+                            if (await genMakeMemo(target, i, signal)) await saveToLocalStorage();
+                        } catch (e) {
+                            if (e && (e.name === 'AbortError' || e.allKeysExhausted)) { genMemoing = -1; written++; throw e; }
+                            console.warn('Memori bab ' + (i + 1) + ' gagal dicatat:', e);
+                        }
+                        genMemoing = -1;
                     }
-                    genMemoing = -1;
                     written++;
                     genFrac = 0; genPaint();
                 }
