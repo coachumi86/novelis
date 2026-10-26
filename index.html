@@ -869,6 +869,19 @@
                         <button type="button" onclick="createProjectFromInput()" class="btn-primary shrink-0"><i class="fa-solid fa-plus"></i> Buat</button>
                     </div>
                 </div>
+                <div>
+                    <label class="label" for="new-project-folder">Masukkan ke folder</label>
+                    <select id="new-project-folder" class="field">
+                        <option value="">Tanpa folder</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label" for="new-folder-name">Folder baru</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-folder-name" class="field" placeholder="Nama folder, mis. Seri Petualangan" maxlength="60" onkeydown="if (event.key === 'Enter') { event.preventDefault(); createFolder(); }">
+                        <button type="button" onclick="createFolder()" class="btn-ghost shrink-0"><i class="fa-solid fa-folder-plus"></i> Buat folder</button>
+                    </div>
+                </div>
                 <div id="projects-list" class="flex flex-col gap-2"></div>
             </div>
             <div class="modal-foot">
@@ -1060,8 +1073,24 @@
                 <button onclick="closeSettingsModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
+                <div class="pb-3 mb-1 border-b border-slate-800/60">
+                    <label class="label">Model AI</label>
+                    <select id="setting-main-gm-model" class="field" onchange="mainModelChanged('gemini')">
+                        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+                        <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
+                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    </select>
+                    <select id="setting-main-ds-model" class="field hidden" onchange="mainModelChanged('deepseek')">
+                        <option value="deepseek-flash">deepseek-flash (cepat dan murah)</option>
+                        <option value="deepseek-v4-flash">deepseek-v4-flash (cepat dan murah)</option>
+                        <option value="deepseek-v4-pro">deepseek-v4-pro (lebih cermat)</option>
+                    </select>
+                    <input type="text" id="setting-main-sp-model" class="field font-mono hidden" placeholder="seed-2-0-pro" autocomplete="off" spellcheck="false" oninput="mainModelChanged('sumopod')">
+                    <input type="text" id="setting-main-kg-model" class="field font-mono hidden" placeholder="Nama model dari dashboard Kagiro" autocomplete="off" spellcheck="false" oninput="mainModelChanged('kagiro')">
+                    <p class="text-[11px] text-slate-500 mt-1.5">Model yang dipakai semua fitur AI, langsung terlihat begitu Pengaturan dibuka. Penyedia & API key ada di tab AI.</p>
+                </div>
                 <div role="tablist" aria-label="Bagian pengaturan" class="flex gap-1.5">
-                    <button type="button" role="tab" id="set-tab-novel" aria-selected="true" aria-controls="set-panel-novel" onclick="switchSettingsTab('novel')" class="set-tab">Novel</button>
+                    <button type="button" role="tab" id="set-tab-novel" aria-selected="true" aria-controls="set-panel-novel" onclick="switchSettingsTab('novel')" class="set-tab">Proyek</button>
                     <button type="button" role="tab" id="set-tab-ai" aria-selected="false" aria-controls="set-panel-ai" onclick="switchSettingsTab('ai')" class="set-tab">AI</button>
                     <button type="button" role="tab" id="set-tab-backup" aria-selected="false" aria-controls="set-panel-backup" onclick="switchSettingsTab('backup')" class="set-tab">Cadangan</button>
                 </div>
@@ -1137,7 +1166,7 @@
                     </div>
                     <div>
                         <label class="label">Model DeepSeek</label>
-                        <select id="setting-ds-model" class="field">
+                        <select id="setting-ds-model" class="field" onchange="document.getElementById('setting-main-ds-model').value = this.value">
                             <option value="deepseek-flash">deepseek-flash (cepat dan murah)</option>
                             <option value="deepseek-v4-flash">deepseek-v4-flash (cepat dan murah)</option>
                             <option value="deepseek-v4-pro">deepseek-v4-pro (lebih cermat)</option>
@@ -1156,7 +1185,7 @@
                     </div>
                     <div>
                         <label class="label">Model</label>
-                        <input type="text" id="setting-sp-model" list="sp-model-list" class="field font-mono" placeholder="seed-2-0-pro" autocomplete="off" spellcheck="false">
+                        <input type="text" id="setting-sp-model" list="sp-model-list" class="field font-mono" placeholder="seed-2-0-pro" autocomplete="off" spellcheck="false" oninput="document.getElementById('setting-main-sp-model').value = this.value">
                         <datalist id="sp-model-list">
                             <option value="seed-2-0-pro"></option>
                             <option value="seed-2-0-code"></option>
@@ -1180,7 +1209,7 @@
                     </div>
                     <div>
                         <label class="label">Model</label>
-                        <input type="text" id="setting-kg-model" class="field font-mono" placeholder="Nama model dari dashboard Kagiro" autocomplete="off" spellcheck="false">
+                        <input type="text" id="setting-kg-model" class="field font-mono" placeholder="Nama model dari dashboard Kagiro" autocomplete="off" spellcheck="false" oninput="document.getElementById('setting-main-kg-model').value = this.value">
                         <p class="text-[11px] text-slate-500 mt-1.5">Ketik nama model persis seperti di dashboard Kagiro.</p>
                     </div>
                     <p class="text-[11px] text-slate-500">Teks naskah yang diproses AI dikirim langsung dari browser ini ke server Kagiro. Pertimbangkan itu untuk naskah yang belum ingin dibagikan.</p>
@@ -1611,6 +1640,22 @@
             threads: []
         };
 
+        // ===== Jenis proyek: registry umum, bukan logika khusus novel =====
+        // Aplikasi ini tidak lagi khusus novel. Tiap jenis proyek mendaftarkan
+        // label, badge, judul bawaan, template bab awal, dan apakah ia memakai
+        // panel fiksi (Tokoh/Lore/Relasi/Plot + memori cerita). Menambah jenis
+        // baru (mis. panduan, komik, naskah) cukup menambah satu entri di sini
+        // plus satu opsi di pemilih jenis proyek; UI dan AI membaca registry ini.
+        const PROJECT_KINDS = {
+            novel: { label: 'Novel', badge: null, fiction: true, defaultTitle: 'Novel Tanpa Judul',
+                     template: [{ title: 'Bab 1' }] },
+            ebook: { label: 'eBook (non-fiksi)', badge: 'eBook', fiction: false, defaultTitle: 'eBook Tanpa Judul',
+                     template: [{ title: 'Pendahuluan' }, { title: 'Bab 1' }, { title: 'Penutup' }] },
+        };
+        function kindDef(kind) { return PROJECT_KINDS[kind] || PROJECT_KINDS.novel; }
+        function isNonFictionKind(kind) { return kindDef(kind).fiction === false; }
+        function isFictionProject() { return kindDef(novelData.kind).fiction === true; }
+
         let activeChapterId = 1;
         let activeEntity = null; // { type: 'character'|'world'|'plot', id: number }
         let isReaderMode = false;
@@ -1637,7 +1682,7 @@
         const LS_INDEX_KEY = 'novelis_projects_index';
         const LS_PID_KEY = 'novelis_ls_pid';
         let currentProjectId = MAIN_PID;
-        let projectIndex = { v: 1, activeId: MAIN_PID, list: [] };
+        let projectIndex = { v: 1, activeId: MAIN_PID, list: [], folders: [] };
         let projSwitching = false;
         let idbHealthy = null;
         let lastIndexPersist = 0;
@@ -1765,7 +1810,7 @@
             };
             const out = {
                 ...src,
-                kind: (src.kind === 'ebook' || (src.gen && src.gen.kind === 'ebook')) ? 'ebook' : 'novel',
+                kind: (src.kind && PROJECT_KINDS[src.kind]) ? src.kind : ((src.gen && src.gen.kind && PROJECT_KINDS[src.gen.kind]) ? src.gen.kind : 'novel'),
                 audit: cleanNovelAudit(src.audit),
                 cover: cleanCover(src.cover),
                 auditParts: (src.auditParts && typeof src.auditParts === 'object' && !Array.isArray(src.auditParts)) ? src.auditParts : undefined,
@@ -1992,7 +2037,7 @@
         }
 
         // Render functions
-        function isEbookProject() { return novelData.kind === 'ebook'; }
+        // (isFictionProject/isNonFictionKind didefinisikan di registry atas.)
 
         // ===== Tampilan per jenis proyek =====
         // Satu aplikasi, dua mode yang tidak saling membingungkan: proyek
@@ -2001,7 +2046,8 @@
         // chip Perbaiki Bab. Dipanggil dari renderAll, jadi berlaku setiap
         // ganti proyek maupun setiap render ulang.
         function applyProjectKindUI() {
-            const ebook = isEbookProject();
+            // 'ebook' di sini artinya mode non-fiksi secara umum (bukan hanya eBook).
+            const ebook = !isFictionProject();
             const notesBtn = document.getElementById('tab-btn-notes');
             const plotBtn = document.getElementById('tab-btn-plot');
             const notesPanel = document.getElementById('sidebar-panel-notes');
@@ -3376,7 +3422,7 @@
             document.getElementById('set-close-btn').classList.toggle('hidden', !isBackup);
         }
         function openSettingsModal(tab) {
-            document.getElementById('setting-novel-title').value = novelData.title === 'Novel Tanpa Judul' ? '' : novelData.title;
+            document.getElementById('setting-novel-title').value = novelData.title === kindDef(novelData.kind).defaultTitle ? '' : novelData.title;
             document.getElementById('setting-novel-author').value = novelData.author === 'Anonim' ? '' : novelData.author;
             document.getElementById('setting-novel-synopsis').value = novelData.synopsis;
             gemKeysRender(getGeminiKeys());
@@ -3389,6 +3435,7 @@
             document.getElementById('setting-kg-key').value = getProviderKey('kagiro');
             document.getElementById('setting-kg-model').value = getKagiroModel();
             syncProviderFields();
+            syncMainModelControls();
             refreshCoverPreview();
             document.getElementById('setting-backup-remind').value = String(getBackupRemindDays());
             document.getElementById('backup-last-info').textContent = describeLastBackup();
@@ -3399,7 +3446,7 @@
             document.getElementById('settings-modal').classList.add('hidden');
         }
         function saveNovelSettings() {
-            novelData.title = document.getElementById('setting-novel-title').value || "Novel Tanpa Judul";
+            novelData.title = document.getElementById('setting-novel-title').value || kindDef(novelData.kind).defaultTitle;
             novelData.author = document.getElementById('setting-novel-author').value || "Anonim";
             novelData.synopsis = document.getElementById('setting-novel-synopsis').value;
             let allOk = true;
@@ -3493,6 +3540,47 @@
             inputs.forEach(i => { i.type = gemKeyShown ? 'text' : 'password'; });
             document.querySelectorAll('.toggle-key-btn').forEach(b => { b.innerHTML = gemKeyShown ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'; });
         }
+        // ===== Model AI di pengaturan utama =====
+        // Kontrol ini tampil di atas tab, jadi selalu terlihat begitu
+        // Pengaturan dibuka (bukan tersembunyi di tab AI). Ia cermin dari
+        // kontrol model di tab AI: mengubah salah satu memperbarui yang lain,
+        // dan Simpan tetap membaca kontrol tab AI seperti sebelumnya.
+        function mainModelControlId(prov) {
+            return { gemini: 'setting-main-gm-model', deepseek: 'setting-main-ds-model', sumopod: 'setting-main-sp-model', kagiro: 'setting-main-kg-model' }[prov] || 'setting-main-gm-model';
+        }
+        function syncMainModelControls() {
+            const prov = getAiProvider();
+            ['gemini', 'deepseek', 'sumopod', 'kagiro'].forEach(pr => {
+                const el = document.getElementById(mainModelControlId(pr));
+                if (el) el.classList.toggle('hidden', pr !== prov);
+            });
+            const gm = document.getElementById('setting-main-gm-model'); if (gm) gm.value = GEMINI_MODEL_CANDIDATES.includes(geminiActiveModel) ? geminiActiveModel : GEMINI_MODEL_CANDIDATES[0];
+            const ds = document.getElementById('setting-main-ds-model');
+            const dsAi = document.getElementById('setting-ds-model');
+            if (ds) ds.value = dsAi ? dsAi.value : getDeepseekModel();
+            const sp = document.getElementById('setting-main-sp-model');
+            const spAi = document.getElementById('setting-sp-model');
+            if (sp) sp.value = spAi ? spAi.value : getSumopodModel();
+            const kg = document.getElementById('setting-main-kg-model');
+            const kgAi = document.getElementById('setting-kg-model');
+            if (kg) kg.value = kgAi ? kgAi.value : getKagiroModel();
+        }
+        function mainModelChanged(prov) {
+            const el = document.getElementById(mainModelControlId(prov));
+            if (!el) return;
+            const v = el.value;
+            if (prov === 'gemini') {
+                geminiActiveModel = v;
+                try { localStorage.setItem('novelis_gemini_model', v); } catch (e) {}
+            } else if (prov === 'deepseek') {
+                const s = document.getElementById('setting-ds-model'); if (s) s.value = v;
+                try { localStorage.setItem(DS_MODEL_KEY, v); } catch (e) {}
+            } else if (prov === 'sumopod') {
+                const s = document.getElementById('setting-sp-model'); if (s) s.value = v;
+            } else if (prov === 'kagiro') {
+                const s = document.getElementById('setting-kg-model'); if (s) s.value = v;
+            }
+        }
         function syncProviderFields() {
             const p = document.getElementById('setting-ai-provider').value;
             document.getElementById('prov-gemini').classList.toggle('hidden', p !== 'gemini');
@@ -3505,6 +3593,7 @@
             const kg = document.getElementById('prov-kagiro');
             kg.classList.toggle('hidden', p !== 'kagiro');
             kg.classList.toggle('flex', p === 'kagiro');
+            syncMainModelControls();
         }
 
         // API key is stored separately from novelData/localStorage project JSON on purpose:
@@ -3883,7 +3972,7 @@ ${recentText || '(bab ini masih kosong)'}
                 return;
             }
 
-            const ebook = isEbookProject();
+            const ebook = !isFictionProject();
             if (ebook && (actionType === 'plot' || actionType === 'character' || actionType === 'dialogue')) {
                 statusEl.textContent = 'Aksi ini khusus proyek novel.';
                 return;
@@ -4496,14 +4585,14 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
             if (!ch || wordCount(ch.content) < 5) { statusEl.textContent = 'Bab ini masih kosong, tulis dulu isinya.'; return; }
 
             let modes = Array.from(document.querySelectorAll('input[name="rf-mode"]:checked')).map(i => i.value);
-            if (isEbookProject()) modes = modes.filter(m => !['describe', 'dialogue', 'plot'].includes(m));
+            if (!isFictionProject()) modes = modes.filter(m => !['describe', 'dialogue', 'plot'].includes(m));
             const custom = document.getElementById('rf-custom').value.trim();
             if (!modes.length && !custom) { statusEl.textContent = 'Pilih minimal satu jenis perbaikan atau tulis instruksi sendiri.'; return; }
             if (modes.includes('expand') && modes.includes('shorten')) { statusEl.textContent = '"Kembangkan" dan "Padatkan" tidak bisa dipilih bersamaan.'; return; }
 
             const intensity = REFINE_INTENSITY[document.getElementById('rf-intensity').value] || REFINE_INTENSITY.light;
             const refineModeText = (m) => {
-                if (isEbookProject()) {
+                if (!isFictionProject()) {
                     if (m === 'style') return 'Perhalus gaya bahasa dan diksi agar enak dibaca, kurangi pengulangan kata, dan jaga suara penulis tetap konsisten.';
                     if (m === 'expand') return 'Kembangkan materi: tambahkan penjelasan, contoh, atau langkah praktis yang relevan sehingga teks sekitar 1,5 kali lebih panjang, tanpa mengubah pokok bahasan.';
                     if (m === 'shorten') return 'Padatkan teks: buang bagian bertele-tele dan pengulangan, tanpa menghilangkan poin penting.';
@@ -4511,12 +4600,12 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
                 return REFINE_MODES[m];
             };
             const instructionLines = modes.map(m => `- ${refineModeText(m)}`);
-            const intensityText = (isEbookProject() && document.getElementById('rf-intensity').value === 'heavy')
+            const intensityText = (!isFictionProject() && document.getElementById('rf-intensity').value === 'heavy')
                 ? 'Silakan menulis ulang kalimat secara bebas agar lebih kuat, tetapi tetap setia pada materi dan fakta yang disampaikan.'
                 : intensity.text;
             if (custom) instructionLines.push(`- Permintaan khusus dari penulis: ${custom}`);
 
-            const systemPrompt = isEbookProject()
+            const systemPrompt = !isFictionProject()
                 ? 'Kamu adalah editor buku non-fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis dan kebenaran materi. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus. Pertahankan subjudul markdown (##) yang ada. Pisahkan paragraf dengan satu baris kosong.'
                 : 'Kamu adalah editor fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah novel sesuai instruksi, dengan menjaga suara penulis, nama tokoh, fakta cerita, dan urutan kejadian. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pisahkan paragraf dengan satu baris kosong.\n\n' + NOVEL_STYLE_RULES;
 
@@ -8827,9 +8916,9 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         // Multi proyek: banyak novel dalam satu aplikasi
         // =====================================================================
         function newProjectId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-        function newMeta(id, title, author, words, chapters, kind) {
+        function newMeta(id, title, author, words, chapters, kind, folderId) {
             const now = Date.now();
-            return { id, title: String(title || 'Novel Tanpa Judul'), author: String(author || ''), words: words || 0, chapters: chapters || 0, kind: kind === 'ebook' ? 'ebook' : 'novel', created: now, updated: now };
+            return { id, title: String(title || 'Novel Tanpa Judul'), author: String(author || ''), words: words || 0, chapters: chapters || 0, kind: PROJECT_KINDS[kind] ? kind : 'novel', folderId: typeof folderId === 'string' ? folderId : null, created: now, updated: now };
         }
         function activeMeta() { return projectIndex.list.find(p => p.id === currentProjectId); }
         function totalWords() { return novelData.chapters.reduce((n, c) => n + countWords(c.content), 0); }
@@ -8862,7 +8951,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const t = novelData.title || 'Novel Tanpa Judul';
             el.textContent = t;
             const badge = document.getElementById('project-kind-badge');
-            if (badge) badge.classList.toggle('hidden', !isEbookProject());
+            if (badge) { const b = kindDef(novelData.kind).badge; badge.textContent = b || ''; badge.classList.toggle('hidden', !b); }
             const btn = document.getElementById('project-switch-btn');
             if (btn) btn.title = `Proyek: ${t} (ketuk untuk ganti)`;
         }
@@ -8891,7 +8980,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                     if (!p || typeof p.id !== 'string' || !p.id || seen.has(p.id)) return;
                     seen.add(p.id);
                     list.push({ id: p.id, title: String(p.title || 'Novel Tanpa Judul'), author: String(p.author || ''),
-                        words: Number(p.words) || 0, chapters: Number(p.chapters) || 0, created: Number(p.created) || 0, updated: Number(p.updated) || 0 });
+                        words: Number(p.words) || 0, chapters: Number(p.chapters) || 0, created: Number(p.created) || 0, updated: Number(p.updated) || 0,
+                        kind: (p.kind && PROJECT_KINDS[p.kind]) ? p.kind : 'novel', folderId: typeof p.folderId === 'string' ? p.folderId : null });
                 });
             } else {
                 // Pertama kali memakai multi proyek: naskah lama menjadi proyek 'main'.
@@ -8921,7 +9011,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (!list.length) list.push(newMeta(MAIN_PID, 'Novel Tanpa Judul', '', 0, 0));
             const activeId = (idx && list.some(p => p.id === idx.activeId)) ? idx.activeId
                 : (list.some(p => p.id === MAIN_PID) ? MAIN_PID : list[0].id);
-            return { v: 1, activeId, list };
+            const folders = (idx && Array.isArray(idx.folders)) ? idx.folders.filter(f => f && typeof f.id === 'string' && f.name).map(f => ({ id: f.id, name: String(f.name) })) : [];
+            return { v: 1, activeId, list, folders };
         }
 
         async function readProjectData(id) {
@@ -9019,20 +9110,18 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             return ok;
         }
 
-        async function createProject(title, kind) {
+        async function createProject(title, kind, folderId) {
             if (projSwitching || multiProjectBlocked()) return false;
-            const isEbook = kind === 'ebook';
+            const def = kindDef(kind);
             const d = normalizeNovelData({
-                title: title || (isEbook ? 'eBook Tanpa Judul' : 'Novel Tanpa Judul'), author: novelData.author || 'Anonim', synopsis: '',
-                kind: isEbook ? 'ebook' : 'novel',
-                chapters: isEbook
-                    ? [{ id: 1, title: 'Pendahuluan', content: '' }, { id: 2, title: 'Bab 1', content: '' }, { id: 3, title: 'Penutup', content: '' }]
-                    : [{ id: 1, title: 'Bab 1', content: '' }]
+                title: title || def.defaultTitle, author: novelData.author || 'Anonim', synopsis: '',
+                kind: PROJECT_KINDS[kind] ? kind : 'novel',
+                chapters: def.template.map((t, i) => ({ id: i + 1, title: t.title, content: '' }))
             });
             const id = newProjectId();
             try { await idbPut(novelKey(id), { json: JSON.stringify(d), savedAt: Date.now() }); }
             catch (e) { showToast('Gagal membuat proyek: penyimpanan browser penuh atau diblokir.', 'error'); return false; }
-            projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, 0, d.chapters.length, d.kind));
+            projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, 0, d.chapters.length, d.kind, folderId));
             await saveProjectIndex();
             const ok = await switchProject(id, { silent: true });
             if (ok) showToast(`Proyek "${d.title}" dibuat. Selamat menulis!`);
@@ -9043,7 +9132,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const title = (inp.value || '').trim();
             inp.value = '';
             const kindSel = document.getElementById('new-project-kind');
-            createProject(title, kindSel ? kindSel.value : 'novel');
+            const folderSel = document.getElementById('new-project-folder');
+            createProject(title, kindSel ? kindSel.value : 'novel', folderSel ? folderSel.value : null);
         }
 
         async function renameProject(id) {
@@ -9079,7 +9169,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             try { await idbPut(novelKey(nid), { json: JSON.stringify(d), savedAt: Date.now() }); }
             catch (e) { showToast('Gagal menggandakan proyek: penyimpanan browser penuh atau diblokir.', 'error'); return; }
             const words = d.chapters.reduce((n, c) => n + countWords(c.content), 0);
-            projectIndex.list.push(newMeta(nid, d.title, d.author === 'Anonim' ? '' : d.author, words, d.chapters.length, d.kind));
+            projectIndex.list.push(newMeta(nid, d.title, d.author === 'Anonim' ? '' : d.author, words, d.chapters.length, d.kind, m.folderId));
             await saveProjectIndex();
             renderProjectsList();
             showToast('Proyek digandakan.');
@@ -9156,24 +9246,78 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (d < 30) return `${d} hari lalu`;
             return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         }
+        // ===== Folder proyek =====
+        // Folder hanya mengelompokkan tampilan daftar buku; isi proyek tidak
+        // berubah. Folder tersimpan di projectIndex.folders, tiap proyek
+        // menunjuk foldernya lewat meta.folderId (null = Tanpa folder).
+        function projFolders() { if (!Array.isArray(projectIndex.folders)) projectIndex.folders = []; return projectIndex.folders; }
+        function refreshFolderSelects() {
+            const sel = document.getElementById('new-project-folder');
+            if (sel) {
+                const cur = sel.value;
+                sel.innerHTML = '<option value="">Tanpa folder</option>' + projFolders().map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+                if (projFolders().some(f => f.id === cur)) sel.value = cur;
+            }
+        }
+        async function createFolder() {
+            const inp = document.getElementById('new-folder-name');
+            const name = (inp.value || '').trim();
+            if (!name) { if (inp) inp.focus(); return; }
+            inp.value = '';
+            projFolders().push({ id: 'f' + Date.now().toString(36), name });
+            await saveProjectIndex();
+            renderProjectsList();
+        }
+        async function renameFolder(id) {
+            const f = projFolders().find(x => x.id === id);
+            if (!f) return;
+            const name = prompt('Nama baru untuk folder ini:', f.name);
+            if (name === null) return;
+            const t = name.trim();
+            if (!t) return;
+            f.name = t;
+            await saveProjectIndex();
+            renderProjectsList();
+        }
+        async function deleteFolder(id) {
+            const f = projFolders().find(x => x.id === id);
+            if (!f) return;
+            if (!confirm(`Hapus folder "${f.name}"? Buku di dalamnya pindah ke Tanpa folder.`)) return;
+            projectIndex.list.forEach(p => { if (p.folderId === id) p.folderId = null; });
+            projectIndex.folders = projFolders().filter(x => x.id !== id);
+            await saveProjectIndex();
+            renderProjectsList();
+        }
+        async function moveProjectToFolder(pid, fid) {
+            const m = projectIndex.list.find(p => p.id === pid);
+            if (!m) return;
+            m.folderId = fid || null;
+            await saveProjectIndex();
+            renderProjectsList();
+        }
         function renderProjectsList() {
             const box = document.getElementById('projects-list');
             if (!box) return;
             syncActiveMeta(true, false);
+            const folders = projFolders();
             const list = [...projectIndex.list].sort((a, b) =>
                 ((b.id === currentProjectId) - (a.id === currentProjectId)) || (b.updated - a.updated));
             const canDelete = list.length > 1;
-            box.innerHTML = list.map(p => {
+            const folderOpts = (selId) => '<option value="">Tanpa folder</option>' + folders.map(f =>
+                `<option value="${f.id}"${selId === f.id ? ' selected' : ''}>${escapeHtml(f.name)}</option>`).join('');
+            const rowHtml = (p) => {
                 const on = p.id === currentProjectId;
                 const t = escapeHtml(p.title || 'Novel Tanpa Judul');
                 const stats = `${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} bab · ${projAgo(p.updated)}`;
-                const kindBadge = (p.kind === 'ebook' || (on && isEbookProject())) ? '<span class="proj-badge" style="background:rgba(168,85,247,.16);color:#c084fc">eBook</span>' : '';
+                const effKind = (p.kind && PROJECT_KINDS[p.kind]) ? p.kind : (on ? novelData.kind : 'novel');
+                const kindBadge = kindDef(effKind).badge ? '<span class="proj-badge" style="background:rgba(168,85,247,.16);color:#c084fc">' + escapeHtml(kindDef(effKind).badge) + '</span>' : '';
                 return `<div class="proj-row ${on ? 'on' : ''}" data-id="${escapeHtml(p.id)}">
                     <button type="button" class="proj-main" data-act="open" aria-label="Buka proyek ${t}"${on ? ' aria-current="true"' : ''}>
                         <span class="proj-title">${t}</span>
                         <span class="proj-meta">${stats}</span>
                     </button>
                     ${kindBadge}${on ? '<span class="proj-badge">Aktif</span>' : ''}
+                    <select class="field shrink-0" style="width:auto;padding:.3rem .5rem;font-size:.75rem" title="Pindahkan ke folder" aria-label="Folder untuk ${t}" onchange="moveProjectToFolder('${escapeHtml(p.id)}', this.value)">${folderOpts(p.folderId)}</select>
                     <div class="proj-actions">
                         <button type="button" class="icon-btn sm" data-act="rename" title="Ubah nama" aria-label="Ubah nama ${t}"><i class="fa-solid fa-pen"></i></button>
                         <button type="button" class="icon-btn sm" data-act="dup" title="Gandakan" aria-label="Gandakan ${t}"><i class="fa-solid fa-copy"></i></button>
@@ -9181,9 +9325,22 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                         <button type="button" class="icon-btn sm danger" data-act="delete" title="${canDelete ? 'Hapus proyek' : 'Minimal satu proyek'}" aria-label="Hapus ${t}"${canDelete ? '' : ' disabled'}><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>`;
-            }).join('');
+            };
+            const sections = folders.map(f => {
+                const items = list.filter(p => p.folderId === f.id);
+                return `<div class="mt-1"><div class="flex items-center gap-2 pl-1 pr-1">
+                    <span class="text-xs font-medium text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-folder text-brand-400"></i>${escapeHtml(f.name)}<span class="font-normal text-slate-500">${items.length} buku</span></span>
+                    <span class="ml-auto flex gap-1">
+                    <button type="button" class="icon-btn sm" onclick="renameFolder('${f.id}')" title="Ubah nama folder" aria-label="Ubah nama folder ${escapeHtml(f.name)}"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="icon-btn sm danger" onclick="deleteFolder('${f.id}')" title="Hapus folder" aria-label="Hapus folder ${escapeHtml(f.name)}"><i class="fa-solid fa-trash"></i></button>
+                    </span></div>${items.map(rowHtml).join('') || '<p class="text-xs text-slate-500 pl-2 py-1">Belum ada buku di folder ini.</p>'}</div>`;
+            });
+            const unfiled = list.filter(p => !p.folderId || !folders.some(f => f.id === p.folderId));
+            sections.push(`<div class="mt-1"><div class="pl-1"><span class="text-xs font-medium text-slate-400">Tanpa folder</span><span class="font-normal text-slate-500 text-xs"> ${unfiled.length} buku</span></div>${unfiled.map(rowHtml).join('') || '<p class="text-xs text-slate-500 pl-2 py-1">Semua buku sudah masuk folder.</p>'}</div>`);
+            box.innerHTML = sections.join('');
+            refreshFolderSelects();
             const c = document.getElementById('projects-count');
-            if (c) c.textContent = `${list.length} proyek`;
+            if (c) c.textContent = `${list.length} buku · ${folders.length} folder`;
         }
         function openProjectsModal() {
             renderProjectsList();
@@ -9541,7 +9698,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
 
         function genChapterPrompt(idx) {
             const g = novelData.gen, chs = novelData.chapters, total = chs.length;
-            if (g && g.kind === 'ebook') {
+            if (g && isNonFictionKind(g.kind)) {
                 const outline = chs.map((c, i) => `${i + 1}. ${c.title} :: ${g.outline[i] || ''}`).join('\n');
                 const prev = idx > 0 ? (chs[idx - 1].content || '').slice(-1500) : '';
                 const system = `Kamu adalah penulis buku non-fiksi profesional yang menulis dalam bahasa ${g.lang}. Kategori ${g.genre}, gaya bahasa ${g.tone}. Tulis penjelasan yang jelas, terstruktur, dan praktis: pakai subjudul markdown (##) untuk membagi pembahasan, beri contoh konkret dan langkah yang bisa langsung diterapkan bila relevan. Jangan mengarang cerita fiksi, tokoh, atau dialog khayalan. Jangan mengarang data, angka, atau kutipan ahli; kalau tidak yakin, sampaikan secara umum tanpa angka spesifik. Keluarkan HANYA isi bab dalam markdown: tanpa judul bab, tanpa nomor bab, tanpa komentar pembuka atau penutup.`;
@@ -9780,7 +9937,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                 const m = text.match(/^[\s\S]*[.!?…”"')](?=\s|$)/);
                 if (m && m[0].length > text.length * 0.6) text = m[0];
             }
-            const isEbook = novelData.gen && novelData.gen.kind === 'ebook';
+            const isEbook = novelData.gen && isNonFictionKind(novelData.gen.kind);
             return (isEbook ? text : text.replace(/^#+\s.*\n+/, '')).trim();
         }
 
@@ -9824,7 +9981,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                     const chId = ch.id;
                     genCur = i; genFrac = 0; genPaint();
                     // Menambal catatan memori bab sebelumnya yang belum ada (mis. proyek lama atau catatan yang gagal).
-                    if ((novelData.gen && novelData.gen.kind) !== 'ebook') await genEnsureMemos(i, signal, pid);
+                    if (!isNonFictionKind(novelData.gen && novelData.gen.kind)) await genEnsureMemos(i, signal, pid);
                     if (signal.aborted || currentProjectId !== pid) { stopped = true; break; }
                     const text = await genWriteChapter(i, signal);
                     if (currentProjectId !== pid) { stopped = true; break; }
@@ -9838,7 +9995,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                     await saveToLocalStorage();
                     genLive.i = -1; genLiveRender(true);
                     // Catat memori bab ini segera, supaya bab berikutnya (dan sesi berikutnya) memakainya.
-                    if ((novelData.gen && novelData.gen.kind) !== 'ebook') {
+                    if (!isNonFictionKind(novelData.gen && novelData.gen.kind)) {
                         genMemoing = i; genPaint();
                         try {
                             if (await genMakeMemo(target, i, signal)) await saveToLocalStorage();
