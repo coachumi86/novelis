@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#1b1a19">
+    <meta name="theme-color" content="#150f24">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>Novelis</title>
 
-    <!-- Tailwind CSS (palet disesuaikan: abu hangat + aksen terakota, mirip tampilan Claude) -->
+    <!-- Tailwind CSS (palet disesuaikan: ungu gelap) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -26,17 +26,17 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#fbf1ed', 100: '#f6dfd5', 300: '#ecaa92', 400: '#e08a6d',
-                            500: '#d97757', 600: '#c15f3c', 700: '#a64d30', 900: '#5a2f20'
+                            50: '#faf5ff', 100: '#f3e8ff', 300: '#d8b4fe', 400: '#c084fc',
+                            500: '#a855f7', 600: '#9333ea', 700: '#7e22ce', 900: '#581c87'
                         },
                         indigo: {
-                            300: '#ecaa92', 400: '#e08a6d', 500: '#d97757', 600: '#c15f3c',
-                            900: '#5a2f20', 950: '#3b1f15'
+                            300: '#d8b4fe', 400: '#c084fc', 500: '#a855f7', 600: '#9333ea',
+                            900: '#581c87', 950: '#3b0764'
                         },
                         slate: {
                             50: '#f7f5ef', 100: '#ece9e1', 200: '#dbd8cf', 300: '#c2bfb5',
                             400: '#a3a096', 500: '#7d7a72', 600: '#55524c', 700: '#403e3a',
-                            800: '#302f2c', 900: '#262523', 950: '#1b1a19'
+                            800: '#302f2c', 900: '#221a35', 950: '#150f24'
                         }
                     },
                     fontFamily: {
@@ -91,8 +91,8 @@
         }
         .icon-btn:hover { background: #302f2c; color: #ece9e1; }
         .icon-btn.sm { width: 1.9rem; height: 1.9rem; font-size: 0.8rem; border-radius: 0.55rem; }
-        .icon-btn.accent { color: #e08a6d; }
-        .icon-btn.accent:hover { background: rgba(217, 119, 87, 0.14); color: #ecaa92; }
+        .icon-btn.accent { color: #c084fc; }
+        .icon-btn.accent:hover { background: rgba(217, 119, 87, 0.14); color: #d8b4fe; }
         .icon-btn.danger:hover { background: rgba(244, 63, 94, 0.12); color: #fb7185; }
         .icon-btn:disabled { opacity: .5; pointer-events: none; }
 
@@ -101,7 +101,7 @@
             height: 2.25rem; padding: 0 1rem; border-radius: 0.65rem;
             font-size: 0.8125rem; font-weight: 500; transition: background .15s, transform .1s;
         }
-        .btn-primary { background: #c15f3c; color: #fff; }
+        .btn-primary { background: #9333ea; color: #fff; }
         .btn-primary:hover { background: #d06a45; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-ghost { background: #302f2c; color: #dbd8cf; border: 1px solid #403e3a; }
@@ -113,7 +113,7 @@
             padding: 0.55rem 0.75rem; font-size: 0.875rem; color: #ece9e1; outline: none;
             transition: border-color .15s;
         }
-        .field:focus { border-color: #d97757; }
+        .field:focus { border-color: #a855f7; }
         .field::placeholder { color: #7d7a72; }
         .label {
             display: block; font-size: 0.75rem; font-weight: 500;
@@ -124,7 +124,7 @@
             padding: 0.6rem 0.75rem; border-radius: 0.65rem; background: #302f2c;
             border: 1px solid #403e3a; font-size: 0.8125rem; color: #dbd8cf; cursor: pointer;
         }
-        .toggle-row input { accent-color: #c15f3c; width: 1rem; height: 1rem; }
+        .toggle-row input { accent-color: #9333ea; width: 1rem; height: 1rem; }
         .chip > span {
             display: inline-flex; align-items: center; height: 2rem; padding: 0 0.8rem;
             border-radius: 9999px; border: 1px solid #403e3a; background: #302f2c;
@@ -132,7 +132,7 @@
         }
         .chip > span:hover { border-color: #55524c; color: #ece9e1; }
         .chip input:checked + span {
-            background: rgba(217, 119, 87, 0.16); border-color: rgba(217, 119, 87, 0.6); color: #ecaa92;
+            background: rgba(217, 119, 87, 0.16); border-color: rgba(217, 119, 87, 0.6); color: #d8b4fe;
         }
         .overlay {
             position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
@@ -140,19 +140,19 @@
         }
         .modal-card {
             width: 100%; max-height: 90vh; max-height: 90dvh; display: flex; flex-direction: column; overflow: hidden;
-            background: #262523; border: 1px solid #403e3a; border-radius: 1rem;
+            background: #221a35; border: 1px solid #403e3a; border-radius: 1rem;
             box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
         }
         .modal-head {
             display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-shrink: 0;
-            padding: 0.6rem 0.75rem 0.6rem 1.1rem; border-bottom: 1px solid #36342f;
+            padding: 0.6rem 0.75rem 0.6rem 1.1rem; border-bottom: 1px solid #2c2340;
         }
         .modal-title { font-size: 0.9rem; font-weight: 600; color: #ece9e1; display: flex; align-items: center; gap: 0.6rem; }
-        .modal-title i { color: #e08a6d; font-size: 0.85rem; }
+        .modal-title i { color: #c084fc; font-size: 0.85rem; }
         .modal-body { padding: 1.1rem; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
         .modal-foot {
             display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-shrink: 0;
-            padding: 0.7rem 1.1rem; border-top: 1px solid #36342f; background: #1f1e1c;
+            padding: 0.7rem 1.1rem; border-top: 1px solid #2c2340; background: #1d1530;
         }
         /* ===== Impor Word ===== */
         .di-drop {
@@ -160,18 +160,18 @@
             padding: 2rem 1rem; border: 2px dashed #4a4741; border-radius: 0.9rem; background: #232220; color: #b3aea4;
             font-size: 0.85rem; line-height: 1.55; cursor: pointer; transition: border-color .15s, background .15s;
         }
-        .di-drop:hover, .di-drop.is-over { border-color: #d97757; background: #2a2826; }
-        .di-drop i { font-size: 1.75rem; color: #d97757; }
+        .di-drop:hover, .di-drop.is-over { border-color: #a855f7; background: #2a2826; }
+        .di-drop i { font-size: 1.75rem; color: #a855f7; }
         .di-drop small { color: #8d897f; font-size: 0.75rem; }
         .di-list { display: flex; flex-direction: column; gap: 0.4rem; max-height: 18rem; overflow-y: auto; padding-right: 0.15rem; }
-        .di-row { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.5rem 0.65rem; border: 1px solid #403e3a; border-radius: 0.7rem; background: #1f1e1c; }
+        .di-row { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.5rem 0.65rem; border: 1px solid #403e3a; border-radius: 0.7rem; background: #1d1530; }
         .di-row.is-off { opacity: 0.5; }
-        .di-row input[type="checkbox"] { margin-top: 0.55rem; accent-color: #d97757; flex-shrink: 0; width: 1rem; height: 1rem; }
+        .di-row input[type="checkbox"] { margin-top: 0.55rem; accent-color: #a855f7; flex-shrink: 0; width: 1rem; height: 1rem; }
         .di-row .di-main { flex: 1; min-width: 0; }
         .di-row .di-title { width: 100%; height: 2rem; padding: 0 0.55rem; font-size: 0.85rem; font-weight: 600; }
         .di-row .di-meta { font-size: 0.72rem; color: #8d897f; margin-top: 0.2rem; line-height: 1.45; overflow-wrap: anywhere; }
         .di-radio { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.82rem; color: #cfcbc1; line-height: 1.45; cursor: pointer; }
-        .di-radio input { margin-top: 0.2rem; accent-color: #d97757; }
+        .di-radio input { margin-top: 0.2rem; accent-color: #a855f7; }
         .di-radio small { display: block; color: #8d897f; font-size: 0.72rem; }
         /* ===== Chat Revisi ===== */
         .cr-thread { display: flex; flex-direction: column; gap: 1rem; min-height: 12rem; }
@@ -181,7 +181,7 @@
             display: block; width: 100%; margin-top: 0.6rem; text-align: left; padding: 0.55rem 0.75rem; border-radius: 0.7rem;
             background: #302f2c; border: 1px dashed #4a4741; color: #cfcbc1; font-size: 0.78rem; line-height: 1.5; transition: border-color .15s, color .15s;
         }
-        .cr-example:hover { border-color: #d97757; color: #ece9e1; }
+        .cr-example:hover { border-color: #a855f7; color: #ece9e1; }
         .cr-user {
             align-self: flex-end; max-width: 88%; background: #3a3835; border: 1px solid #4a4741; color: #ece9e1;
             border-radius: 0.9rem 0.9rem 0.25rem 0.9rem; padding: 0.55rem 0.8rem; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
@@ -190,10 +190,10 @@
         .cr-ai-text { color: #dbd8cf; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
         .cr-err { color: #fb7185; font-size: 0.8rem; line-height: 1.5; padding: 0.5rem 0.75rem; border-radius: 0.7rem; background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); }
         .cr-wait { color: #8d897f; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
-        .cr-edit { border: 1px solid #403e3a; border-radius: 0.8rem; background: #1f1e1c; overflow: hidden; }
+        .cr-edit { border: 1px solid #403e3a; border-radius: 0.8rem; background: #1d1530; overflow: hidden; }
         .cr-edit.is-applied { border-color: rgba(52, 211, 153, 0.45); }
         .cr-edit.is-dismissed { opacity: .55; }
-        .cr-edit-head { padding: 0.55rem 0.8rem; border-bottom: 1px solid #36342f; font-size: 0.75rem; color: #a9a59a; line-height: 1.5; }
+        .cr-edit-head { padding: 0.55rem 0.8rem; border-bottom: 1px solid #2c2340; font-size: 0.75rem; color: #a9a59a; line-height: 1.5; }
         .cr-edit-head b { color: #ece9e1; font-weight: 600; }
         .cr-pane-label { font-size: 0.7rem; font-weight: 600; padding: 0.5rem 0.8rem 0; color: #8d897f; }
         .cr-pane {
@@ -205,7 +205,7 @@
         .cr-after { border-left-color: #3f9d77; background: rgba(63, 157, 119, 0.09); }
         del.cr-del { background: rgba(244, 63, 94, 0.22); color: #fda4af; text-decoration: line-through; text-decoration-thickness: 1px; border-radius: 2px; }
         ins.cr-ins { background: rgba(52, 211, 153, 0.2); color: #a7f3d0; text-decoration: none; border-radius: 2px; }
-        .cr-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.55rem 0.8rem; border-top: 1px solid #36342f; }
+        .cr-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.55rem 0.8rem; border-top: 1px solid #2c2340; }
         .cr-actions .cr-state { font-size: 0.75rem; color: #8d897f; margin-right: auto; }
         .cr-actions .cr-state.ok { color: #34d399; }
         .cr-actions .cr-state.bad { color: #fbbf24; }
@@ -216,7 +216,7 @@
             padding: 0.8rem 0.4rem; border-radius: 0.75rem; background: #302f2c; border: 1px solid #403e3a;
             font-size: 0.75rem; color: #dbd8cf; transition: all .15s;
         }
-        .tile i { font-size: 1.05rem; color: #e08a6d; }
+        .tile i { font-size: 1.05rem; color: #c084fc; }
         .tile:hover { border-color: rgba(217, 119, 87, 0.55); background: #35332f; color: #fff; }
 
         /* ===== Sidebar ===== */
@@ -255,9 +255,9 @@
         }
         header .icon-btn { width: 2.5rem; height: 2.5rem; font-size: 1rem; border-radius: 0.75rem; }
         @media (max-width: 400px) { header .icon-btn { width: 2.25rem; } }
-        .sr-on { background: rgba(217, 119, 87, 0.18) !important; border-color: rgba(217, 119, 87, 0.6) !important; color: #ecaa92 !important; }
+        .sr-on { background: rgba(217, 119, 87, 0.18) !important; border-color: rgba(217, 119, 87, 0.6) !important; color: #d8b4fe !important; }
         .reader-body > :first-child { margin-top: 0; }
-        /* Kontras teks kecil dinaikkan: #7d7a72 di atas #262523 kurang dari 4,5:1 (WCAG AA) */
+        /* Kontras teks kecil dinaikkan: #7d7a72 di atas #221a35 kurang dari 4,5:1 (WCAG AA) */
         .text-slate-500 { color: #958f85 !important; }
         .text-slate-400 { color: #b3aea4 !important; }
     
@@ -266,18 +266,18 @@
         #ai-hud {
             position: fixed; z-index: 9000; left: 50%; top: calc(.75rem + env(safe-area-inset-top));
             width: min(22rem, calc(100vw - 1.5rem)); padding: .7rem .85rem .75rem; border-radius: .9rem;
-            background: #262523; border: 1px solid #403e3a; box-shadow: 0 14px 34px -8px rgba(0,0,0,.7);
+            background: #221a35; border: 1px solid #403e3a; box-shadow: 0 14px 34px -8px rgba(0,0,0,.7);
             opacity: 0; transform: translate(-50%, -14px); pointer-events: none;
             transition: opacity .2s ease, transform .2s ease; font-family: 'Inter', sans-serif;
         }
         #ai-hud.show { opacity: 1; transform: translate(-50%, 0); }
         #ai-hud .ai-hud-top { display: flex; align-items: center; gap: .55rem; }
-        #ai-hud .ai-hud-dot { width: .5rem; height: .5rem; border-radius: 9999px; background: #e08a6d; animation: aiHudPulse 1.1s ease-in-out infinite; }
+        #ai-hud .ai-hud-dot { width: .5rem; height: .5rem; border-radius: 9999px; background: #c084fc; animation: aiHudPulse 1.1s ease-in-out infinite; }
         #ai-hud .ai-hud-title { flex: 1; min-width: 0; font-size: .78rem; font-weight: 600; color: #ece9e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #ai-hud .ai-hud-pct { font-size: .85rem; font-weight: 700; color: #e08a6d; font-variant-numeric: tabular-nums; }
-        #ai-hud .ai-hud-track { height: 6px; margin-top: .55rem; border-radius: 9999px; background: #36342f; overflow: hidden; }
+        #ai-hud .ai-hud-pct { font-size: .85rem; font-weight: 700; color: #c084fc; font-variant-numeric: tabular-nums; }
+        #ai-hud .ai-hud-track { height: 6px; margin-top: .55rem; border-radius: 9999px; background: #2c2340; overflow: hidden; }
         #ai-hud .ai-hud-bar { position: relative; height: 100%; width: 0%; border-radius: 9999px; overflow: hidden;
-            background: linear-gradient(90deg, #c15f3c, #e08a6d); transition: width .12s linear; }
+            background: linear-gradient(90deg, #9333ea, #c084fc); transition: width .12s linear; }
         #ai-hud .ai-hud-bar::after { content: ''; position: absolute; inset: 0;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,.38), transparent);
             transform: translateX(-100%); animation: aiHudShine .8s linear infinite; }
@@ -296,29 +296,29 @@
         /* ===== Pratinjau tulisan langsung (generator) ===== */
         .gen-live { border: 1px solid rgba(217,119,87,.45); background: rgba(217,119,87,.07); border-radius: .8rem; padding: .7rem .8rem; display: flex; flex-direction: column; gap: .5rem; }
         .gen-live .gl-head { display: flex; align-items: center; gap: .5rem; font-size: .78rem; }
-        .gen-live .gl-dot { width: .5rem; height: .5rem; border-radius: 9999px; background: #e08a6d; flex-shrink: 0; animation: aiHudPulse 1.1s ease-in-out infinite; }
+        .gen-live .gl-dot { width: .5rem; height: .5rem; border-radius: 9999px; background: #c084fc; flex-shrink: 0; animation: aiHudPulse 1.1s ease-in-out infinite; }
         .gen-live .gl-t { flex: 1; min-width: 0; font-weight: 600; color: #ece9e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .gen-live .gl-c { color: #ecaa92; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .72rem; }
-        .gen-live .gl-track { height: 4px; border-radius: 9999px; background: #36342f; overflow: hidden; }
-        .gen-live .gl-track > div { height: 100%; width: 0; background: linear-gradient(90deg,#c15f3c,#e08a6d); transition: width .12s linear; }
+        .gen-live .gl-c { color: #d8b4fe; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .72rem; }
+        .gen-live .gl-track { height: 4px; border-radius: 9999px; background: #2c2340; overflow: hidden; }
+        .gen-live .gl-track > div { height: 100%; width: 0; background: linear-gradient(90deg,#9333ea,#c084fc); transition: width .12s linear; }
         .gen-live .gl-text { max-height: 7.5rem; overflow: hidden; font-family: 'Playfair Display', serif; font-size: .8rem; line-height: 1.55; color: #cfcbc1; white-space: pre-wrap; word-break: break-word;
             -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 1.6rem); mask-image: linear-gradient(to bottom, transparent 0, #000 1.6rem); }
-        .gen-live .gl-text::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -.12em; background: #e08a6d; animation: glBlink 1s steps(1) infinite; }
+        .gen-live .gl-text::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -.12em; background: #c084fc; animation: glBlink 1s steps(1) infinite; }
         @keyframes glBlink { 50% { opacity: 0; } }
         .gen-item.cur { position: relative; overflow: hidden; }
-        .gen-item .gi-fill { position: absolute; left: 0; bottom: 0; height: 2px; background: #e08a6d; transition: width .3s linear; }
+        .gen-item .gi-fill { position: absolute; left: 0; bottom: 0; height: 2px; background: #c084fc; transition: width .3s linear; }
         @media (prefers-reduced-motion: reduce) { .gen-live .gl-dot, .gen-live .gl-text::after { animation: none !important; } }
 
         /* ===== Pil progres generator (saat jendela Buat Novel AI ditutup tapi penulisan jalan) ===== */
         #gen-float {
             position: fixed; z-index: 8500; left: 50%; transform: translateX(-50%);
             bottom: calc(.9rem + env(safe-area-inset-bottom)); display: flex; align-items: stretch;
-            border-radius: 9999px; background: #262523; border: 1px solid #5a4237; overflow: hidden;
+            border-radius: 9999px; background: #221a35; border: 1px solid #5a4237; overflow: hidden;
             box-shadow: 0 14px 34px -8px rgba(0,0,0,.75); font-family: 'Inter', sans-serif; max-width: calc(100vw - 1.5rem);
         }
         #gen-float button { display: flex; align-items: center; gap: .5rem; padding: .55rem .9rem; font-size: .78rem; font-weight: 600; white-space: nowrap; }
         #gen-float .gf-main { color: #ece9e1; min-width: 0; }
-        #gen-float .gf-main i { color: #e08a6d; }
+        #gen-float .gf-main i { color: #c084fc; }
         #gen-float .gf-main span { overflow: hidden; text-overflow: ellipsis; }
         #gen-float .gf-stop { color: #fca5a5; border-left: 1px solid #403e3a; }
         #gen-float .gf-stop:hover { background: rgba(244,63,94,.14); }
@@ -334,7 +334,7 @@
         }
         .ns-trigger .ns-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .ns-trigger .ns-caret { flex-shrink: 0; width: .7rem; height: .7rem; color: #8d8a82; transition: transform .15s; }
-        .ns-trigger[aria-expanded="true"] { border-color: #d97757; }
+        .ns-trigger[aria-expanded="true"] { border-color: #a855f7; }
         .ns-trigger[aria-expanded="true"] .ns-caret { transform: rotate(180deg); }
         .ns-trigger:disabled { opacity: .5; cursor: not-allowed; }
         .ns-menu {
@@ -350,7 +350,7 @@
             width: 100%; text-align: left; padding: .5rem .65rem; border-radius: .45rem;
             font-size: .8125rem; font-weight: 450; line-height: 1.35; color: #c9c6bc; cursor: pointer;
         }
-        .ns-item .ns-check { flex-shrink: 0; width: .75rem; height: .75rem; color: #e08a6d; opacity: 0; }
+        .ns-item .ns-check { flex-shrink: 0; width: .75rem; height: .75rem; color: #c084fc; opacity: 0; }
         .ns-item[aria-selected="true"] { color: #f0b9a4; background: rgba(217,119,87,.12); }
         .ns-item[aria-selected="true"] .ns-check { opacity: 1; }
         .ns-item.ns-active { background: #2e2d2a; color: #ece9e1; }
@@ -374,7 +374,7 @@
         .pop-item:disabled { opacity: .4; pointer-events: none; }
         .pop-item.danger, .pop-item.danger i { color: #fb7185; }
         .pop-item.danger:hover, .pop-item.danger:focus-visible { background: rgba(244, 63, 94, .12); }
-        .pop-sep { height: 1px; background: #36342f; margin: 4px 6px; }
+        .pop-sep { height: 1px; background: #2c2340; margin: 4px 6px; }
         /* ===== Ikon AI kustom ===== */
         .ai-ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; transition: transform .25s; }
         .icon-btn:hover .ai-ico { transform: scale(1.14) rotate(8deg); }
@@ -386,13 +386,13 @@
         #tour-shield.dim { background: rgba(10, 9, 8, .78); }
         #tour-spot {
             position: absolute; border-radius: .75rem; pointer-events: none;
-            box-shadow: 0 0 0 9999px rgba(10, 9, 8, .78), 0 0 0 2px #d97757;
+            box-shadow: 0 0 0 9999px rgba(10, 9, 8, .78), 0 0 0 2px #a855f7;
             transition: top .25s, left .25s, width .25s, height .25s, opacity .2s;
         }
         #tour-spot.off { opacity: 0; box-shadow: none; }
         #tour-card {
             position: absolute; width: min(20rem, calc(100vw - 1rem)); padding: 1rem;
-            background: #262523; border: 1px solid #403e3a; border-radius: 1rem;
+            background: #221a35; border: 1px solid #403e3a; border-radius: 1rem;
             box-shadow: 0 20px 50px -10px rgba(0, 0, 0, .7); transition: top .25s, left .25s;
         }
         @media (prefers-reduced-motion: reduce) { #tour-spot, #tour-card { transition: none !important; } }
@@ -401,7 +401,7 @@
             background: #302f2c; color: #c2bfb5; font-size: .8125rem; font-weight: 500; transition: all .15s;
         }
         .set-tab:hover { border-color: #55524c; color: #ece9e1; }
-        .set-tab[aria-selected="true"] { background: rgba(217, 119, 87, .16); border-color: rgba(217, 119, 87, .6); color: #ecaa92; }
+        .set-tab[aria-selected="true"] { background: rgba(217, 119, 87, .16); border-color: rgba(217, 119, 87, .6); color: #d8b4fe; }
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] > summary .det-caret { transform: rotate(180deg); }
@@ -414,7 +414,7 @@
         #mention-strip::-webkit-scrollbar { display: none; }
         .m-chip {
             flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; height: 1.7rem; padding: 0 .7rem;
-            border-radius: 9999px; font-size: .72rem; background: transparent; border: 1px solid #36342f; color: #c2bfb5;
+            border-radius: 9999px; font-size: .72rem; background: transparent; border: 1px solid #2c2340; color: #c2bfb5;
             white-space: nowrap; transition: border-color .15s, color .15s;
         }
         .m-chip:hover { border-color: rgba(217, 119, 87, .55); color: #ece9e1; }
@@ -429,19 +429,19 @@
         .mp-item.on, .mp-item:hover { background: rgba(217, 119, 87, .16); color: #fff; }
         .mp-item small { margin-left: auto; color: #958f85; font-size: .68rem; min-width: 0; max-width: 45%; }
         .th-pill { flex-shrink: 0; font-size: .62rem; font-weight: 600; padding: .1rem .5rem; border-radius: 9999px; letter-spacing: .02em; }
-        .th-open { background: rgba(217, 119, 87, .16); color: #ecaa92; }
+        .th-open { background: rgba(217, 119, 87, .16); color: #d8b4fe; }
         .th-paid { background: rgba(16, 185, 129, .14); color: #6ee7b7; }
         .th-dropped { background: #302f2c; color: #a3a096; }
         .sev { font-size: .68rem; font-weight: 600; padding: .15rem .55rem; border-radius: 9999px; }
         .sev-pasti { background: rgba(244, 63, 94, .14); color: #fda4af; }
         .sev-mungkin { background: rgba(245, 158, 11, .14); color: #fcd34d; }
-        .ct-card { padding: .8rem; border-radius: .75rem; background: #1f1e1c; border: 1px solid #36342f; }
+        .ct-card { padding: .8rem; border-radius: .75rem; background: #1d1530; border: 1px solid #2c2340; }
         .chip input:disabled + span { opacity: .4; pointer-events: none; }
 
         /* ===== Perapian UI (v1.9): tab teks sidebar, tombol AI toolbar ===== */
         .sb-tab { flex: 1; height: 2.5rem; font-size: .8125rem; font-weight: 500; color: #a3a096; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
         .sb-tab:hover { color: #ece9e1; }
-        .sb-tab.on { color: #fff; border-bottom-color: #d97757; }
+        .sb-tab.on { color: #fff; border-bottom-color: #a855f7; }
         .nt-sec > summary { list-style: none; cursor: pointer; }
         .nt-sec > summary::-webkit-details-marker { display: none; }
         .nt-sec + .nt-sec { margin-top: .75rem; }
@@ -458,30 +458,30 @@
         #hint-bubble .hint-arrow { position: absolute; width: 10px; height: 10px; background: #2a2622; border: 1px solid rgba(217,119,87,.55); transform: rotate(45deg); }
         #hint-bubble .hint-arrow.up { top: -6px; border-right: 0; border-bottom: 0; }
         #hint-bubble .hint-arrow.down { bottom: -6px; border-left: 0; border-top: 0; }
-        #hint-bubble .hint-caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: #d97757; animation: hintCaret 1s steps(1) infinite; }
-        #hint-bubble button { font-size: .75rem; color: #e08a6d; margin-top: .45rem; }
-        #hint-bubble button:hover { color: #ecaa92; }
+        #hint-bubble .hint-caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: #a855f7; animation: hintCaret 1s steps(1) infinite; }
+        #hint-bubble button { font-size: .75rem; color: #c084fc; margin-top: .45rem; }
+        #hint-bubble button:hover { color: #d8b4fe; }
         @media (prefers-reduced-motion: reduce) { .hint-ring, #hint-bubble, #hint-bubble .hint-inner, #hint-bubble .hint-caret { animation: none !important; } }
-        .ai-btn { display: inline-flex; align-items: center; gap: .4rem; height: 1.9rem; padding: 0 .65rem; border-radius: .55rem; font-size: .8125rem; font-weight: 500; color: #e08a6d; transition: background .15s, color .15s; }
-        .ai-btn:hover, .ai-btn[aria-expanded="true"] { background: rgba(217, 119, 87, .14); color: #ecaa92; }
+        .ai-btn { display: inline-flex; align-items: center; gap: .4rem; height: 1.9rem; padding: 0 .65rem; border-radius: .55rem; font-size: .8125rem; font-weight: 500; color: #c084fc; transition: background .15s, color .15s; }
+        .ai-btn:hover, .ai-btn[aria-expanded="true"] { background: rgba(217, 119, 87, .14); color: #d8b4fe; }
         @media (pointer: coarse) { .ai-btn { height: 2.5rem; } }
         /* ===== Animasi mini di kartu panduan ===== */
-        .td { position: relative; height: 5.6rem; margin: .15rem 0 .85rem; padding: .75rem .85rem; border-radius: .75rem; background: #1f1e1c; border: 1px solid #36342f; overflow: hidden; font-size: .72rem; color: #c2bfb5; }
+        .td { position: relative; height: 5.6rem; margin: .15rem 0 .85rem; padding: .75rem .85rem; border-radius: .75rem; background: #1d1530; border: 1px solid #2c2340; overflow: hidden; font-size: .72rem; color: #c2bfb5; }
         .td-line { height: .42rem; border-radius: 9999px; background: #403e3a; margin-bottom: .5rem; transform-origin: left; animation: tdWrite 3.4s ease-in-out infinite; }
         .td-line:nth-child(2) { width: 82%; animation-delay: .45s; }
         .td-line:nth-child(3) { width: 58%; animation-delay: .9s; }
-        .td-pen { position: absolute; right: .9rem; bottom: .6rem; color: #e08a6d; font-size: 1.1rem; animation: tdPen 1.1s ease-in-out infinite; }
+        .td-pen { position: absolute; right: .9rem; bottom: .6rem; color: #c084fc; font-size: 1.1rem; animation: tdPen 1.1s ease-in-out infinite; }
         @keyframes tdWrite { 0% { transform: scaleX(0); opacity: .3; } 35%, 80% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
         @keyframes tdPen { 0%, 100% { transform: translate(0, 0) rotate(-8deg); } 50% { transform: translate(-6px, -3px) rotate(4deg); } }
         .td-row { display: flex; align-items: center; gap: .5rem; height: 1.35rem; padding: 0 .5rem; margin-bottom: .3rem; border-radius: .4rem; background: #2a2926; color: #a3a096; }
-        .td-row.new { background: rgba(217,119,87,.16); color: #ecaa92; animation: tdRowIn 3.6s ease-out infinite; }
-        .td-plus { position: absolute; right: .8rem; top: .7rem; width: 1.5rem; height: 1.5rem; border-radius: .45rem; background: #302f2c; color: #e08a6d; display: flex; align-items: center; justify-content: center; animation: tdTap 3.6s ease-out infinite; }
+        .td-row.new { background: rgba(217,119,87,.16); color: #d8b4fe; animation: tdRowIn 3.6s ease-out infinite; }
+        .td-plus { position: absolute; right: .8rem; top: .7rem; width: 1.5rem; height: 1.5rem; border-radius: .45rem; background: #302f2c; color: #c084fc; display: flex; align-items: center; justify-content: center; animation: tdTap 3.6s ease-out infinite; }
         @keyframes tdRowIn { 0%, 30% { opacity: 0; transform: translateY(-6px); } 45%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; } }
         @keyframes tdTap { 0%, 20%, 45%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(217,119,87,0); } 30% { transform: scale(.82); box-shadow: 0 0 0 7px rgba(217,119,87,.35); } }
-        .td-type { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; width: 0; font-family: 'Playfair Display', serif; font-size: .9rem; color: #ece9e1; border-right: 2px solid #d97757; animation: tdType 4.2s steps(14, end) infinite; }
+        .td-type { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; width: 0; font-family: 'Playfair Display', serif; font-size: .9rem; color: #ece9e1; border-right: 2px solid #a855f7; animation: tdType 4.2s steps(14, end) infinite; }
         @keyframes tdType { 0% { width: 0; } 45%, 90% { width: 14ch; } 100% { width: 14ch; opacity: 0; } }
         .td-pop { position: absolute; left: 1.9rem; top: 2.6rem; padding: .3rem .55rem; border-radius: .5rem; background: #2b2a27; border: 1px solid #403e3a; color: #ece9e1; box-shadow: 0 8px 20px rgba(0,0,0,.45); opacity: 0; animation: tdPop 4.2s ease-out infinite; }
-        .td-pop b { color: #e08a6d; font-weight: 600; }
+        .td-pop b { color: #c084fc; font-weight: 600; }
         @keyframes tdPop { 0%, 42% { opacity: 0; transform: translateY(4px); } 55%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
         .td-ai { display: flex; align-items: center; gap: .6rem; }
         .td-ai .ai-ico { width: 1.7rem; height: 1.7rem; animation: tdPulse 2s ease-in-out infinite; }
@@ -492,7 +492,7 @@
         @keyframes tdPill { 0%, 8% { opacity: 0; transform: translateX(-8px); } 22%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
         .td-save { display: flex; align-items: center; gap: .6rem; height: 100%; }
         .td-save .bar { flex: 1; height: .4rem; border-radius: 9999px; background: #302f2c; overflow: hidden; }
-        .td-save .bar i { display: block; height: 100%; width: 0; background: #d97757; animation: tdBar 3.2s ease-in-out infinite; }
+        .td-save .bar i { display: block; height: 100%; width: 0; background: #a855f7; animation: tdBar 3.2s ease-in-out infinite; }
         .td-save .ok { color: #34d399; font-weight: 600; opacity: 0; animation: tdOk 3.2s ease-in-out infinite; white-space: nowrap; }
         @keyframes tdBar { 0% { width: 0; } 55%, 100% { width: 100%; } }
         @keyframes tdOk { 0%, 55% { opacity: 0; } 70%, 92% { opacity: 1; } 100% { opacity: 0; } }
@@ -523,7 +523,7 @@
         .proj-main { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: .15rem; padding: .35rem 0; }
         .proj-title { font-size: .875rem; font-weight: 600; color: #ece9e1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .proj-meta { font-size: .7rem; color: #8f8b82; }
-        .proj-badge { font-size: .65rem; font-weight: 600; color: #ecaa92; background: rgba(217, 119, 87, .16); padding: .1rem .5rem; border-radius: 9999px; flex-shrink: 0; }
+        .proj-badge { font-size: .65rem; font-weight: 600; color: #d8b4fe; background: rgba(217, 119, 87, .16); padding: .1rem .5rem; border-radius: 9999px; flex-shrink: 0; }
         .proj-actions { display: flex; flex-shrink: 0; }
         @media (max-width: 480px) { .proj-badge { display: none; } }
         /* ===== Pilih AI Skill & Generator Naskah ===== */
@@ -534,26 +534,26 @@
             padding: .85rem; border-radius: .9rem; background: #302f2c; border: 1px solid #403e3a;
             transition: border-color .15s, background .15s, transform .1s; cursor: pointer; color: inherit;
         }
-        .skill-card:hover, .skill-card:focus-visible { border-color: #d97757; background: #353330; outline: none; }
+        .skill-card:hover, .skill-card:focus-visible { border-color: #a855f7; background: #353330; outline: none; }
         .skill-card:active { transform: scale(.985); }
         .skill-ico { width: 2.5rem; height: 2.5rem; border-radius: .7rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
         .skill-ttl { display: block; font-size: .875rem; font-weight: 600; color: #ece9e1; line-height: 1.25; }
         .skill-dsc { display: block; font-size: .75rem; color: #a5a198; line-height: 1.45; margin-top: .2rem; }
         .gen-ch-row { display: flex; flex-direction: column; gap: .35rem; padding: .65rem; border-radius: .7rem; background: #302f2c; border: 1px solid #403e3a; }
         .gen-ch-row .field { padding: .4rem .6rem; font-size: .8125rem; }
-        .gen-bar { border-radius: 9999px; background: #36342f; overflow: hidden; }
+        .gen-bar { border-radius: 9999px; background: #2c2340; overflow: hidden; }
         .gen-bar > div { height: 100%; width: 0; transition: width .15s ease-out; }
-        .gen-pct { font-size: 2.6rem; font-weight: 700; line-height: 1; color: #ecaa92; font-variant-numeric: tabular-nums; }
+        .gen-pct { font-size: 2.6rem; font-weight: 700; line-height: 1; color: #d8b4fe; font-variant-numeric: tabular-nums; }
         .gen-bar { height: .85rem; position: relative; }
-        .gen-bar > div { position: relative; overflow: hidden; background: linear-gradient(90deg,#c15f3c,#e08a6d); }
+        .gen-bar > div { position: relative; overflow: hidden; background: linear-gradient(90deg,#9333ea,#c084fc); }
         .gen-bar > div::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent); transform: translateX(-100%); animation: genShine .9s linear infinite; }
         @keyframes genShine { to { transform: translateX(100%); } }
         .gen-list { display: flex; flex-direction: column; gap: .35rem; max-height: 40vh; overflow-y: auto; }
-        .gen-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .65rem; border-radius: .6rem; background: #2a2926; border: 1px solid #36342f; font-size: .8125rem; color: #8f8b82; }
+        .gen-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .65rem; border-radius: .6rem; background: #2a2926; border: 1px solid #2c2340; font-size: .8125rem; color: #8f8b82; }
         .gen-item .gi-t { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .gen-item .gi-w { font-size: .6875rem; color: #6f6c64; flex-shrink: 0; }
         .gen-item.done { color: #dbd8cf; } .gen-item.done i { color: #6ee7b7; }
-        .gen-item.cur { color: #fff; border-color: rgba(217,119,87,.6); background: rgba(217,119,87,.12); } .gen-item.cur i { color: #e08a6d; }
+        .gen-item.cur { color: #fff; border-color: rgba(217,119,87,.6); background: rgba(217,119,87,.12); } .gen-item.cur i { color: #c084fc; }
         .gen-item i { width: 1rem; text-align: center; flex-shrink: 0; }
             /* ===== Pembuka animasi (splash) ===== */
         #intro-splash {
@@ -579,7 +579,7 @@
         @keyframes introLetter { to { opacity: 1; filter: blur(0); transform: none; } }
         .intro-line {
             position: relative; height: 2px; width: 0; margin: 1rem 0 .9rem;
-            background: linear-gradient(90deg, transparent, #d97757, transparent);
+            background: linear-gradient(90deg, transparent, #a855f7, transparent);
             animation: introLine 1.1s ease .95s forwards;
         }
         @keyframes introLine { to { width: min(18rem, 70vw); } }
@@ -593,7 +593,7 @@
             position: absolute; right: 1.25rem; bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
             background: none; border: 0; color: #7d786e; font-size: .8rem; letter-spacing: .02em;
         }
-        .intro-skip:hover { color: #d97757; }
+        .intro-skip:hover { color: #a855f7; }
         @media (prefers-reduced-motion: reduce) {
             #intro-splash::before { animation: none; }
             .intro-title span { opacity: 1; filter: none; transform: none; animation: none; }
@@ -632,7 +632,7 @@
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
         <defs>
             <linearGradient id="ai-grad" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#d97757"/><stop offset=".55" stop-color="#f0a27f"/><stop offset="1" stop-color="#ffd2b8"/>
+                <stop offset="0" stop-color="#a855f7"/><stop offset=".55" stop-color="#f0a27f"/><stop offset="1" stop-color="#ffd2b8"/>
             </linearGradient>
             <symbol id="i-spark" viewBox="0 0 24 24"><path fill="url(#ai-grad)" d="M10 6C10.6 10.6 13.4 13.4 18 14C13.4 14.6 10.6 17.4 10 22C9.4 17.4 6.6 14.6 2 14C6.6 13.4 9.4 10.6 10 6Z"/><path fill="url(#ai-grad)" d="M19 1.5C19.3 3.9 20.1 4.7 22.5 5C20.1 5.3 19.3 6.1 19 8.5C18.7 6.1 17.9 5.3 15.5 5C17.9 4.7 18.7 3.9 19 1.5Z"/></symbol>
             <symbol id="i-spark-flat" viewBox="0 0 24 24"><path fill="currentColor" d="M10 6C10.6 10.6 13.4 13.4 18 14C13.4 14.6 10.6 17.4 10 22C9.4 17.4 6.6 14.6 2 14C6.6 13.4 9.4 10.6 10 6Z"/><path fill="currentColor" d="M19 1.5C19.3 3.9 20.1 4.7 22.5 5C20.1 5.3 19.3 6.1 19 8.5C18.7 6.1 17.9 5.3 15.5 5C17.9 4.7 18.7 3.9 19 1.5Z"/></symbol>
@@ -887,7 +887,7 @@
                         <span class="min-w-0"><span class="skill-ttl block">Buat Novel AI</span><span class="skill-dsc block">Dari ide singkat jadi kerangka, lalu naskah novel utuh bab demi bab.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('editor')">
-                        <span class="skill-ico" style="background:rgba(217,119,87,.16);color:#ecaa92"><i class="fa-solid fa-pen-nib"></i></span>
+                        <span class="skill-ico" style="background:rgba(217,119,87,.16);color:#d8b4fe"><i class="fa-solid fa-pen-nib"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Editor Novel AI</span><span class="skill-dsc block">Tulis dan sunting novelmu dibantu AI: lanjutkan adegan, perbaiki bab, cek kontinuitas.</span></span>
                     </button>
                 </div>
@@ -1035,6 +1035,7 @@
             <div class="modal-foot">
                 <button onclick="generateWordDocument()" id="export-action-btn-word" class="btn-ghost" title="Unduh sebagai Word (.doc)"><i class="fa-solid fa-file-word text-sky-400"></i> Word</button>
                 <button onclick="generateProfessionalPDF()" id="export-action-btn" class="btn-primary" title="Unduh sebagai PDF"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                <button onclick="generateEpub()" id="export-action-btn-epub" class="btn-ghost" title="Unduh sebagai eBook (EPUB)"><i class="fa-solid fa-book-open text-purple-400"></i> eBook</button>
             </div>
         </div>
     </div>
@@ -1068,7 +1069,7 @@
                 <div>
                     <label class="label">Sampul</label>
                     <div class="flex gap-3 items-start">
-                        <div style="width:96px;aspect-ratio:210/297;flex:none;border-radius:4px;overflow:hidden;background:#1c1b19;border:1px solid #403e3a">
+                        <div style="width:96px;aspect-ratio:210/297;flex:none;border-radius:4px;overflow:hidden;background:#1c1428;border:1px solid #403e3a">
                             <img id="cover-preview" alt="Pratinjau sampul" style="width:100%;height:100%;object-fit:cover;display:block">
                         </div>
                         <div class="flex flex-col gap-2 flex-1 min-w-0">
@@ -1082,7 +1083,7 @@
                             <p id="cover-note" class="text-[11px] text-slate-500"></p>
                         </div>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Sampul dipakai di ekspor PDF dan Word (bila "Halaman sampul" dicentang).</p>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Sampul dipakai di ekspor PDF, Word, dan eBook (bila "Halaman sampul" dicentang).</p>
                 </div>
 
                 </div>
@@ -1254,7 +1255,7 @@
                         <span class="label" style="margin:0">Hasil</span>
                         <button type="button" id="ai-copy-btn" onclick="copyAiResult()" class="btn-ghost hidden" style="height:2rem;padding:0 .75rem"><i class="fa-regular fa-copy"></i> Salin</button>
                     </div>
-                    <textarea id="ai-output-area" rows="7" oninput="currentAiGeneratedText = this.value" placeholder="Hasil AI akan muncul di sini. Teks bisa diedit sebelum dimasukkan ke naskah." class="field" style="background:#1f1e1c;font-family:'Playfair Display',serif;font-size:.9375rem;line-height:1.7;min-height:9rem"></textarea>
+                    <textarea id="ai-output-area" rows="7" oninput="currentAiGeneratedText = this.value" placeholder="Hasil AI akan muncul di sini. Teks bisa diedit sebelum dimasukkan ke naskah." class="field" style="background:#1d1530;font-family:'Playfair Display',serif;font-size:.9375rem;line-height:1.7;min-height:9rem"></textarea>
                 </div>
 
                 <details class="rounded-lg border border-slate-800 bg-slate-900/40">
@@ -1327,7 +1328,7 @@
                         <label class="label" style="margin:0">Hasil (bisa diedit)</label>
                         <span id="rf-stats" class="text-[11px] text-emerald-400 text-right"></span>
                     </div>
-                    <textarea id="rf-output" rows="8" placeholder="Hasil AI akan muncul di sini..." class="field resize-y font-serif leading-relaxed" style="background:#1f1e1c"></textarea>
+                    <textarea id="rf-output" rows="8" placeholder="Hasil AI akan muncul di sini..." class="field resize-y font-serif leading-relaxed" style="background:#1d1530"></textarea>
                 </div>
             </div>
             <div class="modal-foot justify-between">
@@ -1489,7 +1490,7 @@
                     <button onclick="closeChatRevModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
-            <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1.1rem;border-bottom:1px solid #36342f;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1.1rem;border-bottom:1px solid #2c2340;flex-shrink:0;">
                 <label class="label" style="margin:0;white-space:nowrap" for="cr-scope">Cari di</label>
                 <select id="cr-scope" class="field" style="height:2.1rem;padding:0 .6rem"></select>
             </div>
@@ -2448,7 +2449,7 @@
                         if (dragChapterId == null) return;
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
-                        div.style.boxShadow = chapterDropAfter(e, div) ? 'inset 0 -2px 0 #d97757' : 'inset 0 2px 0 #d97757';
+                        div.style.boxShadow = chapterDropAfter(e, div) ? 'inset 0 -2px 0 #a855f7' : 'inset 0 2px 0 #a855f7';
                     };
                     div.ondragleave = () => { div.style.boxShadow = ''; };
                     div.ondrop = (e) => {
@@ -5771,6 +5772,240 @@ ${bodyContent}
             }
         }
 
+        // ===== eBook (EPUB) Generator — tanpa dependensi, jalan offline =====
+        // EPUB pada dasarnya adalah arsip ZIP: entri "mimetype" HARUS menjadi
+        // entri pertama dan disimpan tanpa kompresi. Writer di bawah memakai
+        // mode "stored" (tanpa kompresi) untuk semua entri — sah menurut
+        // spesifikasi EPUB dan membuat fitur ini tetap jalan tanpa internet.
+
+        const EPUB_CRC_TABLE = (() => {
+            const t = new Uint32Array(256);
+            for (let n = 0; n < 256; n++) {
+                let c = n;
+                for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                t[n] = c >>> 0;
+            }
+            return t;
+        })();
+
+        function epubCrc32(bytes) {
+            let crc = 0xFFFFFFFF;
+            for (let i = 0; i < bytes.length; i++) crc = EPUB_CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+            return (crc ^ 0xFFFFFFFF) >>> 0;
+        }
+
+        // files: [{ name, data }] — data berupa string (UTF-8) atau Uint8Array.
+        // Entri pertama WAJIB "mimetype" (pemanggil yang menjamin urutannya).
+        function epubZipStore(files) {
+            const enc = new TextEncoder();
+            const parts = [];
+            const central = [];
+            let offset = 0;
+            const pushU16 = (v) => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, v, true); parts.push(b); };
+            const pushU32 = (v) => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, v >>> 0, true); parts.push(b); };
+            for (const f of files) {
+                const name = enc.encode(f.name);
+                const data = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+                const crc = epubCrc32(data);
+                pushU32(0x04034b50); pushU16(20); pushU16(0x0800); pushU16(0); pushU16(0); pushU16(0);
+                pushU32(crc); pushU32(data.length); pushU32(data.length); pushU16(name.length); pushU16(0);
+                parts.push(name, data);
+                central.push({ name, crc, size: data.length, offset });
+                offset += 30 + name.length + data.length;
+            }
+            const cdStart = offset;
+            for (const c of central) {
+                pushU32(0x02014b50); pushU16(20); pushU16(20); pushU16(0x0800); pushU16(0); pushU16(0); pushU16(0);
+                pushU32(c.crc); pushU32(c.size); pushU32(c.size); pushU16(c.name.length);
+                pushU16(0); pushU16(0); pushU16(0); pushU16(0); pushU32(0); pushU32(c.offset);
+                parts.push(c.name);
+                offset += 46 + c.name.length;
+            }
+            const cdSize = offset - cdStart;
+            pushU32(0x06054b50); pushU16(0); pushU16(0); pushU16(central.length); pushU16(central.length);
+            pushU32(cdSize); pushU32(cdStart); pushU16(0);
+            return new Blob(parts, { type: 'application/epub+zip' });
+        }
+
+        function epubDataUrlToBytes(url) {
+            const b64 = String(url).split(',')[1] || '';
+            const bin = atob(b64);
+            const out = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+            return out;
+        }
+
+        function epubChapterBody(content) {
+            return parseBlocks(content).map(b => {
+                if (b.type === 'break') return '<p class="break">* * *</p>';
+                const inner = b.lines.map(inlineMdToHtml);
+                if (b.type === 'heading') return '<h3>' + inner.join(' ') + '</h3>';
+                if (b.type === 'center') return '<p class="center">' + inner.join('<br/>') + '</p>';
+                if (b.type === 'quote') return '<blockquote><p>' + inner.join('<br/>') + '</p></blockquote>';
+                if (b.type === 'list') return '<ul>' + inner.map(l => '<li>' + l + '</li>').join('') + '</ul>';
+                return '<p>' + inner.join('<br/>') + '</p>';
+            }).join('\n');
+        }
+
+        function epubXhtmlDoc(title, bodyHtml) {
+            return '<?xml version="1.0" encoding="utf-8"?>\n'
+                + '<!DOCTYPE html>\n'
+                + '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="id" lang="id">\n'
+                + '<head><title>' + escapeHtml(title) + '</title><link rel="stylesheet" type="text/css" href="style.css"/></head>\n'
+                + '<body>\n' + bodyHtml + '\n</body>\n</html>';
+        }
+
+        // Murni (tidak menyentuh DOM): menerima data novel + opsi, mengembalikan Blob EPUB.
+        // Dipisah dari generateEpub() supaya mudah diuji di luar browser.
+        function buildEpubBlob(novel, opts) {
+            const title = (novel.title || 'Novel Tanpa Judul').trim() || 'Novel Tanpa Judul';
+            const author = (novel.author || '').trim();
+            const chapters = Array.isArray(novel.chapters) ? novel.chapters : [];
+            const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('novelis-' + Date.now());
+            const identifier = 'urn:uuid:' + uuid;
+            const modified = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+
+            let coverImg = null;
+            if (opts.includeCover && opts.coverDataUrl) {
+                const m = String(opts.coverDataUrl).match(/^data:(image\/[a-z]+);base64,/);
+                if (m) {
+                    const ext = m[1] === 'image/jpeg' ? 'jpg' : m[1].split('/')[1];
+                    coverImg = { file: 'cover.' + ext, mime: m[1], bytes: epubDataUrlToBytes(opts.coverDataUrl) };
+                }
+            }
+
+            const chapFiles = chapters.map((ch, i) => 'chap' + String(i + 1).padStart(3, '0') + '.xhtml');
+            const styleCss = 'body { font-family: Georgia, "Times New Roman", serif; line-height: 1.6; margin: 5%; }\n'
+                + 'h1 { text-align: center; font-size: 1.6em; margin: 0.4em 0 1em 0; }\n'
+                + 'h2.bab { text-align: center; font-size: 0.9em; letter-spacing: 0.2em; font-weight: normal; margin: 2em 0 0.4em 0; }\n'
+                + 'h3 { font-size: 1.15em; margin: 1.2em 0 0.4em 0; }\n'
+                + 'p { text-align: justify; margin: 0 0 0.8em 0; }\n'
+                + 'p.center { text-align: center; }\n'
+                + 'p.break { text-align: center; margin: 1.5em 0; }\n'
+                + 'blockquote { margin: 0 2em 0.8em 2em; font-style: italic; }\n'
+                + 'blockquote p { text-align: justify; }\n'
+                + 'ul { margin: 0 0 0.8em 0; }\n'
+                + 'li { text-align: justify; margin-bottom: 0.25em; }\n'
+                + '.cover { text-align: center; margin-top: 25%; }\n'
+                + '.cover h1 { font-size: 2em; }\n'
+                + '.cover .author { font-size: 1.2em; margin-top: 1.5em; }\n'
+                + '.cover .synopsis { font-style: italic; margin-top: 3em; text-align: center; }\n'
+                + '.toc h1 { text-align: center; }\n'
+                + '.toc ol { list-style: none; padding: 0; }\n'
+                + '.toc li { margin-bottom: 0.6em; text-align: left; }\n';
+
+            const files = [{ name: 'mimetype', data: 'application/epub+zip' }];
+            files.push({ name: 'META-INF/container.xml', data: '<?xml version="1.0" encoding="utf-8"?>\n'
+                + '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">\n'
+                + '  <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>\n'
+                + '</container>' });
+            files.push({ name: 'OEBPS/style.css', data: styleCss });
+            if (coverImg) files.push({ name: 'OEBPS/' + coverImg.file, data: coverImg.bytes });
+
+            if (opts.includeCover) {
+                let coverBody = '<div class="cover">';
+                if (coverImg) coverBody += '<img src="' + coverImg.file + '" alt="Sampul" style="max-width: 100%;"/>';
+                coverBody += '<h1>' + escapeHtml(title) + '</h1>';
+                if (author) coverBody += '<p class="author">' + escapeHtml(author) + '</p>';
+                if (novel.synopsis) coverBody += '<p class="synopsis">' + escapeHtml(novel.synopsis) + '</p>';
+                coverBody += '</div>';
+                files.push({ name: 'OEBPS/cover.xhtml', data: epubXhtmlDoc(title, coverBody) });
+            }
+
+            if (opts.includeToc) {
+                const tocItems = chapters.map((ch, i) =>
+                    '<li><a href="' + chapFiles[i] + '">' + (i + 1) + '. ' + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</a></li>').join('\n');
+                files.push({ name: 'OEBPS/nav.xhtml', data: epubXhtmlDoc('Daftar Isi',
+                    '<div class="toc"><h1>Daftar Isi</h1><nav epub:type="toc"><ol>\n' + tocItems + '\n</ol></nav></div>') });
+            }
+
+            const ncxPoints = chapters.map((ch, i) =>
+                '    <navPoint id="np' + (i + 1) + '" playOrder="' + (i + 1) + '"><navLabel><text>'
+                + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</text></navLabel><content src="' + chapFiles[i] + '"/></navPoint>').join('\n');
+            files.push({ name: 'OEBPS/toc.ncx', data: '<?xml version="1.0" encoding="utf-8"?>\n'
+                + '<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">\n'
+                + '<head><meta name="dtb:uid" content="' + escapeHtml(identifier) + '"/><meta name="dtb:depth" content="1"/>'
+                + '<meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>\n'
+                + '<docTitle><text>' + escapeHtml(title) + '</text></docTitle>\n'
+                + '<navMap>\n' + ncxPoints + '\n</navMap>\n</ncx>' });
+
+            chapters.forEach((ch, i) => {
+                const body = '<h2 class="bab">BAB ' + (i + 1) + '</h2><h1>' + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</h1>\n'
+                    + epubChapterBody(ch.content);
+                files.push({ name: 'OEBPS/' + chapFiles[i], data: epubXhtmlDoc(ch.title || 'Bab ' + (i + 1), body) });
+            });
+
+            let manifest = '';
+            if (coverImg) manifest += '<item id="cover-img" href="' + coverImg.file + '" media-type="' + coverImg.mime + '" properties="cover-image"/>\n';
+            if (opts.includeCover) manifest += '<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>\n';
+            if (opts.includeToc) manifest += '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>\n';
+            manifest += '<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>\n';
+            manifest += '<item id="css" href="style.css" media-type="text/css"/>\n';
+            chapters.forEach((ch, i) => { manifest += '<item id="chap' + (i + 1) + '" href="' + chapFiles[i] + '" media-type="application/xhtml+xml"/>\n'; });
+            let spine = '';
+            if (opts.includeCover) spine += '<itemref idref="cover"/>\n';
+            if (opts.includeToc) spine += '<itemref idref="nav"/>\n';
+            chapters.forEach((ch, i) => { spine += '<itemref idref="chap' + (i + 1) + '"/>\n'; });
+            files.push({ name: 'OEBPS/content.opf', data: '<?xml version="1.0" encoding="utf-8"?>\n'
+                + '<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="bookid" version="3.0">\n'
+                + '<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">\n'
+                + '<dc:identifier id="bookid">' + escapeHtml(identifier) + '</dc:identifier>\n'
+                + '<dc:title>' + escapeHtml(title) + '</dc:title>\n'
+                + (author ? '<dc:creator>' + escapeHtml(author) + '</dc:creator>\n' : '')
+                + '<dc:language>id</dc:language>\n'
+                + '<meta property="dcterms:modified">' + modified + '</meta>\n'
+                + (coverImg ? '<meta name="cover" content="cover-img"/>\n' : '')
+                + '</metadata>\n<manifest>\n' + manifest + '</manifest>\n'
+                + '<spine toc="ncx">\n' + spine + '</spine>\n</package>' });
+
+            return epubZipStore(files);
+        }
+
+        // Tombol "eBook" di modal ekspor: membaca opsi yang sama dengan PDF/Word.
+        function generateEpub() {
+            const loadingEl = document.getElementById('export-loading');
+            const actionBtn = document.getElementById('export-action-btn');
+            const actionBtnWord = document.getElementById('export-action-btn-word');
+            const actionBtnEpub = document.getElementById('export-action-btn-epub');
+            if (!novelData.chapters || !novelData.chapters.length) {
+                showToast('Belum ada bab untuk diekspor.', 'error');
+                return;
+            }
+            loadingEl.classList.remove('hidden');
+            actionBtn.disabled = true;
+            if (actionBtnWord) actionBtnWord.disabled = true;
+            if (actionBtnEpub) actionBtnEpub.disabled = true;
+
+            // Biarkan indikator loading tampil dulu sebelum build (sinkron) dimulai.
+            setTimeout(() => {
+                try {
+                    const includeCover = document.getElementById('export-cover').checked;
+                    const includeToc = document.getElementById('export-toc').checked;
+                    const coverDataUrl = includeCover ? coverImageForExport() : null;
+                    const blob = buildEpubBlob(novelData, { includeCover, includeToc, coverDataUrl });
+                    const fileBase = String(novelData.title || 'Novel').replace(/[\\/:*?"<>|]+/g, '').trim().replace(/\s+/g, '_') || 'Novel';
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileBase + '_eBook.epub';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    closeExportModal();
+                    showToast('eBook (EPUB) berhasil diunduh.');
+                } catch (err) {
+                    console.error('EPUB Export Error:', err);
+                    showToast('Gagal membuat eBook: ' + (err && err.message ? err.message : 'kesalahan tidak diketahui'), 'error');
+                } finally {
+                    loadingEl.classList.add('hidden');
+                    actionBtn.disabled = false;
+                    if (actionBtnWord) actionBtnWord.disabled = false;
+                    if (actionBtnEpub) actionBtnEpub.disabled = false;
+                }
+            }, 60);
+        }
+
         // ===== Markdown ringan: **tebal**, *miring*, "> kutipan", "- daftar" =====
         // Dipakai bersama oleh mode baca, ekspor Word, dan ekspor PDF supaya hasilnya konsisten.
         function parseInlineMd(text) {
@@ -7713,7 +7948,7 @@ ${body}
                 const idxs = issues.map((x, i) => i).filter(i => issues[i].lens === k)
                     .sort((p, q) => ((issues[p].dismissed || issues[p].applied ? 1 : 0) - (issues[q].dismissed || issues[q].applied ? 1 : 0)) || (sevRank[issues[p].level] - sevRank[issues[q].level]) || p - q);
                 if (!idxs.length) return;
-                html += `<div class="text-xs font-semibold text-slate-300 pt-2 flex items-center gap-2"><i class="fa-solid ${AUDIT_LENSES[k].icon}" style="color:#e08a6d"></i>${AUDIT_LENSES[k].label} <span class="font-normal text-slate-500">${idxs.length}</span></div>`;
+                html += `<div class="text-xs font-semibold text-slate-300 pt-2 flex items-center gap-2"><i class="fa-solid ${AUDIT_LENSES[k].icon}" style="color:#c084fc"></i>${AUDIT_LENSES[k].label} <span class="font-normal text-slate-500">${idxs.length}</span></div>`;
                 idxs.forEach(i => {
                     const x = issues[i];
                     const sv = AUDIT_SEV[x.level] || AUDIT_SEV.sedang;
@@ -7766,7 +8001,7 @@ ${body}
                 h += `<div class="text-[11px] text-slate-400">Bab ${chapterNo(sg.ch.id)} dipecah menjadi ${sg.segs.length} bab${p.why ? ' · ' + escapeHtml(p.why) : ''}</div>`;
                 sg.segs.forEach((sgm, k) => {
                     const total = wordCount(sgm.text);
-                    h += `<div class="rounded-lg p-2.5 space-y-1.5" style="border:1px solid #36342f;background:#191816">
+                    h += `<div class="rounded-lg p-2.5 space-y-1.5" style="border:1px solid #2c2340;background:#191816">
                         <div class="flex items-center justify-between gap-2 text-[11px] text-slate-400"><span>${k === 0 ? 'Bab ' + chapterNo(sg.ch.id) + ' (tetap)' : 'Bab baru ' + k}</span><span>${total.toLocaleString('id-ID')} kata</span></div>
                         ${k === 0 ? `<div class="text-xs text-slate-300">${escapeHtml(sg.ch.title || 'Tanpa judul')}</div>` : `<input type="text" value="${escapeHtml(p.parts[k - 1].title)}" placeholder="Judul bab baru" oninput="auditEditSplitTitle(${i},${k - 1},this.value)" class="field" style="height:2rem">`}
                         <div class="font-serif text-[11px] leading-relaxed" style="color:#a3a096">Mulai: “${escapeHtml(clipText(sgm.text, 130))}”</div>
@@ -7784,7 +8019,7 @@ ${body}
                 return h;
             }
             p.edits.forEach((e, j) => {
-                h += `<div class="rounded-lg p-2.5 space-y-1.5" style="border:1px solid #36342f;background:#191816">
+                h += `<div class="rounded-lg p-2.5 space-y-1.5" style="border:1px solid #2c2340;background:#191816">
                     <div class="text-[11px] text-slate-400">Bab ${chapterNo(e.chapterId)} · ${e.mode === 'ganti' ? 'Bagian yang diganti' : 'Sisipan ditaruh sesudah bagian ini'}${e.why ? ' · ' + escapeHtml(e.why) : ''}</div>
                     <div class="font-serif text-xs leading-relaxed" style="${e.mode === 'ganti' ? 'color:#fda4af;text-decoration:line-through;text-decoration-color:rgba(253,164,175,.45)' : 'color:#a3a096'}">${escapeHtml(clipText(e.old, 500))}</div>
                     <div class="text-[11px]" style="color:#6ee7b7">${e.mode === 'ganti' ? 'Diganti dengan (boleh kamu ubah):' : 'Teks sisipan (boleh kamu ubah):'}</div>
@@ -9711,7 +9946,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
         card = document.createElement('div');
         card.setAttribute('role', 'dialog');
         card.setAttribute('aria-label', 'Pasang Novelis');
-        card.style.cssText = 'position:fixed;z-index:56;left:50%;transform:translateX(-50%);bottom:calc(2.75rem + env(safe-area-inset-bottom));width:min(26rem,calc(100vw - 1.25rem));padding:.95rem;border-radius:1rem;background:#262523;border:1px solid rgba(217,119,87,.55);box-shadow:0 20px 50px -10px rgba(0,0,0,.7);animation:modalIn .22s ease-out';
+        card.style.cssText = 'position:fixed;z-index:56;left:50%;transform:translateX(-50%);bottom:calc(2.75rem + env(safe-area-inset-bottom));width:min(26rem,calc(100vw - 1.25rem));padding:.95rem;border-radius:1rem;background:#221a35;border:1px solid rgba(217,119,87,.55);box-shadow:0 20px 50px -10px rgba(0,0,0,.7);animation:modalIn .22s ease-out';
         const ios = mode === 'ios';
         card.innerHTML =
             '<div style="display:flex;gap:.8rem;align-items:flex-start">' +

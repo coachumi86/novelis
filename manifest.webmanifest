@@ -8,8 +8,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#1b1a19",
-  "theme_color": "#1b1a19",
+  "background_color": "#150f24",
+  "theme_color": "#150f24",
   "categories": ["productivity", "books"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
