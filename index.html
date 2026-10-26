@@ -1069,6 +1069,23 @@
                         <option value="compact">Padat (spasi tunggal)</option>
                     </select>
                 </div>
+                <div>
+                    <label class="label">Ukuran halaman (PDF)</label>
+                    <select id="export-page-size" class="field">
+                        <option value="a4">A4 (210 × 297 mm)</option>
+                        <option value="a5">A5 (148 × 210 mm) — ukuran buku saku</option>
+                        <option value="b5">B5 (176 × 250 mm)</option>
+                        <option value="letter">Letter (216 × 279 mm)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label">Ukuran huruf (PDF)</label>
+                    <select id="export-font-size" class="field">
+                        <option value="10">Kecil (10 pt)</option>
+                        <option value="12" selected>Standar (12 pt)</option>
+                        <option value="14">Besar (14 pt)</option>
+                    </select>
+                </div>
                 <div class="space-y-2">
                     <label class="toggle-row"><span>Halaman sampul</span><input type="checkbox" id="export-cover" checked></label>
                     <label class="toggle-row"><span>Daftar isi</span><input type="checkbox" id="export-toc" checked></label>
@@ -5697,6 +5714,13 @@ ${chunks[i]}
             return { fontFamily: "'Times New Roman', serif", fontSize: '12pt', lineHeight: '1.8', marginMm: 20 };
         }
 
+        // Ukuran halaman PDF dalam mm (lebar, tinggi). Kunci tak dikenal kembali ke A4.
+        function pdfPageSize(key) {
+            const S = { a4: [210, 297], a5: [148, 210], b5: [176, 250], letter: [216, 279] };
+            const s = S[String(key || '').toLowerCase()] || S.a4;
+            return { w: s[0], h: s[1] };
+        }
+
         // ===== Professional PDF Generator =====
         // Text-based PDF via jsPDF (NO canvas / html2canvas). The old approach rendered the whole
         // manuscript into one giant canvas, which exceeds browser canvas-size limits for long
@@ -5735,6 +5759,8 @@ ${chunks[i]}
             const includeToc = document.getElementById('export-toc').checked;
             const layoutStyle = document.getElementById('export-layout-style').value;
             const layout = getLayoutSettings(layoutStyle);
+            const pageSizeEl = document.getElementById('export-page-size');
+            const fontSizeEl = document.getElementById('export-font-size');
 
             const loadingEl = document.getElementById('export-loading');
             const actionBtn = document.getElementById('export-action-btn');
@@ -5750,17 +5776,18 @@ ${chunks[i]}
                     const fontName = isManuscript ? 'courier' : 'times';
                     const justify = !isManuscript;
                     const PT = 0.3528;                          // 1pt in mm
-                    const fontPt = parseFloat(layout.fontSize);
+                    const fontPt = (fontSizeEl && parseFloat(fontSizeEl.value)) || parseFloat(layout.fontSize);
                     const lineMm = fontPt * parseFloat(layout.lineHeight) * PT;
                     const fontMm = fontPt * PT;
                     const indentMm = isManuscript ? 12.7 : 8;
                     const paraGapMm = isManuscript ? 0 : 2.5;
-                    const PAGE_W = 210, PAGE_H = 297;
+                    const pageSize = pdfPageSize(pageSizeEl ? pageSizeEl.value : 'a4');
+                    const PAGE_W = pageSize.w, PAGE_H = pageSize.h;
                     const m = layout.marginMm;
                     const contentW = PAGE_W - 2 * m;
                     const bottomY = PAGE_H - m;
 
-                    const pdf = new jsPDFCtor({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+                    const pdf = new jsPDFCtor({ unit: 'mm', format: [PAGE_W, PAGE_H], orientation: 'portrait', compress: true });
                     const safeTitle = sanitizeForPdf(novelData.title);
                     const safeAuthor = sanitizeForPdf(novelData.author);
                     pdf.setProperties({ title: safeTitle, author: safeAuthor, creator: 'Novelis' });
