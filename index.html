@@ -1964,6 +1964,10 @@
             // Simpan segera: memigrasikan data lama dari localStorage ke IndexedDB.
             saveToLocalStorage();
             saveProjectIndex();
+            // Rak Buku sebagai layar utama: dibuka otomatis tiap aplikasi
+            // dibuka. Proyek terakhir tetap dimuat di belakang rak, jadi
+            // menutup rak langsung melanjutkan buku tersebut.
+            openShelfModal();
             if (unreadableTitle) showToast(`Proyek "${unreadableTitle}" tidak bisa dibaca. Membuka "${novelData.title}" sebagai gantinya.`, 'error');
             // Pengingat backup: saat dibuka, lalu tiap 6 jam selama tab masih terbuka.
             setTimeout(checkBackupReminder, 2500);
@@ -2456,7 +2460,7 @@
             if (typeof genRunning !== 'undefined' && (genRunning || !document.getElementById('gen-modal').classList.contains('hidden'))) return;
             const blank = novelData.chapters.every(c => !(c.content || '').trim())
                 && !novelData.characters.length && !novelData.world.length && !(novelData.plot || []).length;
-            if (blank) startTour();
+            if (blank) { try { closeShelfModal(); } catch (e) {} startTour(); }
         }
 
         // ===== Status bab =====
