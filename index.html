@@ -211,6 +211,11 @@
         .cr-actions .cr-state.bad { color: #fbbf24; }
         .cr-mini { height: 2rem; padding: 0 0.8rem; font-size: 0.78rem; }
         .cr-all { align-self: flex-start; }
+        /* 'hidden' harus selalu menang atas display komponen (.tile, .icon-btn,
+           .overlay): urutan stylesheet Tailwind CDN tidak dijamin, jadi tanpa
+           ini ubin fiksi bisa tetap tampil di proyek non-fiksi meski kelasnya
+           sudah ditandai hidden. */
+        .hidden { display: none !important; }
         .tile {
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem;
             padding: 0.8rem 0.4rem; border-radius: 0.75rem; background: #2e2547; border: 1px solid #4a3a6b;
@@ -2100,6 +2105,20 @@
             if (ta) ta.placeholder = ebook
                 ? 'Mulai menulis bab Anda di sini... (gunakan ## untuk subjudul)'
                 : 'Mulai menulis cerita Anda di sini... (ketik @ untuk menyisipkan nama tokoh)';
+            applyAiStudioKindUI(ebook);
+            ['describe', 'dialogue', 'plot'].forEach(v => {
+                const inp = document.querySelector('input[name="rf-mode"][value="' + v + '"]');
+                const lb = inp ? inp.closest('label') : null;
+                if (lb) lb.classList.toggle('hidden', ebook);
+            });
+            const heavy = document.querySelector('#rf-intensity option[value="heavy"]');
+            if (heavy) heavy.textContent = ebook ? 'Tulis ulang (setia pada materi)' : 'Tulis ulang (setia pada cerita)';
+        }
+
+        // Penyesuaian AI Studio per jenis proyek. Dipanggil dari
+        // applyProjectKindUI DAN dari openAiModal, supaya keadaannya selalu
+        // benar saat jendela dibuka — tidak bergantung pada render terakhir.
+        function applyAiStudioKindUI(ebook) {
             const tiles = document.getElementById('ai-tiles');
             if (tiles) { tiles.classList.toggle('grid-cols-4', !ebook); tiles.classList.toggle('grid-cols-2', ebook); }
             ['ai-tile-plot', 'ai-tile-character', 'ai-tile-dialogue'].forEach(id => {
@@ -2116,15 +2135,7 @@
             if (memoBtn) memoBtn.classList.toggle('hidden', ebook);
             const memoNote = document.getElementById('ai-memo-note');
             if (memoNote) memoNote.classList.toggle('hidden', ebook);
-            ['describe', 'dialogue', 'plot'].forEach(v => {
-                const inp = document.querySelector('input[name="rf-mode"][value="' + v + '"]');
-                const lb = inp ? inp.closest('label') : null;
-                if (lb) lb.classList.toggle('hidden', ebook);
-            });
-            const heavy = document.querySelector('#rf-intensity option[value="heavy"]');
-            if (heavy) heavy.textContent = ebook ? 'Tulis ulang (setia pada materi)' : 'Tulis ulang (setia pada cerita)';
         }
-
         function renderAll() {
             renderChaptersList();
             renderCharactersList();
@@ -3850,6 +3861,7 @@
         let aiInsertCursorPos = null;
 
         function openAiModal() {
+            applyAiStudioKindUI(!isFictionProject());
             const textarea = document.getElementById('chapter-content-textarea');
             aiInsertCursorPos = { start: textarea.selectionStart, end: textarea.selectionEnd };
 
