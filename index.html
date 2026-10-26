@@ -1065,6 +1065,38 @@
         </div>
     </div>
 
+    <!-- ===== Modal: Model AI (dari menu titik tiga) ===== -->
+    <div id="model-modal" class="overlay hidden" onclick="if (event.target === this) closeModelModal()">
+        <div class="modal-card max-w-sm" role="dialog" aria-label="Model AI">
+            <div class="modal-head">
+                <div class="modal-title"><i class="fa-solid fa-microchip"></i> Model AI</div>
+                <button onclick="closeModelModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-[13px] text-slate-400">Penyedia aktif: <span id="model-modal-provider" class="text-slate-100 font-medium"></span></p>
+                <div>
+                    <label class="label">Model yang dipakai semua fitur AI</label>
+                    <select id="setting-menu-gm-model" class="field" onchange="menuModelChanged('gemini')">
+                        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+                        <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
+                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    </select>
+                    <select id="setting-menu-ds-model" class="field hidden" onchange="menuModelChanged('deepseek')">
+                        <option value="deepseek-flash">deepseek-flash (cepat dan murah)</option>
+                        <option value="deepseek-v4-flash">deepseek-v4-flash (cepat dan murah)</option>
+                        <option value="deepseek-v4-pro">deepseek-v4-pro (lebih cermat)</option>
+                    </select>
+                    <input type="text" id="setting-menu-sp-model" class="field font-mono hidden" placeholder="seed-2-0-pro" autocomplete="off" spellcheck="false" oninput="menuModelChanged('sumopod')">
+                    <input type="text" id="setting-menu-kg-model" class="field font-mono hidden" placeholder="Nama model dari dashboard Kagiro" autocomplete="off" spellcheck="false" oninput="menuModelChanged('kagiro')">
+                </div>
+                <p class="text-[11px] text-slate-500">Tersimpan langsung saat diubah, tanpa perlu menekan Simpan di Pengaturan.</p>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn-ghost" onclick="closeModelModal(); openSettingsModal('ai');"><i class="fa-solid fa-gear"></i> Penyedia & API key</button>
+                <button type="button" class="btn-primary" style="margin-left:auto" onclick="closeModelModal()">Selesai</button>
+            </div>
+        </div>
+    </div>
     <!-- ===== Modal: Pengaturan ===== -->
     <div id="settings-modal" class="overlay hidden">
         <div class="modal-card max-w-md">
@@ -2179,6 +2211,7 @@
             ];
             items.push(
                 { icon: 'fa-wand-magic-sparkles', label: 'Ganti AI Skill', run: openSkillModal },
+                { icon: 'fa-microchip', label: 'Model AI', run: openModelModal },
                 { icon: 'fa-layer-group', label: 'Proyek saya (ganti / baru)', run: openProjectsModal },
                 { icon: 'fa-file-arrow-down', label: 'Ekspor naskah (PDF / Word)', run: openExportModal },
                 { icon: 'fa-file-import', label: 'Impor dari Word (.docx)', run: openDocImportModal },
@@ -3580,6 +3613,51 @@
             } else if (prov === 'kagiro') {
                 const s = document.getElementById('setting-kg-model'); if (s) s.value = v;
             }
+        }
+        // ===== Model AI dari menu titik tiga =====
+        // Sama seperti blok di Pengaturan, tapi dibuka langsung dari menu —
+        // tanpa masuk Pengaturan dulu. Perubahan disimpan seketika dan
+        // dicerminkan ke kontrol Pengaturan agar tidak saling menimpa.
+        function menuModelControlId(prov) {
+            return { gemini: 'setting-menu-gm-model', deepseek: 'setting-menu-ds-model', sumopod: 'setting-menu-sp-model', kagiro: 'setting-menu-kg-model' }[prov] || 'setting-menu-gm-model';
+        }
+        function syncMenuModelControls() {
+            const prov = getAiProvider();
+            const names = { gemini: 'Google Gemini', deepseek: 'DeepSeek', sumopod: 'Sumopod', kagiro: 'Kagiro' };
+            const pn = document.getElementById('model-modal-provider'); if (pn) pn.textContent = names[prov] || prov;
+            ['gemini', 'deepseek', 'sumopod', 'kagiro'].forEach(pr => {
+                const el = document.getElementById(menuModelControlId(pr));
+                if (el) el.classList.toggle('hidden', pr !== prov);
+            });
+            const gm = document.getElementById('setting-menu-gm-model'); if (gm) gm.value = GEMINI_MODEL_CANDIDATES.includes(geminiActiveModel) ? geminiActiveModel : GEMINI_MODEL_CANDIDATES[0];
+            const ds = document.getElementById('setting-menu-ds-model'); if (ds) ds.value = getDeepseekModel();
+            const sp = document.getElementById('setting-menu-sp-model'); if (sp) sp.value = getSumopodModel();
+            const kg = document.getElementById('setting-menu-kg-model'); if (kg) kg.value = getKagiroModel();
+        }
+        function menuModelChanged(prov) {
+            const el = document.getElementById(menuModelControlId(prov));
+            if (!el) return;
+            const v = el.value;
+            if (prov === 'gemini') {
+                geminiActiveModel = v;
+                try { localStorage.setItem('novelis_gemini_model', v); } catch (e) {}
+            } else if (prov === 'deepseek') {
+                try { localStorage.setItem(DS_MODEL_KEY, v); } catch (e) {}
+            } else if (prov === 'sumopod') {
+                try { localStorage.setItem(SP_MODEL_KEY, v.trim().replace(/\s+/g, '') || 'seed-2-0-pro'); } catch (e) {}
+            } else if (prov === 'kagiro') {
+                try { localStorage.setItem(KG_MODEL_KEY, v.trim()); } catch (e) {}
+            }
+            const aiId = { deepseek: 'setting-ds-model', sumopod: 'setting-sp-model', kagiro: 'setting-kg-model' }[prov];
+            if (aiId) { const s = document.getElementById(aiId); if (s) s.value = v; }
+            const mn = document.getElementById(mainModelControlId(prov)); if (mn) mn.value = v;
+        }
+        function openModelModal() {
+            syncMenuModelControls();
+            document.getElementById('model-modal').classList.remove('hidden');
+        }
+        function closeModelModal() {
+            document.getElementById('model-modal').classList.add('hidden');
         }
         function syncProviderFields() {
             const p = document.getElementById('setting-ai-provider').value;
