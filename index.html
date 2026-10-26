@@ -904,6 +904,7 @@
             </div>
             <div class="modal-foot">
                 <span id="projects-count" class="text-[11px] text-slate-500 mr-auto"></span>
+                <button type="button" class="btn-ghost" onclick="closeProjectsModal(); openShelfModal();"><i class="fa-solid fa-book-open"></i> Rak buku</button>
                 <label class="btn-ghost cursor-pointer" title="Tambahkan file backup (.json) sebagai proyek baru">
                     <i class="fa-solid fa-file-import"></i> Impor .json
                     <input type="file" accept=".json" class="hidden" onchange="importProjectAsNew(event)">
@@ -2304,49 +2305,58 @@
         function tourPick(sel) { const el = document.querySelector(sel); return tourVisible(el) ? el : null; }
         function buildTourSteps() {
             const drawer = isDrawerMode();
+            const ebook = !isFictionProject();
             const openSb = () => { if (drawer) openSidebar(); switchSidebarTab('chapters'); };
             const closeSb = () => { if (drawer) closeSidebar(); };
             return [
                 { title: 'Selamat datang di Novelis', demo: 'write',
-                  body: 'Editor untuk menulis novel dengan asisten AI. Naskahmu tersimpan di perangkat ini, bukan di server. Yuk kenalan singkat, sekitar satu menit.',
+                  body: 'Editor untuk menulis buku — novel maupun eBook non-fiksi — dengan asisten AI. Naskahmu tersimpan di perangkat ini, bukan di server. Yuk kenalan singkat.',
                   before: closeSb },
+                { title: 'Rak Buku', demo: 'shelf',
+                  body: 'Ini layar utamamu: semua buku berjejer dengan sampulnya, dikelompokkan per folder. Ketuk sampul untuk membuka naskahnya, tombol Baca untuk mode baca. Rak juga bisa dibuka kapan saja lewat menu titik tiga.' },
                 { title: 'Menu naskah',
                   el: () => drawer ? tourPick('#sidebar-toggle-btn') : tourPick('#sidebar'),
-                  body: drawer ? 'Ketuk tombol ini untuk membuka daftar bab dan catatan ceritamu.' : 'Panel ini berisi daftar bab dan catatan dunia ceritamu.',
+                  body: drawer ? 'Ketuk tombol ini untuk membuka daftar bab bukumu.' : (ebook ? 'Panel ini berisi daftar bab bukumu.' : 'Panel ini berisi daftar bab dan catatan dunia ceritamu.'),
                   before: closeSb },
-                { title: 'Bab, Catatan, Plot',
+                { title: ebook ? 'Bab dan subjudul' : 'Bab, Catatan, Plot',
                   el: () => { const b = document.getElementById('tab-btn-chapters'); return tourVisible(b) ? b.parentElement : null; },
-                  body: 'Dua tab utama: Bab dan Catatan (tokoh, relasi antar tokoh, dan lore dunia cerita). Tab Plot muncul otomatis begitu kamu mengisinya, atau lewat tautan di bawah Catatan. Makin lengkap isinya, makin nyambung hasil AI.',
+                  body: ebook ? 'Buku non-fiksi disusun per bab, dan tiap bab bisa dibagi lagi dengan subjudul (tulis ## di awal baris). Tidak ada panel tokoh atau plot, karena semua bantuan AI menyesuaikan ke penjelasan.' : 'Dua tab utama: Bab dan Catatan (tokoh, relasi antar tokoh, dan lore dunia cerita). Tab Plot muncul otomatis begitu kamu mengisinya, atau lewat tautan di bawah Catatan. Makin lengkap isinya, makin nyambung hasil AI.',
                   before: openSb },
                 { title: 'Tambah bab', demo: 'add',
                   el: () => tourPick('#sidebar-panel-chapters button[onclick="addChapter()"]'),
                   body: 'Ketuk + untuk bab baru. Bab bisa diurutkan ulang, dan status Draf, Revisi, atau Selesai menandai progres tiap bab.',
                   before: openSb },
-                { title: 'Judul dan isi bab', demo: 'type',
+                { title: 'Judul dan isi bab', demo: ebook ? 'typeBook' : 'type',
                   el: () => tourPick('#chapter-title-input'),
-                  body: 'Tulis judul bab di sini, lalu isi ceritamu di bawahnya. Semuanya tersimpan otomatis. Ketuk pil status di atas judul untuk menandai Draf, Revisi, atau Selesai.',
+                  body: ebook ? 'Tulis judul bab di sini, lalu isi penjelasanmu di bawahnya. Pakai subjudul ## supaya bab mudah dipindai, dan semuanya tersimpan otomatis.' : 'Tulis judul bab di sini, lalu isi ceritamu di bawahnya. Semuanya tersimpan otomatis. Ketuk pil status di atas judul untuk menandai Draf, Revisi, atau Selesai.',
                   before: closeSb },
                 { title: 'Toolbar menulis',
                   el: () => tourPick('#editor-view .sticky'),
-                  body: 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka tiga bantuan: lanjutkan tulisan, perbaiki bab, dan periksa kontinuitas.' },
+                  body: 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka bantuan penulisan: lanjutkan tulisan, perbaiki bab, chat revisi, periksa kontinuitas, dan audit bab.' },
                 { title: 'Menu bab',
                   el: () => tourPick('button[aria-label="Menu bab"]'),
                   body: 'Benang cerita, riwayat versi, pindah urutan bab, dan hapus bab ada di sini. Tombol di sebelahnya, Mode fokus, menyembunyikan semua menu agar kamu fokus menulis.' },
-                { title: 'Proyek',
+                { title: 'Proyek dan folder',
                   el: () => tourPick('#project-switch-btn'),
-                  body: 'Satu aplikasi, banyak novel. Ketuk nama proyek di header untuk berpindah, membuat novel baru, menggandakan, atau mengimpor file backup. Setiap proyek punya bab, catatan, dan riwayat versinya sendiri.',
+                  body: 'Satu aplikasi, banyak buku. Ketuk nama proyek di header untuk berpindah, membuat buku baru (novel atau eBook), menggandakan, atau mengimpor file backup. Di Proyek saya, buku bisa dikelompokkan ke folder supaya rak dan daftar tetap rapi. Setiap proyek punya bab, catatan, dan riwayat versinya sendiri.',
                   before: closeSb },
                 { title: 'AI Studio', demo: 'ai',
                   el: () => tourPick('header button[aria-label="AI Studio"]'),
-                  body: 'Minta ide plot twist, profil tokoh, lanjutan adegan, atau dialog. Isi dulu API key (Gemini, DeepSeek, Sumopod, atau Kagiro) di Pengaturan, tab AI.' },
+                  body: ebook ? 'Minta lanjutan penjelasan untuk bab yang sedang kamu tulis. Isi dulu API key (Gemini, DeepSeek, Sumopod, atau Kagiro) di Pengaturan, tab AI.' : 'Minta ide plot twist, profil tokoh, lanjutan adegan, atau dialog. Isi dulu API key (Gemini, DeepSeek, Sumopod, atau Kagiro) di Pengaturan, tab AI.' },
+                { title: 'Model AI',
+                  body: 'Model yang dipakai semua fitur AI bisa diganti langsung dari menu titik tiga, tanpa masuk Pengaturan dulu. Penyedia dan API key tetap diatur di Pengaturan, tab AI.' },
+                { title: ebook ? 'Mode eBook' : 'Buku non-fiksi? Ada mode eBook',
+                  body: ebook ? 'Proyek ini berjenis eBook: editor, AI Studio, dan Perbaiki Bab sudah menyesuaikan ke buku non-fiksi. Sampul dan ekspor EPUB-nya juga sudah disiapkan.' : 'Punya buku non-fiksi? Di Proyek saya, pilih jenis eBook saat membuat proyek baru. Editornya menyesuaikan: tanpa panel tokoh dan plot, AI Studio hanya menampilkan Lanjutkan penjelasan, dan ekspornya tersedia dalam format eBook (EPUB).' },
+                { title: 'Ekspor dan sampul',
+                  body: 'Dari menu titik tiga, ekspor naskahmu ke PDF, Word, atau eBook (EPUB). Sampulnya bisa otomatis dari judul dan deskripsi, atau memakai gambar sendiri — diatur di Pengaturan.' },
                 { title: 'Menu lainnya',
                   el: () => { const b = tourPick('header button[aria-label="Menu lainnya"]'); return b ? b.parentElement : null; },
-                  body: 'Cari & ganti dan Mode baca ada di ikon header (di layar kecil lewat menu titik tiga). Ekspor PDF atau Word, panduan ini, dan Pengaturan & backup ada di menu titik tiga.' },
+                  body: 'Cari & ganti dan Mode baca ada di ikon header (di layar kecil lewat menu titik tiga). Rak buku, Model AI, ekspor, panduan ini, dan Pengaturan & backup ada di menu titik tiga.' },
                 { title: 'Tersimpan otomatis', demo: 'save',
                   el: () => tourPick('#save-status'),
                   body: 'Naskah tersimpan otomatis di perangkat ini. Tetap rutin tekan Backup di Pengaturan, tab Cadangan, supaya aman kalau data browser terhapus.' },
                 { title: 'Siap menulis!', demo: 'write',
-                  body: 'Panduan ini bisa dibuka lagi kapan saja lewat menu. Selamat berkarya.' }
+                  body: 'Panduan ini bisa dibuka lagi kapan saja lewat menu titik tiga, lalu Panduan penggunaan. Selamat berkarya.' }
             ];
         }
         function tourDemo(kind) {
@@ -2355,7 +2365,9 @@
                 add: '<div class="td" aria-hidden="true"><div class="td-row"><span>1</span> Bab 1</div><div class="td-row"><span>2</span> Bab 2</div><div class="td-row new"><span>3</span> Bab baru</div><div class="td-plus"><i class="fa-solid fa-plus text-[11px]"></i></div></div>',
                 type: '<div class="td" aria-hidden="true"><span class="td-type">Malam itu, @Ri</span><div class="td-pop"><i class="fa-solid fa-user" style="font-size:.65rem;color:#a89cc9"></i> <b>Rina</b> <span style="color:#a89cc9">Tokoh utama</span></div></div>',
                 ai: '<div class="td td-ai" aria-hidden="true"><svg class="ai-ico"><use href="#i-spark"/></svg><div class="td-ai-pills"><span class="td-pill">Lanjutkan tulisan</span><span class="td-pill">Perbaiki bab</span><span class="td-pill">Periksa kontinuitas</span></div></div>',
-                save: '<div class="td" aria-hidden="true"><div class="td-save"><div class="bar"><i></i></div><span class="ok"><i class="fa-solid fa-check"></i> Tersimpan</span></div></div>'
+                save: '<div class="td" aria-hidden="true"><div class="td-save"><div class="bar"><i></i></div><span class="ok"><i class="fa-solid fa-check"></i> Tersimpan</span></div></div>',
+                shelf: '<div class="td" aria-hidden="true" style="display:flex;gap:.45rem;align-items:flex-end"><div style="width:2.1rem;height:2.9rem;border-radius:.3rem;background:#7e22ce"></div><div style="width:2.1rem;height:2.9rem;border-radius:.3rem;background:#9333ea"></div><div style="width:2.1rem;height:2.9rem;border-radius:.3rem;background:#a855f7"></div></div>',
+                typeBook: '<div class="td" aria-hidden="true"><span class="td-type">## Cara kerja otak</span><div class="td-line"></div><div class="td-line"></div></div>'
             };
             return d[kind] || '';
         }
@@ -9038,7 +9050,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         })();
 
         // =====================================================================
-        // Multi proyek: banyak novel dalam satu aplikasi
+        // Multi proyek: banyak buku dalam satu aplikasi
         // =====================================================================
         function newProjectId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
         function newMeta(id, title, author, words, chapters, kind, folderId) {
