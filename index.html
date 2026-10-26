@@ -531,6 +531,19 @@
         .proj-badge { font-size: .65rem; font-weight: 600; color: #d8b4fe; background: rgba(168, 85, 247, .16); padding: .1rem .5rem; border-radius: 9999px; flex-shrink: 0; }
         .proj-actions { display: flex; flex-shrink: 0; }
         @media (max-width: 480px) { .proj-badge { display: none; } }
+        /* ===== Rak Buku ===== */
+        .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 1rem; }
+        .shelf-book { display: flex; flex-direction: column; gap: .35rem; }
+        .shelf-cover-wrap { position: relative; padding: 0; background: none; border: 0; cursor: pointer; text-align: left; }
+        .shelf-cover { width: 100%; aspect-ratio: 840 / 1188; object-fit: cover; border-radius: .6rem; border: 1px solid #4a3a6b; background: #2e2547; display: block; }
+        .shelf-cover-wrap:hover .shelf-cover { border-color: #a855f7; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+        .shelf-badges { position: absolute; top: .4rem; left: .4rem; display: flex; gap: .25rem; flex-wrap: wrap; }
+        .shelf-badge { font-size: .6rem; font-weight: 700; color: #fff; background: rgba(21,15,36,.85); border: 1px solid #4a3a6b; padding: .1rem .45rem; border-radius: 9999px; }
+        .shelf-badge.active { color: #d8b4fe; border-color: rgba(168,85,247,.55); }
+        .shelf-title { font-size: .85rem; font-weight: 600; color: #ede9fe; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+        .shelf-meta { font-size: .7rem; color: #9a8fc0; }
+        .shelf-actions { display: flex; gap: .4rem; }
+        .shelf-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .3rem; font-size: .75rem; padding: .45rem .25rem; }
         /* ===== Pilih AI Skill & Generator Naskah ===== */
         .skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
         @media (max-width: 560px) { .skill-grid { grid-template-columns: 1fr; } }
@@ -1099,6 +1112,23 @@
             <div class="modal-foot">
                 <button type="button" class="btn-ghost" onclick="closeModelModal(); openSettingsModal('ai');"><i class="fa-solid fa-gear"></i> Penyedia & API key</button>
                 <button type="button" class="btn-primary" style="margin-left:auto" onclick="closeModelModal()">Selesai</button>
+            </div>
+        </div>
+    </div>
+    <!-- ===== Modal: Rak Buku ===== -->
+    <div id="shelf-modal" class="overlay hidden" onclick="if (event.target === this) closeShelfModal()">
+        <div class="modal-card max-w-2xl" role="dialog" aria-label="Rak buku">
+            <div class="modal-head">
+                <div class="modal-title"><i class="fa-solid fa-book-open"></i> Rak Buku</div>
+                <button onclick="closeShelfModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-[13px] text-slate-400">Ketuk sampul untuk membuka naskahnya. Tombol Baca membuka buku dalam mode baca.</p>
+                <div id="shelf-grid-wrap" class="flex flex-col gap-5"></div>
+            </div>
+            <div class="modal-foot">
+                <span id="shelf-count" class="text-[11px] text-slate-500 mr-auto"></span>
+                <button type="button" class="btn-ghost" onclick="closeShelfModal(); openProjectsModal();"><i class="fa-solid fa-layer-group"></i> Kelola di Proyek saya</button>
             </div>
         </div>
     </div>
@@ -2224,6 +2254,7 @@
                 { icon: 'fa-wand-magic-sparkles', label: 'Ganti AI Skill', run: openSkillModal },
                 { icon: 'fa-microchip', label: 'Model AI', run: openModelModal },
                 { icon: 'fa-layer-group', label: 'Proyek saya (ganti / baru)', run: openProjectsModal },
+                { icon: 'fa-book-open', label: 'Rak buku', run: openShelfModal },
                 { icon: 'fa-file-arrow-down', label: 'Ekspor naskah (PDF / Word)', run: openExportModal },
                 { icon: 'fa-file-import', label: 'Impor dari Word (.docx)', run: openDocImportModal },
                 { icon: 'fa-circle-question', label: 'Panduan penggunaan', run: startTour },
@@ -9438,6 +9469,87 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         }
         function closeProjectsModal() {
             document.getElementById('projects-modal').classList.add('hidden');
+        }
+        // ===== Rak Buku =====
+        // Rak visual: tiap proyek tampil sebagai buku dengan sampul aslinya
+        // (gambar sendiri, atau sampul otomatis dari judul/sinopsis/seed yang
+        // sama dengan sampul ekspor). Ketuk sampul = masuk ke naskah
+        // (editor); tombol Baca = masuk dalam mode baca.
+        function shelfCoverDataUrl(d) {
+            const cur = cleanCover(d && d.cover);
+            if (cur.mode === 'custom') return cur.img;
+            const cv = document.createElement('canvas');
+            cv.width = 252; cv.height = 356;
+            drawAutoCover(cv, d.title, d.author, d.synopsis, cur.seed);
+            return cv.toDataURL('image/jpeg', 0.85);
+        }
+        function shelfFallbackCover(meta) {
+            const cv = document.createElement('canvas');
+            cv.width = 252; cv.height = 356;
+            drawAutoCover(cv, meta.title, meta.author || '', '', null);
+            return cv.toDataURL('image/jpeg', 0.85);
+        }
+        async function renderShelf() {
+            const box = document.getElementById('shelf-grid-wrap');
+            if (!box) return;
+            syncActiveMeta(true, false);
+            const folders = projFolders();
+            const list = [...projectIndex.list].sort((a, b) =>
+                ((b.id === currentProjectId) - (a.id === currentProjectId)) || (b.updated - a.updated));
+            box.innerHTML = '<p class="text-sm text-slate-400">Memuat rak buku...</p>';
+            const covers = {};
+            for (const p of list) {
+                try { const d = await readProjectData(p.id); covers[p.id] = shelfCoverDataUrl(d); }
+                catch (e) { covers[p.id] = shelfFallbackCover(p); }
+            }
+            if (!coverFontsRequested && document.fonts) {
+                coverFontsRequested = true;
+                document.fonts.load("700 60px 'Playfair Display'").then(() => renderShelf(), () => {});
+            }
+            const cardHtml = (p) => {
+                const on = p.id === currentProjectId;
+                const t = escapeHtml(p.title || 'Novel Tanpa Judul');
+                const a = escapeHtml(p.author || '');
+                const effKind = (p.kind && PROJECT_KINDS[p.kind]) ? p.kind : (on ? novelData.kind : 'novel');
+                const badge = kindDef(effKind).badge ? `<span class="shelf-badge">${escapeHtml(kindDef(effKind).badge)}</span>` : '';
+                const active = on ? '<span class="shelf-badge active">Aktif</span>' : '';
+                return `<div class="shelf-book">
+                    <button type="button" class="shelf-cover-wrap" onclick="openShelfProject('${escapeHtml(p.id)}', false)" aria-label="Buka ${t}">
+                        <img class="shelf-cover" src="${covers[p.id]}" alt="Sampul ${t}">
+                        <span class="shelf-badges">${badge}${active}</span>
+                    </button>
+                    <div class="shelf-title">${t}</div>
+                    <div class="shelf-meta">${a ? a + ' · ' : ''}${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} bab</div>
+                    <div class="shelf-actions">
+                        <button type="button" class="btn-ghost shelf-btn" onclick="openShelfProject('${escapeHtml(p.id)}', false)"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button type="button" class="btn-ghost shelf-btn" onclick="openShelfProject('${escapeHtml(p.id)}', true)"><i class="fa-solid fa-book-reader"></i> Baca</button>
+                    </div>
+                </div>`;
+            };
+            const sections = folders.map(f => {
+                const items = list.filter(p => p.folderId === f.id);
+                if (!items.length) return '';
+                return `<div><div class="flex items-center gap-2 mb-2"><span class="text-xs font-medium text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-folder text-brand-400"></i>${escapeHtml(f.name)}</span></div><div class="shelf-grid">${items.map(cardHtml).join('')}</div></div>`;
+            }).filter(Boolean);
+            const unfiled = list.filter(p => !p.folderId || !folders.some(f => f.id === p.folderId));
+            if (unfiled.length) sections.push(`<div><div class="flex items-center gap-2 mb-2"><span class="text-xs font-medium text-slate-400">Tanpa folder</span></div><div class="shelf-grid">${unfiled.map(cardHtml).join('')}</div></div>`);
+            box.innerHTML = sections.join('') || '<p class="text-sm text-slate-400">Belum ada buku.</p>';
+            const c = document.getElementById('shelf-count');
+            if (c) c.textContent = `${list.length} buku · ${folders.length} folder`;
+        }
+        function openShelfModal() {
+            renderShelf();
+            document.getElementById('shelf-modal').classList.remove('hidden');
+        }
+        function closeShelfModal() {
+            document.getElementById('shelf-modal').classList.add('hidden');
+        }
+        async function openShelfProject(id, read) {
+            closeShelfModal();
+            const ok = await switchProject(id);
+            if (!ok) return;
+            if (read) { if (!isReaderMode) toggleReaderMode(); }
+            else if (isReaderMode) toggleReaderMode();
         }
         document.addEventListener('click', e => {
             const list = document.getElementById('projects-list');
