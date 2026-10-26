@@ -805,6 +805,7 @@
                         <button onclick="insertMarkdown('- ', '')" class="icon-btn sm" title="Daftar" aria-label="Daftar"><i class="fa-solid fa-list-ul"></i></button>
                         <button onclick="toggleCenter()" class="icon-btn sm" title="Rata tengah" aria-label="Rata tengah"><i class="fa-solid fa-align-center"></i></button>
                         <button onclick="insertSceneBreak()" class="icon-btn sm" title="Pemisah adegan (* * *)" aria-label="Pemisah adegan"><i class="fa-solid fa-asterisk"></i></button>
+                        <button onclick="pickChapterImage()" class="icon-btn sm" title="Sisipkan gambar" aria-label="Sisipkan gambar"><i class="fa-solid fa-image"></i></button>
                         <div class="sep w-px h-4 bg-slate-700/70 mx-1.5"></div>
                         <button onclick="editorUndo()" class="icon-btn sm" title="Urungkan (Ctrl+Z)" aria-label="Urungkan"><i class="fa-solid fa-rotate-left"></i></button>
                         <button onclick="editorRedo()" class="icon-btn sm" title="Ulangi (Ctrl+Shift+Z)" aria-label="Ulangi"><i class="fa-solid fa-rotate-right"></i></button>
@@ -821,6 +822,7 @@
 
                     <div id="mention-strip" class="hidden" aria-label="Tokoh dan lore yang disebut di bab ini"></div>
                     <textarea id="chapter-content-textarea" oninput="updateChapterContent(this.value)" placeholder="Mulai menulis cerita Anda di sini... (ketik @ untuk menyisipkan nama tokoh)" class="w-full flex-1 bg-transparent text-slate-200 prose-editor resize-none focus:outline-none placeholder-slate-600"></textarea>
+                    <input type="file" id="chapter-image-input" accept="image/*" class="hidden" onchange="onChapterImagePicked(event)">
                 </div>
             </div>
 
@@ -1882,6 +1884,7 @@
                 audit: cleanNovelAudit(src.audit),
                 cover: cleanCover(src.cover),
                 auditParts: (src.auditParts && typeof src.auditParts === 'object' && !Array.isArray(src.auditParts)) ? src.auditParts : undefined,
+                images: cleanImages(src.images),
                 title: str(src.title) || 'Novel Tanpa Judul',
                 author: str(src.author),
                 synopsis: str(src.synopsis),
@@ -2332,7 +2335,7 @@
                   before: closeSb },
                 { title: 'Toolbar menulis',
                   el: () => tourPick('#editor-view .sticky'),
-                  body: 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka bantuan penulisan: lanjutkan tulisan, perbaiki bab, chat revisi, periksa kontinuitas, dan audit bab.' },
+                  body: 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka bantuan penulisan: lanjutkan tulisan, perbaiki bab, chat revisi, periksa kontinuitas, dan audit bab. Tombol gambar menyisipkan gambar ke dalam bab; hasilnya terlihat di Mode baca dan ekspor.' },
                 { title: 'Menu bab',
                   el: () => tourPick('button[aria-label="Menu bab"]'),
                   body: 'Benang cerita, riwayat versi, pindah urutan bab, dan hapus bab ada di sini. Tombol di sebelahnya, Mode fokus, menyembunyikan semua menu agar kamu fokus menulis.' },
@@ -3020,7 +3023,7 @@
 
         function countWords(str) {
             if (!str) return 0;
-            str = str.replace(/^\s*\*(\s*\*){2,}\s*$/gm, '').replace(/^[ \t]*##[ \t]+/gm, '').replace(/^[ \t]*->[ \t]?/gm, '').replace(/[ \t]?<-[ \t]*$/gm, '');
+            str = str.replace(/^!\[.*\]\(img:[A-Za-z0-9_-]+\)$/gm, '').replace(/^\s*\*(\s*\*){2,}\s*$/gm, '').replace(/^[ \t]*##[ \t]+/gm, '').replace(/^[ \t]*->[ \t]?/gm, '').replace(/[ \t]?<-[ \t]*$/gm, '');
             if (!str.trim()) return 0;
             return str.trim().split(/\s+/).length;
         }
@@ -3342,6 +3345,62 @@
         }
 
         // Formatting Helper
+        function pickChapterImage() { const inp = document.getElementById('chapter-image-input'); if (inp) inp.click(); }
+        // Gambar dikompresi ke JPEG (maks 1200px, kualitas menurun bertahap) supaya satu gambar
+        // tidak membebani penyimpanan proyek; latar transparan diisi putih.
+        function compressChapterImage(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const iw = img.naturalWidth, ih = img.naturalHeight;
+                        if (!iw || !ih) return reject(new Error('empty'));
+                        let out = null;
+                        for (const [maxDim, q] of [[1200, 0.85], [1200, 0.7], [900, 0.6]]) {
+                            const scale = Math.min(1, maxDim / Math.max(iw, ih));
+                            const cv = document.createElement('canvas');
+                            cv.width = Math.max(1, Math.round(iw * scale));
+                            cv.height = Math.max(1, Math.round(ih * scale));
+                            const ctx = cv.getContext('2d');
+                            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+                            ctx.drawImage(img, 0, 0, cv.width, cv.height);
+                            out = cv.toDataURL('image/jpeg', q);
+                            if (out.length <= 900 * 1024) break;
+                        }
+                        resolve(out);
+                    } catch (e) { reject(e); }
+                };
+                img.onerror = () => reject(new Error('load'));
+                img.src = dataUrl;
+            });
+        }
+        async function onChapterImagePicked(ev) {
+            const file = ev.target.files && ev.target.files[0];
+            ev.target.value = '';
+            if (!file) return;
+            const ta = document.getElementById('chapter-content-textarea');
+            if (!ta) return;
+            try {
+                const raw = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('read')); r.readAsDataURL(file); });
+                const data = await compressChapterImage(raw);
+                if (!novelData.images || typeof novelData.images !== 'object') novelData.images = {};
+                const id = 'img' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                const alt = (file.name || 'gambar').replace(/\.[^.]+$/, '').replace(/[\r\n\[\]@]/g, ' ').trim() || 'gambar';
+                novelData.images[id] = { data, name: file.name || '' };
+                const line = '![' + alt + '](img:' + id + ')';
+                const v = ta.value, start = ta.selectionStart, end = ta.selectionEnd;
+                let before = v.slice(0, start), after = v.slice(end);
+                if (before && !before.endsWith('\n\n')) before += before.endsWith('\n') ? '\n' : '\n\n';
+                if (after && !after.startsWith('\n\n')) after = after.startsWith('\n') ? '\n' + after : '\n\n' + after;
+                const nv = before + line + after;
+                ta.value = nv;
+                const pos = before.length + line.length;
+                ta.focus();
+                try { ta.setSelectionRange(pos, pos); } catch (e) {}
+                updateChapterContent(nv);
+                showToast('Gambar disisipkan. Lihat hasilnya di Mode baca atau ekspor.');
+            } catch (e) { showToast('Gambar tidak bisa diproses. Coba file gambar lain.', 'error'); }
+        }
         function insertMarkdown(prefix, suffix) {
             const ta = document.getElementById('chapter-content-textarea');
             const v = ta.value;
@@ -3401,6 +3460,7 @@
 
         // ===== Rata tengah: baris dibungkus "-> teks <-" =====
         const CENTER_RE = /^->\s?(.*?)\s?<-$/;
+        const IMG_LINE_RE = /^!\[([^\]]*)\]\(img:([A-Za-z0-9_-]+)\)$/;
         function toggleCenter() {
             const ta = document.getElementById('chapter-content-textarea');
             const v = ta.value, start = ta.selectionStart, end = ta.selectionEnd;
@@ -5931,6 +5991,28 @@ ${chunks[i]}
                                 y += lineMm + paraGapMm;
                                 return;
                             }
+                            if (block.type === 'image') {
+                                const src = chapterImageData(block.imgId);
+                                if (!src) { pdf.text('[gambar tidak ditemukan]', m, y); y += lineMm + paraGapMm; return; }
+                                try {
+                                    let pw = 0, ph = 0;
+                                    try { const props = pdf.getImageProperties(src); pw = props.width; ph = props.height; } catch (e) {}
+                                    if (!pw || !ph) { pw = 4; ph = 3; }
+                                    let w = contentW, h = w * ph / pw;
+                                    const maxH = bottomY - m;
+                                    if (h > maxH) { h = maxH; w = h * pw / ph; }
+                                    if (y + h > bottomY) newPage();
+                                    pdf.addImage(src, 'JPEG', m + (contentW - w) / 2, y, w, h);
+                                    y += h + paraGapMm;
+                                    if (block.alt) {
+                                        pdf.setFont(fontName, 'italic'); pdf.setFontSize(9); pdf.setTextColor(120);
+                                        pdf.text(String(block.alt), PAGE_W / 2, y, { align: 'center' });
+                                        pdf.setFont(fontName, 'normal'); pdf.setFontSize(fontPt); pdf.setTextColor(17);
+                                        y += lineMm + paraGapMm;
+                                    }
+                                } catch (e) { pdf.text('[gambar tidak dapat ditampilkan]', m, y); y += lineMm + paraGapMm; }
+                                return;
+                            }
                             const quote = block.type === 'quote';
                             const list = block.type === 'list';
                             const leftPad = quote ? 10 : (list ? 7 : 0);
@@ -6161,9 +6243,10 @@ ${bodyContent}
             return out;
         }
 
-        function epubChapterBody(content) {
+        function epubChapterBody(content, imgFileFor) {
             return parseBlocks(content).map(b => {
                 if (b.type === 'break') return '<p class="break">* * *</p>';
+                if (b.type === 'image') { const f = (typeof imgFileFor === 'function') ? imgFileFor(b.imgId) : null; if (!f) return '<p class="center">[Gambar: ' + escapeHtml(b.alt) + ']</p>'; return '<figure><img src="' + f + '" alt="' + escapeHtml(b.alt) + '"/>' + (b.alt ? '<figcaption>' + escapeHtml(b.alt) + '</figcaption>' : '') + '</figure>'; }
                 const inner = b.lines.map(inlineMdToHtml);
                 if (b.type === 'heading') return '<h3>' + inner.join(' ') + '</h3>';
                 if (b.type === 'center') return '<p class="center">' + inner.join('<br/>') + '</p>';
@@ -6201,6 +6284,10 @@ ${bodyContent}
             }
 
             const chapFiles = chapters.map((ch, i) => 'chap' + String(i + 1).padStart(3, '0') + '.xhtml');
+            // Gambar bab yang dipakai: dikumpulkan dulu agar masuk zip + manifes sebagai file sendiri.
+            const srcImgs = (novel.images && typeof novel.images === 'object' && !Array.isArray(novel.images)) ? novel.images : {};
+            const usedImgs = new Map();
+            chapters.forEach(ch => { parseBlocks(ch.content).forEach(b => { if (b.type !== 'image') return; if (usedImgs.has(b.imgId)) return; const im = srcImgs[b.imgId]; if (!im || typeof im.data !== 'string') return; const mm = im.data.match(/^data:(image\/[a-z]+);base64,/); if (!mm) return; const ext = mm[1] === 'image/jpeg' ? 'jpg' : mm[1].split('/')[1]; usedImgs.set(b.imgId, { file: 'img/' + b.imgId + '.' + ext, mime: mm[1], bytes: epubDataUrlToBytes(im.data) }); }); });
             const styleCss = 'body { font-family: Georgia, "Times New Roman", serif; line-height: 1.6; margin: 5%; }\n'
                 + 'h1 { text-align: center; font-size: 1.6em; margin: 0.4em 0 1em 0; }\n'
                 + 'h2.bab { text-align: center; font-size: 0.9em; letter-spacing: 0.2em; font-weight: normal; margin: 2em 0 0.4em 0; }\n'
@@ -6218,7 +6305,10 @@ ${bodyContent}
                 + '.cover .synopsis { font-style: italic; margin-top: 3em; text-align: center; }\n'
                 + '.toc h1 { text-align: center; }\n'
                 + '.toc ol { list-style: none; padding: 0; }\n'
-                + '.toc li { margin-bottom: 0.6em; text-align: left; }\n';
+                + '.toc li { margin-bottom: 0.6em; text-align: left; }\n'
+                + 'figure { text-align: center; margin: 1em 0; }\n'
+                + 'figure img { max-width: 100%; }\n'
+                + 'figcaption { font-size: 0.85em; color: #555; margin-top: 0.3em; }\n';
 
             const files = [{ name: 'mimetype', data: 'application/epub+zip' }];
             files.push({ name: 'META-INF/container.xml', data: '<?xml version="1.0" encoding="utf-8"?>\n'
@@ -6227,6 +6317,7 @@ ${bodyContent}
                 + '</container>' });
             files.push({ name: 'OEBPS/style.css', data: styleCss });
             if (coverImg) files.push({ name: 'OEBPS/' + coverImg.file, data: coverImg.bytes });
+            usedImgs.forEach(v => { files.push({ name: 'OEBPS/' + v.file, data: v.bytes }); });
 
             if (opts.includeCover) {
                 let coverBody = '<div class="cover">';
@@ -6257,7 +6348,7 @@ ${bodyContent}
 
             chapters.forEach((ch, i) => {
                 const body = '<h2 class="bab">BAB ' + (i + 1) + '</h2><h1>' + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</h1>\n'
-                    + epubChapterBody(ch.content);
+                    + epubChapterBody(ch.content, id => usedImgs.has(id) ? usedImgs.get(id).file : null);
                 files.push({ name: 'OEBPS/' + chapFiles[i], data: epubXhtmlDoc(ch.title || 'Bab ' + (i + 1), body) });
             });
 
@@ -6268,6 +6359,7 @@ ${bodyContent}
             manifest += '<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>\n';
             manifest += '<item id="css" href="style.css" media-type="text/css"/>\n';
             chapters.forEach((ch, i) => { manifest += '<item id="chap' + (i + 1) + '" href="' + chapFiles[i] + '" media-type="application/xhtml+xml"/>\n'; });
+            usedImgs.forEach((v, k) => { manifest += '<item id="img-' + k + '" href="' + v.file + '" media-type="' + v.mime + '"/>\n'; });
             let spine = '';
             if (opts.includeCover) spine += '<itemref idref="cover"/>\n';
             if (opts.includeToc) spine += '<itemref idref="nav"/>\n';
@@ -6359,10 +6451,28 @@ ${bodyContent}
         }
 
         // Memecah isi bab menjadi blok: paragraf biasa, kutipan, atau daftar.
+        // Gambar bab: data tersimpan per proyek di novelData.images[id] = { data: dataURL JPEG, name }.
+        // Isi bab hanya merujuknya lewat baris mandiri ![keterangan](img:id) agar textarea tetap
+        // ringan dibaca dan diedit. Gambar yang barisnya dihapus dari naskah tidak lagi tampil di
+        // buku; datanya sengaja tidak di-prune otomatis demi keamanan undo editor.
+        function chapterImageData(id) {
+            const im = novelData.images && novelData.images[id];
+            return (im && typeof im.data === 'string' && im.data.startsWith('data:image/')) ? im.data : null;
+        }
+        function cleanImages(v) {
+            if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+            const out = {};
+            for (const [k, im] of Object.entries(v)) {
+                if (!/^[A-Za-z0-9_-]{1,40}$/.test(k)) continue;
+                if (im && typeof im.data === 'string' && im.data.startsWith('data:image/') && im.data.length < 8 * 1024 * 1024) out[k] = { data: im.data, name: String(im.name || '') };
+            }
+            return out;
+        }
         function parseBlocks(content) {
             const blocks = [];
             const classify = lines => {
                 if (lines.length === 1 && SCENE_BREAK_RE.test(lines[0])) { blocks.push({ type: 'break', lines: [] }); return; }
+                if (lines.length === 1) { const im = lines[0].match(IMG_LINE_RE); if (im) { blocks.push({ type: 'image', alt: im[1], imgId: im[2], lines: [] }); return; } }
                 if (lines.every(l => CENTER_RE.test(l))) { blocks.push({ type: 'center', lines: lines.map(l => l.replace(CENTER_RE, '$1')) }); return; }
                 if (lines.every(l => /^>\s?/.test(l))) blocks.push({ type: 'quote', lines: lines.map(l => l.replace(/^>\s?/, '')) });
                 else if (lines.every(l => /^[-•]\s+/.test(l))) blocks.push({ type: 'list', lines: lines.map(l => l.replace(/^[-•]\s+/, '')) });
@@ -6390,6 +6500,7 @@ ${bodyContent}
         function mdToReaderHtml(content) {
             return parseBlocks(content).map(b => {
                 if (b.type === 'break') return '<p class="mt-8 mb-4 text-center text-slate-500" style="letter-spacing:.5em">* * *</p>';
+                if (b.type === 'image') { const src = chapterImageData(b.imgId); if (!src) return '<p class="mt-4 text-center text-sm text-slate-500">[gambar tidak ditemukan]</p>'; return '<figure class="mt-4 mb-2 text-center"><img src="' + src + '" alt="' + escapeHtml(b.alt) + '" style="max-width:100%;border-radius:.5rem"/>' + (b.alt ? '<figcaption class="mt-1 text-sm text-slate-400">' + escapeHtml(b.alt) + '</figcaption>' : '') + '</figure>'; }
                 const inner = b.lines.map(inlineMdToHtml);
                 if (b.type === 'heading') return `<h4 class="mt-8 mb-1 text-lg font-bold font-serif text-white">${inner.join(' ')}</h4>`;
                 if (b.type === 'center') return `<p class="mt-4 text-center">${inner.join('<br>')}</p>`;
@@ -6402,6 +6513,7 @@ ${bodyContent}
         function mdToWordHtml(content) {
             return parseBlocks(content).map(b => {
                 if (b.type === 'break') return '<p style="text-align:center; margin:14pt 0;">* * *</p>';
+                if (b.type === 'image') { const src = chapterImageData(b.imgId); if (!src) return '<p style="text-align:center;">[gambar tidak ditemukan]</p>'; return '<p style="text-align:center; margin:0 0 4pt 0;"><img src="' + src + '" style="max-width:100%"/></p>' + (b.alt ? '<p style="text-align:center; font-size:9pt; color:#666; margin:0 0 10pt 0;">' + escapeHtml(b.alt) + '</p>' : ''); }
                 const inner = b.lines.map(inlineMdToHtml);
                 if (b.type === 'heading') return `<p style="font-weight:bold; font-size:14pt; margin:16pt 0 8pt 0; text-indent:0;">${inner.join(' ')}</p>`;
                 if (b.type === 'center') return `<p style="text-align:center; margin:0 0 10pt 0;">${inner.join('<br>')}</p>`;
