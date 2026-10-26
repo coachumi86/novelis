@@ -653,6 +653,7 @@
                 <h1 class="brand-name text-[15px] font-semibold tracking-tight truncate">Novelis</h1>
                 <button type="button" id="project-switch-btn" onclick="openProjectsModal()" class="proj-btn" title="Ganti proyek" aria-label="Proyek saya" aria-haspopup="dialog">
                     <span id="project-switch-label">Novel Tanpa Judul</span>
+                    <span id="project-kind-badge" class="proj-badge hidden" style="background:rgba(168,85,247,.16);color:#c084fc">eBook</span>
                     <i class="fa-solid fa-chevron-down text-[10px] opacity-70"></i>
                 </button>
             </div>
@@ -855,9 +856,16 @@
             </div>
             <div class="modal-body">
                 <div>
-                    <label class="label" for="new-project-title">Novel baru</label>
+                    <label class="label" for="new-project-kind">Jenis proyek</label>
+                    <select id="new-project-kind" class="field">
+                        <option value="novel">Novel</option>
+                        <option value="ebook">eBook (non-fiksi)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label" for="new-project-title">Judul proyek</label>
                     <div class="flex gap-2">
-                        <input type="text" id="new-project-title" class="field" placeholder="Judul novel baru" maxlength="120" onkeydown="if (event.key === 'Enter') { event.preventDefault(); createProjectFromInput(); }">
+                        <input type="text" id="new-project-title" class="field" placeholder="Judul proyek baru" maxlength="120" onkeydown="if (event.key === 'Enter') { event.preventDefault(); createProjectFromInput(); }">
                         <button type="button" onclick="createProjectFromInput()" class="btn-primary shrink-0"><i class="fa-solid fa-plus"></i> Buat</button>
                     </div>
                 </div>
@@ -1240,11 +1248,11 @@
                     <div>API key belum diisi. <button onclick="closeAiModal(); openSettingsModal('ai');" class="underline font-medium hover:text-amber-200">Isi di Pengaturan</button></div>
                 </div>
 
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="runAiAction('plot')" class="tile" title="Ide plot twist"><i class="fa-solid fa-lightbulb"></i>Plot twist</button>
-                    <button onclick="runAiAction('character')" class="tile" title="Profil tokoh baru"><i class="fa-solid fa-user-plus"></i>Tokoh</button>
-                    <button onclick="runAiAction('continue')" class="tile" title="Lanjutkan adegan"><i class="fa-solid fa-pen-nib"></i>Lanjutkan</button>
-                    <button onclick="runAiAction('dialogue')" class="tile" title="Dialog emosional"><i class="fa-solid fa-comments"></i>Dialog</button>
+                <div class="grid grid-cols-4 gap-2" id="ai-tiles">
+                    <button id="ai-tile-plot" onclick="runAiAction('plot')" class="tile" title="Ide plot twist"><i class="fa-solid fa-lightbulb"></i>Plot twist</button>
+                    <button id="ai-tile-character" onclick="runAiAction('character')" class="tile" title="Profil tokoh baru"><i class="fa-solid fa-user-plus"></i>Tokoh</button>
+                    <button id="ai-tile-continue" onclick="runAiAction('continue')" class="tile" title="Lanjutkan adegan"><i class="fa-solid fa-pen-nib"></i>Lanjutkan</button>
+                    <button id="ai-tile-dialogue" onclick="runAiAction('dialogue')" class="tile" title="Dialog emosional"><i class="fa-solid fa-comments"></i>Dialog</button>
                 </div>
 
                 <div>
@@ -1265,10 +1273,10 @@
                 <details class="rounded-lg border border-slate-800 bg-slate-900/40">
                     <summary class="cursor-pointer select-none px-3 h-10 flex items-center gap-2 text-xs text-slate-300"><i class="fa-solid fa-brain text-slate-500"></i> Konteks AI <i class="fa-solid fa-chevron-down det-caret ml-auto text-[10px] text-slate-500 transition-transform"></i></summary>
                     <div class="px-3 pb-3 space-y-2">
-                        <p class="text-xs text-slate-400">AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan bab sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.</p>
+                        <p class="text-xs text-slate-400" id="ai-context-text">AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan bab sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.</p>
                         <button onclick="refreshChapterSummaries()" id="ai-summary-btn" class="btn-ghost w-full"><i class="fa-solid fa-list-check"></i> Perbarui ringkasan bab</button>
                         <button onclick="rebuildStoryMemory()" id="ai-memo-btn" class="btn-ghost w-full"><i class="fa-solid fa-book-bookmark"></i> Perbarui memori cerita</button>
-                        <p class="text-[11px] text-slate-500">Memori cerita (fakta, keadaan tokoh, benang terbuka, gaya) dikirim ke semua tombol AI agar bab-bab akhir tetap nyambung. Dibuat otomatis saat Buat Novel AI; tombol ini menyusunnya untuk bab yang kamu tulis sendiri atau yang sudah berubah.</p>
+                        <p class="text-[11px] text-slate-500" id="ai-memo-note">Memori cerita (fakta, keadaan tokoh, benang terbuka, gaya) dikirim ke semua tombol AI agar bab-bab akhir tetap nyambung. Dibuat otomatis saat Buat Novel AI; tombol ini menyusunnya untuk bab yang kamu tulis sendiri atau yang sudah berubah.</p>
                     </div>
                 </details>
             </div>
@@ -1757,6 +1765,7 @@
             };
             const out = {
                 ...src,
+                kind: (src.kind === 'ebook' || (src.gen && src.gen.kind === 'ebook')) ? 'ebook' : 'novel',
                 audit: cleanNovelAudit(src.audit),
                 cover: cleanCover(src.cover),
                 auditParts: (src.auditParts && typeof src.auditParts === 'object' && !Array.isArray(src.auditParts)) ? src.auditParts : undefined,
@@ -1983,6 +1992,61 @@
         }
 
         // Render functions
+        function isEbookProject() { return novelData.kind === 'ebook'; }
+
+        // ===== Tampilan per jenis proyek =====
+        // Satu aplikasi, dua mode yang tidak saling membingungkan: proyek
+        // eBook menyembunyikan semua panel fiksi (Catatan/Plot), mengganti
+        // label novel menjadi label buku, dan menyesuaikan tile AI serta
+        // chip Perbaiki Bab. Dipanggil dari renderAll, jadi berlaku setiap
+        // ganti proyek maupun setiap render ulang.
+        function applyProjectKindUI() {
+            const ebook = isEbookProject();
+            const notesBtn = document.getElementById('tab-btn-notes');
+            const plotBtn = document.getElementById('tab-btn-plot');
+            const notesPanel = document.getElementById('sidebar-panel-notes');
+            const plotPanel = document.getElementById('sidebar-panel-plot');
+            if (ebook) {
+                if (notesBtn) notesBtn.classList.add('hidden');
+                if (plotBtn) plotBtn.classList.add('hidden');
+                if ((notesPanel && !notesPanel.classList.contains('hidden')) || (plotPanel && !plotPanel.classList.contains('hidden'))) switchSidebarTab('chapters');
+                if (notesPanel) notesPanel.classList.add('hidden');
+                if (plotPanel) plotPanel.classList.add('hidden');
+            } else if (notesBtn) notesBtn.classList.remove('hidden');
+            const setLabel = (forId, text) => { const lb = document.querySelector('label[for="' + forId + '"]'); if (lb) lb.textContent = text; };
+            setLabel('setting-novel-title', ebook ? 'Judul eBook' : 'Judul novel');
+            setLabel('setting-novel-synopsis', ebook ? 'Deskripsi' : 'Sinopsis');
+            const st = document.getElementById('setting-novel-title');
+            if (st) st.placeholder = ebook ? 'eBook Tanpa Judul' : 'Novel Tanpa Judul';
+            const ta = document.getElementById('chapter-content-textarea');
+            if (ta) ta.placeholder = ebook
+                ? 'Mulai menulis bab Anda di sini... (gunakan ## untuk subjudul)'
+                : 'Mulai menulis cerita Anda di sini... (ketik @ untuk menyisipkan nama tokoh)';
+            const tiles = document.getElementById('ai-tiles');
+            if (tiles) { tiles.classList.toggle('grid-cols-4', !ebook); tiles.classList.toggle('grid-cols-2', ebook); }
+            ['ai-tile-plot', 'ai-tile-character', 'ai-tile-dialogue'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', ebook);
+            });
+            const cont = document.getElementById('ai-tile-continue');
+            if (cont) cont.title = ebook ? 'Lanjutkan penjelasan' : 'Lanjutkan adegan';
+            const ctx = document.getElementById('ai-context-text');
+            if (ctx) ctx.textContent = ebook
+                ? 'AI mengenal judul, deskripsi, dan ringkasan bab sebelumnya.'
+                : 'AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan bab sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.';
+            const memoBtn = document.getElementById('ai-memo-btn');
+            if (memoBtn) memoBtn.classList.toggle('hidden', ebook);
+            const memoNote = document.getElementById('ai-memo-note');
+            if (memoNote) memoNote.classList.toggle('hidden', ebook);
+            ['describe', 'dialogue', 'plot'].forEach(v => {
+                const inp = document.querySelector('input[name="rf-mode"][value="' + v + '"]');
+                const lb = inp ? inp.closest('label') : null;
+                if (lb) lb.classList.toggle('hidden', ebook);
+            });
+            const heavy = document.querySelector('#rf-intensity option[value="heavy"]');
+            if (heavy) heavy.textContent = ebook ? 'Tulis ulang (setia pada materi)' : 'Tulis ulang (setia pada cerita)';
+        }
+
         function renderAll() {
             renderChaptersList();
             renderCharactersList();
@@ -1991,6 +2055,7 @@
             loadActiveChapterIntoEditor();
             updateWordCounts();
             updateProjectLabel();
+            applyProjectKindUI();
         }
 
 
@@ -3741,6 +3806,14 @@
             }
         }
 
+        function buildEbookContext() {
+            const activeIdx = novelData.chapters.findIndex(c => c.id === activeChapterId);
+            const activeCh = novelData.chapters[activeIdx];
+            const recentText = activeCh ? activeCh.content.slice(-800) : '';
+            const list = novelData.chapters.map((c, i) => `${i + 1}. ${c.title}`).join('\n');
+            return `JUDUL BUKU: ${novelData.title}\nDESKRIPSI: ${novelData.synopsis || '(belum ada deskripsi)'}\n\nDAFTAR BAB:\n${list}\n\nPOTONGAN TERBARU BAB AKTIF:\n${recentText || '(bab masih kosong)'}`;
+        }
+
         function buildNovelContext() {
             const activeIdx = novelData.chapters.findIndex(c => c.id === activeChapterId);
             const activeCh = novelData.chapters[activeIdx];
@@ -3810,13 +3883,20 @@ ${recentText || '(bab ini masih kosong)'}
                 return;
             }
 
+            const ebook = isEbookProject();
+            if (ebook && (actionType === 'plot' || actionType === 'character' || actionType === 'dialogue')) {
+                statusEl.textContent = 'Aksi ini khusus proyek novel.';
+                return;
+            }
             let instruction = "";
             if (actionType === 'plot') {
                 instruction = "Berikan 3 ide plot twist mengejutkan yang cocok dengan arah cerita saat ini, masing-masing 1-2 kalimat.";
             } else if (actionType === 'character') {
                 instruction = "Buatkan satu profil karakter pendukung baru yang menarik (Nama, Peran, dan Latar Belakang singkat) yang cocok untuk dunia dan alur novel ini.";
             } else if (actionType === 'continue') {
-                instruction = "Lanjutkan langsung dari potongan teks terbaru di atas, dengan gaya bahasa yang konsisten dengan teks sebelumnya. Tulis 2-4 paragraf saja, jangan mengulang teks yang sudah ada.";
+                instruction = ebook
+                    ? "Lanjutkan penjelasan dari potongan teks terbaru di atas dengan gaya yang konsisten. Tulis 2-4 paragraf saja, tetap jelas dan praktis, jangan mengulang teks yang sudah ada."
+                    : "Lanjutkan langsung dari potongan teks terbaru di atas, dengan gaya bahasa yang konsisten dengan teks sebelumnya. Tulis 2-4 paragraf saja, jangan mengulang teks yang sudah ada.";
             } else if (actionType === 'dialogue') {
                 instruction = "Tuliskan satu adegan dialog emosional antar tokoh yang relevan dengan adegan saat ini, dengan sedikit narasi aksi di antara ucapan mereka.";
             } else { // custom
@@ -3833,8 +3913,10 @@ ${recentText || '(bab ini masih kosong)'}
             insertBtn.classList.add('hidden');
             document.getElementById('ai-copy-btn').classList.add('hidden');
 
-            const systemPrompt = "Kamu adalah co-writer novel profesional berbahasa Indonesia. Gunakan konteks novel yang diberikan agar hasil tulisanmu konsisten dengan gaya, tokoh, dan alur cerita yang sudah ada. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta.\n\n" + NOVEL_STYLE_RULES;
-            const userPrompt = `${buildNovelContext()}\n\nInstruksi: ${instruction}`;
+            const systemPrompt = ebook
+                ? "Kamu adalah penulis dan editor buku non-fiksi profesional berbahasa Indonesia. Gunakan konteks buku yang diberikan agar hasilnya konsisten dengan gaya dan materi yang sudah ada. Tulis penjelasan yang jelas dan praktis; pakai subjudul bila membantu. Jangan mengarang data, angka, atau kutipan ahli. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta."
+                : "Kamu adalah co-writer novel profesional berbahasa Indonesia. Gunakan konteks novel yang diberikan agar hasil tulisanmu konsisten dengan gaya, tokoh, dan alur cerita yang sudah ada. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta.\n\n" + NOVEL_STYLE_RULES;
+            const userPrompt = `${ebook ? buildEbookContext() : buildNovelContext()}\n\nInstruksi: ${instruction}`;
 
             try {
                 const { text } = await callGemini({ systemPrompt, userPrompt, temperature: 0.8 });
@@ -4413,16 +4495,30 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
             const ch = getRefineChapter();
             if (!ch || wordCount(ch.content) < 5) { statusEl.textContent = 'Bab ini masih kosong, tulis dulu isinya.'; return; }
 
-            const modes = Array.from(document.querySelectorAll('input[name="rf-mode"]:checked')).map(i => i.value);
+            let modes = Array.from(document.querySelectorAll('input[name="rf-mode"]:checked')).map(i => i.value);
+            if (isEbookProject()) modes = modes.filter(m => !['describe', 'dialogue', 'plot'].includes(m));
             const custom = document.getElementById('rf-custom').value.trim();
             if (!modes.length && !custom) { statusEl.textContent = 'Pilih minimal satu jenis perbaikan atau tulis instruksi sendiri.'; return; }
             if (modes.includes('expand') && modes.includes('shorten')) { statusEl.textContent = '"Kembangkan" dan "Padatkan" tidak bisa dipilih bersamaan.'; return; }
 
             const intensity = REFINE_INTENSITY[document.getElementById('rf-intensity').value] || REFINE_INTENSITY.light;
-            const instructionLines = modes.map(m => `- ${REFINE_MODES[m]}`);
+            const refineModeText = (m) => {
+                if (isEbookProject()) {
+                    if (m === 'style') return 'Perhalus gaya bahasa dan diksi agar enak dibaca, kurangi pengulangan kata, dan jaga suara penulis tetap konsisten.';
+                    if (m === 'expand') return 'Kembangkan materi: tambahkan penjelasan, contoh, atau langkah praktis yang relevan sehingga teks sekitar 1,5 kali lebih panjang, tanpa mengubah pokok bahasan.';
+                    if (m === 'shorten') return 'Padatkan teks: buang bagian bertele-tele dan pengulangan, tanpa menghilangkan poin penting.';
+                }
+                return REFINE_MODES[m];
+            };
+            const instructionLines = modes.map(m => `- ${refineModeText(m)}`);
+            const intensityText = (isEbookProject() && document.getElementById('rf-intensity').value === 'heavy')
+                ? 'Silakan menulis ulang kalimat secara bebas agar lebih kuat, tetapi tetap setia pada materi dan fakta yang disampaikan.'
+                : intensity.text;
             if (custom) instructionLines.push(`- Permintaan khusus dari penulis: ${custom}`);
 
-            const systemPrompt = 'Kamu adalah editor fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah novel sesuai instruksi, dengan menjaga suara penulis, nama tokoh, fakta cerita, dan urutan kejadian. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pisahkan paragraf dengan satu baris kosong.\n\n' + NOVEL_STYLE_RULES;
+            const systemPrompt = isEbookProject()
+                ? 'Kamu adalah editor buku non-fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis dan kebenaran materi. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus. Pertahankan subjudul markdown (##) yang ada. Pisahkan paragraf dengan satu baris kosong.'
+                : 'Kamu adalah editor fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah novel sesuai instruksi, dengan menjaga suara penulis, nama tokoh, fakta cerita, dan urutan kejadian. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pisahkan paragraf dengan satu baris kosong.\n\n' + NOVEL_STYLE_RULES;
 
             const chunks = splitIntoChunks(ch.content, REFINE_CHUNK_WORDS);
             const original = ch.content;
@@ -4451,7 +4547,7 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
 Instruksi perbaikan:
 ${instructionLines.join('\n')}
 
-Tingkat perubahan: ${intensity.text}
+Tingkat perubahan: ${intensityText}
 
 ${chunks.length > 1 ? `Ini bagian ${i + 1} dari ${chunks.length} dari bab ini. ${i > 0 ? 'Lanjutkan dengan mulus dari bagian sebelumnya; jangan mengulang atau menambah pembuka baru.' : ''} ${i < chunks.length - 1 ? 'Jangan menutup bab di bagian ini.' : ''}` : ''}
 ${tail ? `\nAkhir bagian sebelumnya (sudah direvisi, hanya untuk kesinambungan, JANGAN ditulis ulang):\n"""\n${tail}\n"""\n` : ''}
@@ -8731,9 +8827,9 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         // Multi proyek: banyak novel dalam satu aplikasi
         // =====================================================================
         function newProjectId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-        function newMeta(id, title, author, words, chapters) {
+        function newMeta(id, title, author, words, chapters, kind) {
             const now = Date.now();
-            return { id, title: String(title || 'Novel Tanpa Judul'), author: String(author || ''), words: words || 0, chapters: chapters || 0, created: now, updated: now };
+            return { id, title: String(title || 'Novel Tanpa Judul'), author: String(author || ''), words: words || 0, chapters: chapters || 0, kind: kind === 'ebook' ? 'ebook' : 'novel', created: now, updated: now };
         }
         function activeMeta() { return projectIndex.list.find(p => p.id === currentProjectId); }
         function totalWords() { return novelData.chapters.reduce((n, c) => n + countWords(c.content), 0); }
@@ -8748,6 +8844,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (m.title !== t) { m.title = t; changed = true; }
             if (m.author !== a) { m.author = a; changed = true; }
             if (m.chapters !== novelData.chapters.length) { m.chapters = novelData.chapters.length; changed = true; }
+            if (novelData.kind && m.kind !== novelData.kind) { m.kind = novelData.kind; changed = true; }
             if (withWords) { const w = totalWords(); if (m.words !== w) { m.words = w; changed = true; } }
             if (bump) m.updated = Date.now();
             return changed;
@@ -8764,6 +8861,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (!el) return;
             const t = novelData.title || 'Novel Tanpa Judul';
             el.textContent = t;
+            const badge = document.getElementById('project-kind-badge');
+            if (badge) badge.classList.toggle('hidden', !isEbookProject());
             const btn = document.getElementById('project-switch-btn');
             if (btn) btn.title = `Proyek: ${t} (ketuk untuk ganti)`;
         }
@@ -8814,7 +8913,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                     seen.add(id);
                     const chs = Array.isArray(d.chapters) ? d.chapters : [];
                     const m = newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author,
-                        chs.reduce((n, c) => n + countWords(String((c && c.content) || '')), 0), chs.length);
+                        chs.reduce((n, c) => n + countWords(String((c && c.content) || '')), 0), chs.length, d.kind || (d.gen && d.gen.kind));
                     m.updated = Number(rec.savedAt) || m.updated;
                     list.push(m);
                 }
@@ -8920,16 +9019,20 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             return ok;
         }
 
-        async function createProject(title) {
+        async function createProject(title, kind) {
             if (projSwitching || multiProjectBlocked()) return false;
+            const isEbook = kind === 'ebook';
             const d = normalizeNovelData({
-                title: title || 'Novel Tanpa Judul', author: novelData.author || 'Anonim', synopsis: '',
-                chapters: [{ id: 1, title: 'Bab 1', content: '' }]
+                title: title || (isEbook ? 'eBook Tanpa Judul' : 'Novel Tanpa Judul'), author: novelData.author || 'Anonim', synopsis: '',
+                kind: isEbook ? 'ebook' : 'novel',
+                chapters: isEbook
+                    ? [{ id: 1, title: 'Pendahuluan', content: '' }, { id: 2, title: 'Bab 1', content: '' }, { id: 3, title: 'Penutup', content: '' }]
+                    : [{ id: 1, title: 'Bab 1', content: '' }]
             });
             const id = newProjectId();
             try { await idbPut(novelKey(id), { json: JSON.stringify(d), savedAt: Date.now() }); }
             catch (e) { showToast('Gagal membuat proyek: penyimpanan browser penuh atau diblokir.', 'error'); return false; }
-            projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, 0, 1));
+            projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, 0, d.chapters.length, d.kind));
             await saveProjectIndex();
             const ok = await switchProject(id, { silent: true });
             if (ok) showToast(`Proyek "${d.title}" dibuat. Selamat menulis!`);
@@ -8939,7 +9042,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const inp = document.getElementById('new-project-title');
             const title = (inp.value || '').trim();
             inp.value = '';
-            createProject(title);
+            const kindSel = document.getElementById('new-project-kind');
+            createProject(title, kindSel ? kindSel.value : 'novel');
         }
 
         async function renameProject(id) {
@@ -8975,7 +9079,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             try { await idbPut(novelKey(nid), { json: JSON.stringify(d), savedAt: Date.now() }); }
             catch (e) { showToast('Gagal menggandakan proyek: penyimpanan browser penuh atau diblokir.', 'error'); return; }
             const words = d.chapters.reduce((n, c) => n + countWords(c.content), 0);
-            projectIndex.list.push(newMeta(nid, d.title, d.author === 'Anonim' ? '' : d.author, words, d.chapters.length));
+            projectIndex.list.push(newMeta(nid, d.title, d.author === 'Anonim' ? '' : d.author, words, d.chapters.length, d.kind));
             await saveProjectIndex();
             renderProjectsList();
             showToast('Proyek digandakan.');
@@ -9030,7 +9134,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                     const id = newProjectId();
                     await idbPut(novelKey(id), { json: JSON.stringify(d), savedAt: Date.now() });
                     const words = d.chapters.reduce((n, c) => n + countWords(c.content), 0);
-                    projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, words, d.chapters.length));
+                    projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, words, d.chapters.length, d.kind));
                     await saveProjectIndex();
                     const ok = await switchProject(id, { silent: true });
                     if (ok) showToast(`File diimpor sebagai proyek baru: "${d.title}".`);
@@ -9063,12 +9167,13 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 const on = p.id === currentProjectId;
                 const t = escapeHtml(p.title || 'Novel Tanpa Judul');
                 const stats = `${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} bab · ${projAgo(p.updated)}`;
+                const kindBadge = (p.kind === 'ebook' || (on && isEbookProject())) ? '<span class="proj-badge" style="background:rgba(168,85,247,.16);color:#c084fc">eBook</span>' : '';
                 return `<div class="proj-row ${on ? 'on' : ''}" data-id="${escapeHtml(p.id)}">
                     <button type="button" class="proj-main" data-act="open" aria-label="Buka proyek ${t}"${on ? ' aria-current="true"' : ''}>
                         <span class="proj-title">${t}</span>
                         <span class="proj-meta">${stats}</span>
                     </button>
-                    ${on ? '<span class="proj-badge">Aktif</span>' : ''}
+                    ${kindBadge}${on ? '<span class="proj-badge">Aktif</span>' : ''}
                     <div class="proj-actions">
                         <button type="button" class="icon-btn sm" data-act="rename" title="Ubah nama" aria-label="Ubah nama ${t}"><i class="fa-solid fa-pen"></i></button>
                         <button type="button" class="icon-btn sm" data-act="dup" title="Gandakan" aria-label="Gandakan ${t}"><i class="fa-solid fa-copy"></i></button>
@@ -9380,7 +9485,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const id = newProjectId();
             try { await idbPut(novelKey(id), { json: JSON.stringify(d), savedAt: Date.now() }); }
             catch (e) { showToast('Gagal membuat proyek: penyimpanan browser penuh atau diblokir.', 'error'); return false; }
-            projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, 0, d.chapters.length));
+            projectIndex.list.push(newMeta(id, d.title, d.author === 'Anonim' ? '' : d.author, 0, d.chapters.length, d.kind));
             await saveProjectIndex();
             const ok = await switchProject(id, { silent: true });
             if (!ok) {
@@ -9403,6 +9508,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const o = genOpts || genOptions();
             const d = normalizeNovelData({
                 title: ol.title, author: novelData.author || 'Anonim', synopsis: ol.synopsis,
+                kind: genKind,
                 chapters: ol.chapters.map((c, i) => ({ id: i + 1, title: `Bab ${i + 1}${c.title ? ': ' + c.title : ''}`, content: '' })),
                 characters: ol.characters.map((c, i) => ({ id: i + 1, name: c.name, role: c.role, desc: c.desc, alias: '' })),
                 gen: { kind: genKind, idea: o.idea, genre: o.genre, tone: o.tone, pov: o.pov, lang: o.lang, words: o.words, batch: parseInt(genEl('gen-batch').value, 10) || 0, outline: ol.chapters.map(c => c.summary || '') }
