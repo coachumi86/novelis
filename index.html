@@ -2409,6 +2409,7 @@
         function openAiToolMenu(btn) {
             openPopMenu(btn, [
                 { icon: 'fa-pen-nib', label: 'Lanjutkan tulisan', run: promptAiContinue },
+                { icon: 'fa-image', label: 'Buat ilustrasi ' + unitWordLower() + ' ini', run: generatePageIllustration },
                 { icon: 'fa-spell-check', label: 'Perbaiki ' + unitWordLower(), run: () => openRefineModal() },
                 { icon: 'fa-comments', label: 'Chat revisi', run: () => openChatRevModal() },
                 { icon: 'fa-shield-halved', label: 'Periksa kontinuitas', run: openContinuityModal },
@@ -3597,6 +3598,142 @@
         // ===== Rata tengah: baris dibungkus "-> teks <-" =====
         const CENTER_RE = /^->\s?(.*?)\s?<-$/;
         const IMG_LINE_RE = /^!\[([^\]]*)\]\(img:([A-Za-z0-9_-]+)\)$/;
+
+        // ===== Ilustrasi AI per halaman =====
+        // Satu ketuk dari menu AI: adegan pada halaman aktif (catatan [Ilustrasi: ...]
+        // untuk cerita anak, atau isi halaman untuk novel/eBook) digambar oleh model
+        // gambar Gemini memakai API key Gemini yang sudah tersimpan di Pengaturan —
+        // penyedia aktif tidak harus Gemini. Hasilnya dikompresi lewat jalur yang sama
+        // dengan gambar manual (JPEG <900KB) lalu menggantikan baris catatan ilustrasi
+        // (atau baris gambar lama bila regenerasi), sehingga Mode baca, Word, EPUB,
+        // dan PDF langsung menampilkan gambarnya.
+        const ILLUSTRATION_MODELS = ['gemini-2.5-flash-image', 'gemini-2.0-flash-preview-image-generation'];
+        const ILLUSTRATION_NOTE_RE = /\[Ilustrasi:\s*([^\]]+)\]/;
+        let illustratingChapterId = null;
+        function illustrationSceneText(content) {
+            const lines = String(content || '').split('\n').filter(l => !IMG_LINE_RE.test(l.trim()) && !ILLUSTRATION_NOTE_RE.test(l));
+            return lines.join(' ').replace(/\s+/g, ' ').trim().slice(0, 400);
+        }
+        function buildIllustrationPrompt(ch) {
+            const content = ch.content || '';
+            const noteMatch = content.match(ILLUSTRATION_NOTE_RE);
+            const note = noteMatch ? noteMatch[1].trim() : '';
+            const scene = note || illustrationSceneText(content);
+            const kind = novelData.kind;
+            if (kind === 'anak') {
+                const age = (novelData.gen && novelData.gen.kind === 'anak' && novelData.gen.genre) ? novelData.gen.genre : '';
+                return 'Ilustrasi buku cerita anak bergaya lembut dan hangat, warna cerah dan ceria, karakter lucu dan ramah, format lanskap. Adegan: ' + scene + '. ' + (age ? 'Untuk anak usia ' + age + '. ' : '') + 'Tanpa teks, huruf, angka, atau watermark di dalam gambar. Aman untuk anak: tanpa kekerasan dan tanpa hal menakutkan.';
+            }
+            if (kind === 'ebook') {
+                return 'Ilustrasi edukatif yang jelas dan ramah untuk buku non-fiksi, gaya datar modern, warna lembut, format lanskap. Topik: ' + scene + '. Tanpa teks, huruf, atau angka di dalam gambar.';
+            }
+            return 'Ilustrasi adegan novel bergaya lukisan digital yang hangat dan sinematik, format lanskap. Adegan: ' + scene + '. Tanpa teks, huruf, atau angka di dalam gambar.';
+        }
+        function applyGeneratedImage(content, imgLine) {
+            const lines = String(content || '').split('\n');
+            let imgIdx = -1, noteIdx = -1;
+            lines.forEach((line, i) => {
+                const t = line.trim();
+                if (imgIdx < 0 && IMG_LINE_RE.test(t)) imgIdx = i;
+                if (noteIdx < 0 && ILLUSTRATION_NOTE_RE.test(line)) noteIdx = i;
+            });
+            if (imgIdx >= 0) {
+                lines[imgIdx] = imgLine;
+                if (noteIdx >= 0) {
+                    const rest = lines[noteIdx].replace(ILLUSTRATION_NOTE_RE, '').trim();
+                    if (rest) lines[noteIdx] = lines[noteIdx].replace(ILLUSTRATION_NOTE_RE, '').replace(/\s+$/, '');
+                    else lines.splice(noteIdx, 1);
+                }
+                return lines.join('\n');
+            }
+            if (noteIdx >= 0) {
+                const rest = lines[noteIdx].replace(ILLUSTRATION_NOTE_RE, '').trim();
+                if (rest) {
+                    lines[noteIdx] = lines[noteIdx].replace(ILLUSTRATION_NOTE_RE, '').replace(/\s+$/, '');
+                    lines.splice(noteIdx + 1, 0, imgLine);
+                } else lines[noteIdx] = imgLine;
+                return lines.join('\n');
+            }
+            const base = String(content || '').replace(/\n+$/, '');
+            return base ? base + '\n\n' + imgLine : imgLine;
+        }
+        async function callGeminiImage(prompt) {
+            const keys = getGeminiKeys();
+            if (!keys.length) return null;
+            let lastErr = null;
+            for (const model of ILLUSTRATION_MODELS) {
+                let modelDead = false;
+                for (const withAspect of [true, false]) {
+                    if (modelDead) break;
+                    for (const key of keys) {
+                        try {
+                            const body = { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } };
+                            if (withAspect) body.generationConfig.imageConfig = { aspectRatio: '4:3' };
+                            const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                                body: JSON.stringify(body)
+                            });
+                            if (!res.ok) {
+                                const eb = await res.json().catch(() => null);
+                                const msg = (eb && eb.error && eb.error.message) || ('HTTP ' + res.status);
+                                lastErr = new Error(msg); lastErr.status = res.status;
+                                if (res.status === 404) { modelDead = true; break; }
+                                continue;
+                            }
+                            const result = await res.json();
+                            const parts = (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) || [];
+                            const imgPart = parts.find(p => p.inlineData && p.inlineData.data);
+                            if (imgPart) return { mime: imgPart.inlineData.mimeType || 'image/png', data: imgPart.inlineData.data, model };
+                            const blockReason = result.promptFeedback && result.promptFeedback.blockReason;
+                            lastErr = new Error(blockReason ? 'Gambar diblokir filter keamanan (' + blockReason + '). Coba ubah deskripsi adegan.' : 'AI tidak mengembalikan gambar. Coba lagi.');
+                        } catch (e) {
+                            if (e && e.name === 'AbortError') throw e;
+                            lastErr = e;
+                        }
+                    }
+                }
+            }
+            throw lastErr || new Error('Ilustrasi gagal dibuat.');
+        }
+        async function generatePageIllustration() {
+            const ch = novelData.chapters.find(c => c.id === activeChapterId);
+            if (!ch) { showToast('Pilih ' + unitWordLower() + ' dulu.', 'error'); return; }
+            if (illustratingChapterId) { showToast('Ilustrasi sedang dibuat, mohon tunggu sebentar.'); return; }
+            if (!getGeminiKeys().length) {
+                showToast('Isi dulu API key Gemini di Pengaturan agar bisa membuat ilustrasi.', 'error');
+                openSettingsModal('ai');
+                return;
+            }
+            const ta = document.getElementById('chapter-content-textarea');
+            const cur = ta ? ta.value : (ch.content || '');
+            if (!cur.trim()) { showToast(unitWord() + ' ini masih kosong, tulis dulu isinya.', 'error'); return; }
+            illustratingChapterId = ch.id;
+            const hud = (typeof aiHudStart === 'function') ? aiHudStart('Gemini · Ilustrasi') : null;
+            try {
+                if (hud) aiHudSet(hud, { note: 'Membuat ilustrasi...' });
+                const prompt = buildIllustrationPrompt({ content: cur });
+                const img = await callGeminiImage(prompt);
+                if (!img) throw new Error('API key Gemini tidak ditemukan.');
+                const data = await compressChapterImage('data:' + img.mime + ';base64,' + img.data);
+                if (!novelData.images || typeof novelData.images !== 'object') novelData.images = {};
+                const id = 'img' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+                const noteMatch = cur.match(ILLUSTRATION_NOTE_RE);
+                const alt = ((noteMatch ? noteMatch[1].trim() : '') || ('Ilustrasi ' + unitWordLower())).slice(0, 80).replace(/[\r\n\[\]]/g, ' ').trim() || ('Ilustrasi ' + unitWordLower());
+                novelData.images[id] = { data, name: 'ilustrasi-ai.jpg' };
+                const imgLine = '![' + alt + '](img:' + id + ')';
+                const nv = applyGeneratedImage(cur, imgLine);
+                if (ta) ta.value = nv;
+                updateChapterContent(nv);
+                if (hud) aiHudFinish(hud, true, 'Ilustrasi jadi');
+                showToast('Ilustrasi ' + unitWordLower() + ' berhasil dibuat dan disisipkan.');
+            } catch (e) {
+                if (hud) aiHudFinish(hud, false, 'Gagal');
+                showToast('Ilustrasi gagal: ' + String((e && e.message) || e).slice(0, 140), 'error');
+            } finally {
+                illustratingChapterId = null;
+            }
+        }
         function toggleCenter() {
             const ta = document.getElementById('chapter-content-textarea');
             const v = ta.value, start = ta.selectionStart, end = ta.selectionEnd;
