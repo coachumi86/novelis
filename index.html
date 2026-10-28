@@ -850,10 +850,10 @@
                         <button onclick="openSearchModal()" class="icon-btn sm" title="Cari &amp; ganti (Ctrl+K)" aria-label="Cari dan ganti"><i class="fa-solid fa-magnifying-glass"></i></button>
                         </div>
                         <div class="sep w-px h-4 bg-slate-700/70 mx-1.5 shrink-0"></div>
-                        <button type="button" onclick="openAiToolMenu(this)" class="ai-btn" title="Bantuan AI untuk bab ini" aria-label="Bantuan AI untuk bab ini" aria-haspopup="menu" aria-expanded="false"><svg class="ai-ico" aria-hidden="true"><use href="#i-spark"/></svg><span>AI</span><i class="fa-solid fa-chevron-down text-[9px] opacity-70"></i></button>
+                        <button type="button" id="ai-tool-btn" onclick="openAiToolMenu(this)" class="ai-btn" title="Bantuan AI untuk bab ini" aria-label="Bantuan AI untuk bab ini" aria-haspopup="menu" aria-expanded="false"><svg class="ai-ico" aria-hidden="true"><use href="#i-spark"/></svg><span>AI</span><i class="fa-solid fa-chevron-down text-[9px] opacity-70"></i></button>
                         <div class="ml-auto flex items-center">
                             <button onclick="toggleFocusMode()" id="focus-btn" class="icon-btn sm" title="Mode fokus" aria-label="Mode fokus"><i class="fa-solid fa-expand"></i></button>
-                            <button type="button" onclick="openEditorMenu(this)" class="icon-btn sm" title="Menu bab" aria-label="Menu bab" aria-haspopup="menu" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
+                            <button type="button" id="editor-menu-btn" onclick="openEditorMenu(this)" class="icon-btn sm" title="Menu bab" aria-label="Menu bab" aria-haspopup="menu" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
                         </div>
                     </div>
 
@@ -896,7 +896,7 @@
                 <span class="flex items-center gap-1">
                     <button type="button" id="ch-prev-btn" onclick="goChapter(-1)" class="icon-btn sm" title="Bab sebelumnya" aria-label="Bab sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
                     <button type="button" id="ch-next-btn" onclick="goChapter(1)" class="icon-btn sm" title="Bab berikutnya" aria-label="Bab berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
-                    <span><span id="chapter-words">0</span> kata di bab ini</span>
+                    <span><span id="chapter-words">0</span> <span id="chapter-words-unit">kata di bab ini</span></span>
                 </span>
                 <button type="button" id="backup-chip" onclick="exportProjectJson()" class="hidden items-center gap-1.5 font-medium hover:text-slate-100 transition-colors" title="Unduh backup sekarang"></button>
                 <span id="save-status" class="text-emerald-400 font-medium">Tersimpan</span>
@@ -1037,7 +1037,7 @@
                         <option value="0">Semua sekaligus</option><option value="2">2 bab, lalu jeda</option><option value="3">3 bab, lalu jeda</option><option value="5">5 bab, lalu jeda</option><option value="10">10 bab, lalu jeda</option>
                     </select>
                     <p class="text-[11px] text-slate-500 mt-1">Lebih hemat kuota API. Setelah satu sesi, penulisan berhenti sendiri dan bisa dilanjutkan kapan saja lewat tombol Lanjutkan.</p></div>
-                <div><label class="label">Kerangka bab</label><div id="gen-o-chapters" class="flex flex-col gap-2"></div></div>
+                <div><label class="label" id="gen-o-chapters-label">Kerangka bab</label><div id="gen-o-chapters" class="flex flex-col gap-2"></div></div>
             </div>
             <!-- Langkah 3: menulis -->
             <div id="gen-step-3" class="modal-body hidden">
@@ -1087,8 +1087,8 @@
                 <button onclick="closeHistoryModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="px-4 pt-3 flex flex-wrap gap-1.5">
-                <label class="chip"><input type="radio" name="hist-tab" value="chapter" checked class="sr-only" onchange="histExpanded=-1;renderHistory()"><span>Bab ini</span></label>
-                <label class="chip"><input type="radio" name="hist-tab" value="deleted" class="sr-only" onchange="histExpanded=-1;renderHistory()"><span>Bab terhapus</span></label>
+                <label class="chip"><input type="radio" name="hist-tab" value="chapter" checked class="sr-only" onchange="histExpanded=-1;renderHistory()"><span id="hist-chip-this">Bab ini</span></label>
+                <label class="chip"><input type="radio" name="hist-tab" value="deleted" class="sr-only" onchange="histExpanded=-1;renderHistory()"><span id="hist-chip-deleted">Bab terhapus</span></label>
                 <label class="chip"><input type="radio" name="hist-tab" value="full" class="sr-only" onchange="histExpanded=-1;renderHistory()"><span>Cadangan otomatis</span></label>
             </div>
             <div class="modal-body" id="hist-body"></div>
@@ -1449,7 +1449,7 @@
                     <summary class="cursor-pointer select-none px-3 h-10 flex items-center gap-2 text-xs text-slate-300"><i class="fa-solid fa-brain text-slate-500"></i> Konteks AI <i class="fa-solid fa-chevron-down det-caret ml-auto text-[10px] text-slate-500 transition-transform"></i></summary>
                     <div class="px-3 pb-3 space-y-2">
                         <p class="text-xs text-slate-400" id="ai-context-text">AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan bab sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.</p>
-                        <button onclick="refreshChapterSummaries()" id="ai-summary-btn" class="btn-ghost w-full"><i class="fa-solid fa-list-check"></i> Perbarui ringkasan bab</button>
+                        <button onclick="refreshChapterSummaries()" id="ai-summary-btn" class="btn-ghost w-full"><i class="fa-solid fa-list-check"></i> <span id="ai-summary-btn-text">Perbarui ringkasan bab</span></button>
                         <button onclick="rebuildStoryMemory()" id="ai-memo-btn" class="btn-ghost w-full"><i class="fa-solid fa-book-bookmark"></i> Perbarui memori cerita</button>
                         <p class="text-[11px] text-slate-500" id="ai-memo-note">Memori cerita (fakta, keadaan tokoh, benang terbuka, gaya) dikirim ke semua tombol AI agar bab-bab akhir tetap nyambung. Dibuat otomatis saat Buat Novel AI; tombol ini menyusunnya untuk bab yang kamu tulis sendiri atau yang sudah berubah.</p>
                     </div>
@@ -1466,7 +1466,7 @@
     <div id="refine-modal" class="overlay hidden">
         <div class="modal-card max-w-2xl">
             <div class="modal-head">
-                <div class="modal-title"><i class="fa-solid fa-spell-check"></i> Perbaiki bab</div>
+                <div class="modal-title"><i class="fa-solid fa-spell-check"></i> <span id="refine-modal-title-text">Perbaiki bab</span></div>
                 <button onclick="closeRefineModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
@@ -1571,7 +1571,7 @@
                     <select id="ct-chapter" onchange="renderContinuityReport()" class="field"></select>
                     <p id="ct-info" class="text-[11px] text-slate-500 mt-1.5"></p>
                 </div>
-                <label class="toggle-row"><span>Cocokkan juga dengan paragraf di bab lain</span><input type="checkbox" id="ct-crossref" checked></label>
+                <label class="toggle-row"><span id="ct-crossref-label">Cocokkan juga dengan paragraf di bab lain</span><input type="checkbox" id="ct-crossref" checked></label>
                 <div id="ct-report" class="space-y-2.5"></div>
             </div>
             <div class="modal-foot justify-between">
@@ -1596,7 +1596,7 @@
                     <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
                     <div>API key belum diisi. <button onclick="closeAuditModal(); openSettingsModal('ai');" class="underline font-medium hover:text-amber-200">Isi di Pengaturan</button></div>
                 </div>
-                <p class="text-xs text-slate-400">AI membaca seluruh bab, mencatat fakta dan bagian yang terlalu umum di tiap bab, lalu membandingkannya untuk mencari kelemahan cerita. Setiap temuan bisa langsung dieksekusi: AI menyusun teks pengganti atau sisipan, kamu tinjau dan ubah bila perlu, lalu terapkan ke naskah (bisa diurungkan). Bab yang tidak berubah tidak dibaca ulang. Pilih Cakupan satu bab untuk audit yang lebih cepat dan lebih rinci: bab itu dibaca penuh langsung oleh AI, dan bab lain hanya jadi pembanding.</p>
+                <p id="audit-desc" class="text-xs text-slate-400">AI membaca seluruh bab, mencatat fakta dan bagian yang terlalu umum di tiap bab, lalu membandingkannya untuk mencari kelemahan cerita. Setiap temuan bisa langsung dieksekusi: AI menyusun teks pengganti atau sisipan, kamu tinjau dan ubah bila perlu, lalu terapkan ke naskah (bisa diurungkan). Bab yang tidak berubah tidak dibaca ulang. Pilih Cakupan satu bab untuk audit yang lebih cepat dan lebih rinci: bab itu dibaca penuh langsung oleh AI, dan bab lain hanya jadi pembanding.</p>
                 <div class="flex items-center gap-2">
                     <label for="au-scope" class="text-xs text-slate-400 shrink-0">Cakupan</label>
                     <select id="au-scope" onchange="auditScopeChanged()" class="field" style="height:2.25rem"></select>
@@ -1640,12 +1640,12 @@
                 <div id="di-step-preview" class="hidden" style="display:none;flex-direction:column;gap:.9rem;">
                     <div id="di-fileinfo" style="font-size:.8rem;color:#a89cc9;line-height:1.5"></div>
                     <div>
-                        <label class="label" for="di-mode">Cara memisahkan bab</label>
+                        <label class="label" id="di-mode-label" for="di-mode">Cara memisahkan bab</label>
                         <select id="di-mode" class="field" onchange="docImpModeChanged()"></select>
                     </div>
                     <label id="di-title-row" class="di-radio hidden" style="display:none"><input type="checkbox" id="di-use-title"> <span>Pakai judul dokumen sebagai judul novel<small id="di-doc-title"></small></span></label>
                     <div>
-                        <div class="label">Bab hasil impor <span id="di-count" style="text-transform:none;letter-spacing:0;color:#9a8fc0;font-weight:400"></span></div>
+                        <div class="label"><span id="di-label">Bab hasil impor</span> <span id="di-count" style="text-transform:none;letter-spacing:0;color:#9a8fc0;font-weight:400"></span></div>
                         <div id="di-list" class="di-list"></div>
                         <div style="display:flex;gap:.5rem;margin-top:.5rem">
                             <button class="btn-ghost cr-mini" onclick="docImpCheckAll(true)">Pilih semua</button>
@@ -1654,8 +1654,8 @@
                     </div>
                     <div style="display:flex;flex-direction:column;gap:.55rem">
                         <div class="label">Masukkan ke naskah</div>
-                        <label class="di-radio"><input type="radio" name="di-target" value="append"> <span>Tambahkan di akhir naskah<small>Bab yang sudah ada tetap aman.</small></span></label>
-                        <label class="di-radio"><input type="radio" name="di-target" value="replace"> <span>Ganti semua bab yang ada<small>Bab lama disimpan di Riwayat versi, jadi masih bisa dikembalikan.</small></span></label>
+                        <label class="di-radio"><input type="radio" name="di-target" value="append"> <span>Tambahkan di akhir naskah<small id="di-append-note">Bab yang sudah ada tetap aman.</small></span></label>
+                        <label class="di-radio"><input type="radio" name="di-target" value="replace"> <span><span id="di-replace-label">Ganti semua bab yang ada</span><small id="di-replace-note">Bab lama disimpan di Riwayat versi, jadi masih bisa dikembalikan.</small></span></label>
                     </div>
                 </div>
             </div>
@@ -1729,8 +1729,8 @@
                 <div class="pt-3 border-t border-slate-800">
                     <div class="flex items-center justify-between gap-3">
                         <div class="min-w-0">
-                            <p class="text-xs font-medium text-slate-200">Pindai bab ini dengan AI</p>
-                            <p class="text-[11px] text-slate-500">Mencari janji baru dan benang lama yang tertutup di bab ini.</p>
+                            <p id="ct-scan-title" class="text-xs font-medium text-slate-200">Pindai bab ini dengan AI</p>
+                            <p id="ct-scan-desc" class="text-[11px] text-slate-500">Mencari janji baru dan benang lama yang tertutup di bab ini.</p>
                         </div>
                         <button onclick="scanThreadsAi()" id="th-scan-btn" class="btn-ghost shrink-0"><svg class="ai-ico" aria-hidden="true"><use href="#i-spark-flat"/></svg> Pindai</button>
                     </div>
@@ -1801,6 +1801,9 @@
                     template: [{ title: 'Halaman 1' }, { title: 'Halaman 2' }, { title: 'Halaman 3' }] },
         };
         function kindDef(kind) { return PROJECT_KINDS[kind] || PROJECT_KINDS.novel; }
+        // Kata satuan isi buku: 'Bab' untuk novel/eBook, 'Halaman' untuk cerita anak.
+        function unitWord() { return novelData.kind === 'anak' ? 'Halaman' : 'Bab'; }
+        function unitWordLower() { return novelData.kind === 'anak' ? 'halaman' : 'bab'; }
         function isNonFictionKind(kind) { return kindDef(kind).fiction === false; }
         function isFictionProject() { return kindDef(novelData.kind).fiction === true; }
 
@@ -2233,6 +2236,47 @@
             if (chPrev) { chPrev.title = novelData.kind === 'anak' ? 'Halaman sebelumnya' : 'Bab sebelumnya'; chPrev.setAttribute('aria-label', novelData.kind === 'anak' ? 'Halaman sebelumnya' : 'Bab sebelumnya'); }
             const chNext = document.getElementById('ch-next-btn');
             if (chNext) { chNext.title = novelData.kind === 'anak' ? 'Halaman berikutnya' : 'Bab berikutnya'; chNext.setAttribute('aria-label', novelData.kind === 'anak' ? 'Halaman berikutnya' : 'Bab berikutnya'); }
+            const ctIn = document.getElementById('chapter-title-input');
+            if (ctIn) ctIn.placeholder = novelData.kind === 'anak' ? 'Judul halaman' : 'Judul bab';
+            const rfTitle = document.getElementById('refine-modal-title-text');
+            if (rfTitle) rfTitle.textContent = novelData.kind === 'anak' ? 'Perbaiki halaman' : 'Perbaiki bab';
+            const histThis = document.getElementById('hist-chip-this');
+            if (histThis) histThis.textContent = novelData.kind === 'anak' ? 'Halaman ini' : 'Bab ini';
+            const histDel = document.getElementById('hist-chip-deleted');
+            if (histDel) histDel.textContent = novelData.kind === 'anak' ? 'Halaman terhapus' : 'Bab terhapus';
+            const diLabel = document.getElementById('di-label');
+            if (diLabel) diLabel.textContent = novelData.kind === 'anak' ? 'Halaman hasil impor' : 'Bab hasil impor';
+            const diApp = document.getElementById('di-append-note');
+            if (diApp) diApp.textContent = novelData.kind === 'anak' ? 'Halaman yang sudah ada tetap aman.' : 'Bab yang sudah ada tetap aman.';
+            const diRep = document.getElementById('di-replace-label');
+            if (diRep) diRep.textContent = novelData.kind === 'anak' ? 'Ganti semua halaman yang ada' : 'Ganti semua bab yang ada';
+            const diRepNote = document.getElementById('di-replace-note');
+            if (diRepNote) diRepNote.textContent = novelData.kind === 'anak' ? 'Halaman lama disimpan di Riwayat versi, jadi masih bisa dikembalikan.' : 'Bab lama disimpan di Riwayat versi, jadi masih bisa dikembalikan.';
+            const aiBtn = document.getElementById('ai-tool-btn');
+            if (aiBtn) { aiBtn.title = novelData.kind === 'anak' ? 'Bantuan AI untuk halaman ini' : 'Bantuan AI untuk bab ini'; aiBtn.setAttribute('aria-label', aiBtn.title); }
+            const edMenu = document.getElementById('editor-menu-btn');
+            if (edMenu) { edMenu.title = novelData.kind === 'anak' ? 'Menu halaman' : 'Menu bab'; edMenu.setAttribute('aria-label', edMenu.title); }
+            const menStrip = document.getElementById('mention-strip');
+            if (menStrip) menStrip.setAttribute('aria-label', novelData.kind === 'anak' ? 'Tokoh dan lore yang disebut di halaman ini' : 'Tokoh dan lore yang disebut di bab ini');
+            const rfApply = document.getElementById('rf-apply-btn');
+            if (rfApply) rfApply.title = novelData.kind === 'anak' ? 'Ganti isi halaman dengan hasil ini' : 'Ganti isi bab dengan hasil ini';
+            const aiSum = document.getElementById('ai-summary-btn-text');
+            if (aiSum) aiSum.textContent = novelData.kind === 'anak' ? 'Perbarui ringkasan halaman' : 'Perbarui ringkasan bab';
+            const aiMemo = document.getElementById('ai-memo-note');
+            if (aiMemo) aiMemo.textContent = novelData.kind === 'anak' ? 'Memori cerita (fakta, keadaan tokoh, benang terbuka, gaya) dikirim ke semua tombol AI agar halaman-halaman akhir tetap nyambung. Dibuat otomatis saat Buat Cerita Anak; tombol ini menyusunnya untuk halaman yang kamu tulis sendiri atau yang sudah berubah.' : 'Memori cerita (fakta, keadaan tokoh, benang terbuka, gaya) dikirim ke semua tombol AI agar bab-bab akhir tetap nyambung. Dibuat otomatis saat Buat Novel AI; tombol ini menyusunnya untuk bab yang kamu tulis sendiri atau yang sudah berubah.';
+            const ctCross = document.getElementById('ct-crossref-label');
+            if (ctCross) ctCross.textContent = novelData.kind === 'anak' ? 'Cocokkan juga dengan paragraf di halaman lain' : 'Cocokkan juga dengan paragraf di bab lain';
+            const ctTitle = document.getElementById('ct-scan-title');
+            if (ctTitle) ctTitle.textContent = novelData.kind === 'anak' ? 'Pindai halaman ini dengan AI' : 'Pindai bab ini dengan AI';
+            const ctDesc = document.getElementById('ct-scan-desc');
+            if (ctDesc) ctDesc.textContent = novelData.kind === 'anak' ? 'Mencari janji baru dan benang lama yang tertutup di halaman ini.' : 'Mencari janji baru dan benang lama yang tertutup di bab ini.';
+            const diMode = document.getElementById('di-mode-label');
+            if (diMode) diMode.textContent = novelData.kind === 'anak' ? 'Cara memisahkan halaman' : 'Cara memisahkan bab';
+            const cwUnit = document.getElementById('chapter-words-unit');
+            if (cwUnit) cwUnit.textContent = novelData.kind === 'anak' ? 'kata di halaman ini' : 'kata di bab ini';
+            if (typeof refreshChapterLabel === 'function') refreshChapterLabel();
+            const auDesc = document.getElementById('audit-desc');
+            if (auDesc) auDesc.textContent = novelData.kind === 'anak' ? 'AI membaca seluruh halaman, mencatat fakta dan bagian yang terlalu umum di tiap halaman, lalu membandingkannya untuk mencari kelemahan cerita. Setiap temuan bisa langsung dieksekusi: AI menyusun teks pengganti atau sisipan, kamu tinjau dan ubah bila perlu, lalu terapkan ke naskah (bisa diurungkan). Halaman yang tidak berubah tidak dibaca ulang. Pilih Cakupan satu halaman untuk audit yang lebih cepat dan lebih rinci: halaman itu dibaca penuh langsung oleh AI, dan halaman lain hanya jadi pembanding.' : 'AI membaca seluruh bab, mencatat fakta dan bagian yang terlalu umum di tiap bab, lalu membandingkannya untuk mencari kelemahan cerita. Setiap temuan bisa langsung dieksekusi: AI menyusun teks pengganti atau sisipan, kamu tinjau dan ubah bila perlu, lalu terapkan ke naskah (bisa diurungkan). Bab yang tidak berubah tidak dibaca ulang. Pilih Cakupan satu bab untuk audit yang lebih cepat dan lebih rinci: bab itu dibaca penuh langsung oleh AI, dan bab lain hanya jadi pembanding.';
             applyAiStudioKindUI(ebook);
             ['describe', 'dialogue', 'plot'].forEach(v => {
                 const inp = document.querySelector('input[name="rf-mode"][value="' + v + '"]');
@@ -2258,7 +2302,7 @@
             const ctx = document.getElementById('ai-context-text');
             if (ctx) ctx.textContent = ebook
                 ? 'AI mengenal judul, deskripsi, dan ringkasan bab sebelumnya.'
-                : 'AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan bab sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.';
+                : novelData.kind === 'anak' ? 'AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan halaman sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.' : 'AI mengenal judul, sinopsis, tokoh, relasi, timeline, lore, dan ringkasan bab sebelumnya. Perbarui ringkasan setelah menulis banyak agar alur tetap nyambung.';
             const memoBtn = document.getElementById('ai-memo-btn');
             if (memoBtn) memoBtn.classList.toggle('hidden', ebook);
             const memoNote = document.getElementById('ai-memo-note');
@@ -2365,10 +2409,10 @@
         function openAiToolMenu(btn) {
             openPopMenu(btn, [
                 { icon: 'fa-pen-nib', label: 'Lanjutkan tulisan', run: promptAiContinue },
-                { icon: 'fa-spell-check', label: 'Perbaiki bab', run: () => openRefineModal() },
+                { icon: 'fa-spell-check', label: 'Perbaiki ' + unitWordLower(), run: () => openRefineModal() },
                 { icon: 'fa-comments', label: 'Chat revisi', run: () => openChatRevModal() },
                 { icon: 'fa-shield-halved', label: 'Periksa kontinuitas', run: openContinuityModal },
-                { icon: 'fa-clipboard-list', label: 'Audit bab ini', run: () => openAuditModal(activeChapterId) },
+                { icon: 'fa-clipboard-list', label: 'Audit ' + unitWordLower() + ' ini', run: () => openAuditModal(activeChapterId) },
                 { icon: 'fa-clipboard-check', label: 'Audit seluruh naskah', run: () => openAuditModal() }
             ], 'left');
         }
@@ -2376,12 +2420,12 @@
             const idx = novelData.chapters.findIndex(c => c.id === activeChapterId);
             openPopMenu(btn, [
                 { icon: 'fa-thumbtack', label: 'Tandai benang cerita', run: openThreadModal },
-                { icon: 'fa-clock-rotate-left', label: 'Riwayat versi bab', run: () => openHistoryModal() },
+                { icon: 'fa-clock-rotate-left', label: 'Riwayat versi ' + unitWordLower(), run: () => openHistoryModal() },
                 'sep',
-                { icon: 'fa-arrow-up', label: 'Pindahkan bab ke atas', disabled: idx <= 0, run: () => moveChapter(activeChapterId, -1) },
-                { icon: 'fa-arrow-down', label: 'Pindahkan bab ke bawah', disabled: idx < 0 || idx >= novelData.chapters.length - 1, run: () => moveChapter(activeChapterId, 1) },
+                { icon: 'fa-arrow-up', label: 'Pindahkan ' + unitWordLower() + ' ke atas', disabled: idx <= 0, run: () => moveChapter(activeChapterId, -1) },
+                { icon: 'fa-arrow-down', label: 'Pindahkan ' + unitWordLower() + ' ke bawah', disabled: idx < 0 || idx >= novelData.chapters.length - 1, run: () => moveChapter(activeChapterId, 1) },
                 'sep',
-                { icon: 'fa-trash', label: 'Hapus bab ini', danger: true, run: deleteCurrentChapter }
+                { icon: 'fa-trash', label: 'Hapus ' + unitWordLower() + ' ini', danger: true, run: deleteCurrentChapter }
             ]);
         }
 
@@ -2426,10 +2470,10 @@
                   before: closeSb },
                 { title: 'Toolbar menulis',
                   el: () => tourPick('#editor-view .sticky'),
-                  body: 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka bantuan penulisan: lanjutkan tulisan, perbaiki bab, chat revisi, periksa kontinuitas, dan audit bab. Tombol gambar menyisipkan gambar ke dalam bab; hasilnya terlihat di Mode baca dan ekspor.' },
-                { title: 'Menu bab',
-                  el: () => tourPick('button[aria-label="Menu bab"]'),
-                  body: 'Benang cerita, riwayat versi, pindah urutan bab, dan hapus bab ada di sini. Tombol di sebelahnya, Mode fokus, menyembunyikan semua menu agar kamu fokus menulis.' },
+                  body: anak ? 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka bantuan penulisan: lanjutkan tulisan, perbaiki halaman, chat revisi, periksa kontinuitas, dan audit halaman. Tombol gambar menyisipkan gambar ke dalam halaman; hasilnya terlihat di Mode baca dan ekspor.' : 'Tebal, miring, kutipan, dan daftar. Tombol AI membuka bantuan penulisan: lanjutkan tulisan, perbaiki bab, chat revisi, periksa kontinuitas, dan audit bab. Tombol gambar menyisipkan gambar ke dalam bab; hasilnya terlihat di Mode baca dan ekspor.' },
+                { title: anak ? 'Menu halaman' : 'Menu bab',
+                  el: () => tourPick(anak ? 'button[aria-label="Menu halaman"]' : 'button[aria-label="Menu bab"]'),
+                  body: anak ? 'Benang cerita, riwayat versi, pindah urutan halaman, dan hapus halaman ada di sini. Tombol di sebelahnya, Mode fokus, menyembunyikan semua menu agar kamu fokus menulis.' : 'Benang cerita, riwayat versi, pindah urutan bab, dan hapus bab ada di sini. Tombol di sebelahnya, Mode fokus, menyembunyikan semua menu agar kamu fokus menulis.' },
                 { title: 'Proyek dan folder',
                   el: () => tourPick('#project-switch-btn'),
                   body: 'Satu aplikasi, banyak buku. Ketuk nama proyek di header untuk berpindah, membuat buku baru (novel atau eBook), menggandakan, atau mengimpor file backup. Di Proyek saya, buku bisa dikelompokkan ke folder supaya rak dan daftar tetap rapi. Setiap proyek punya bab, catatan, dan riwayat versinya sendiri.',
@@ -2454,11 +2498,12 @@
             ];
         }
         function tourDemo(kind) {
+            const u = unitWord();
             const d = {
                 write: '<div class="td" aria-hidden="true"><div class="td-line"></div><div class="td-line"></div><div class="td-line"></div><i class="fa-solid fa-pen-nib td-pen"></i></div>',
-                add: '<div class="td" aria-hidden="true"><div class="td-row"><span>1</span> Bab 1</div><div class="td-row"><span>2</span> Bab 2</div><div class="td-row new"><span>3</span> Bab baru</div><div class="td-plus"><i class="fa-solid fa-plus text-[11px]"></i></div></div>',
+                add: '<div class="td" aria-hidden="true"><div class="td-row"><span>1</span> ' + u + ' 1</div><div class="td-row"><span>2</span> ' + u + ' 2</div><div class="td-row new"><span>3</span> ' + u + ' baru</div><div class="td-plus"><i class="fa-solid fa-plus text-[11px]"></i></div></div>',
                 type: '<div class="td" aria-hidden="true"><span class="td-type">Malam itu, @Ri</span><div class="td-pop"><i class="fa-solid fa-user" style="font-size:.65rem;color:#a89cc9"></i> <b>Rina</b> <span style="color:#a89cc9">Tokoh utama</span></div></div>',
-                ai: '<div class="td td-ai" aria-hidden="true"><svg class="ai-ico"><use href="#i-spark"/></svg><div class="td-ai-pills"><span class="td-pill">Lanjutkan tulisan</span><span class="td-pill">Perbaiki bab</span><span class="td-pill">Periksa kontinuitas</span></div></div>',
+                ai: '<div class="td td-ai" aria-hidden="true"><svg class="ai-ico"><use href="#i-spark"/></svg><div class="td-ai-pills"><span class="td-pill">Lanjutkan tulisan</span><span class="td-pill">Perbaiki ' + u.toLowerCase() + '</span><span class="td-pill">Periksa kontinuitas</span></div></div>',
                 save: '<div class="td" aria-hidden="true"><div class="td-save"><div class="bar"><i></i></div><span class="ok"><i class="fa-solid fa-check"></i> Tersimpan</span></div></div>',
                 shelf: '<div class="td" aria-hidden="true" style="display:flex;gap:.45rem;align-items:flex-end"><div style="width:2.1rem;height:2.9rem;border-radius:.3rem;background:#7e22ce"></div><div style="width:2.1rem;height:2.9rem;border-radius:.3rem;background:#9333ea"></div><div style="width:2.1rem;height:2.9rem;border-radius:.3rem;background:#a855f7"></div></div>',
                 typeBook: '<div class="td" aria-hidden="true"><span class="td-type">## Cara kerja otak</span><div class="td-line"></div><div class="td-line"></div></div>'
@@ -2679,7 +2724,7 @@
                 div.onclick = () => openEntityDetail('event', t.id);
                 div.innerHTML = `
                     <div class="min-w-0 flex-1">
-                        <div class="text-[11px] text-brand-400 truncate">${escapeHtml(t.when) || 'Waktu belum diisi'}${chIdx >= 0 ? ` · Bab ${chIdx + 1}` : ''}</div>
+                        <div class="text-[11px] text-brand-400 truncate">${escapeHtml(t.when) || 'Waktu belum diisi'}${chIdx >= 0 ? ` · ${unitWord()} ${chIdx + 1}` : ''}</div>
                         <div class="font-semibold text-sm text-white truncate">${escapeHtml(t.title) || 'Kejadian tanpa judul'}</div>
                         ${t.desc ? `<p class="text-xs text-slate-400 line-clamp-1">${escapeHtml(t.desc)}</p>` : ''}
                     </div>
@@ -2730,7 +2775,7 @@
                 const words = countWords(ch.content);
                 // Tanda ringkasan: belum pernah dibuat, atau sudah tidak cocok dengan isi bab
                 const sumFlag = (words >= 30 && !chapterSummaryFresh(ch))
-                    ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 ml-1.5 align-middle" title="${ch.summary ? 'Ringkasan untuk AI sudah basi' : 'Bab ini belum diringkas untuk AI'}"></span>`
+                    ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 ml-1.5 align-middle" title="${ch.summary ? 'Ringkasan untuk AI sudah basi' : unitWord() + ' ini belum diringkas untuk AI'}"></span>`
                     : '';
 
                 const div = document.createElement('div');
@@ -2773,7 +2818,7 @@
                         <div class="text-sm truncate leading-snug ${isActive ? 'font-medium' : ''}">${escapeHtml(ch.title) || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')}${sumFlag}</div>
                         <div class="text-[11px] text-slate-500 leading-snug">${words.toLocaleString('id-ID')} kata · <button type="button" data-status title="Ketuk untuk ganti status" class="${stm.txt} hover:underline">${stm.label}</button></div>
                     </div>
-                    ${showRefine ? `<button type="button" data-refine title="Perbaiki bab ini dengan AI" aria-label="Perbaiki bab ini dengan AI" class="w-7 h-7 shrink-0 rounded-md text-slate-500 hover:bg-slate-700/60 hover:text-brand-400 text-[11px] flex items-center justify-center transition-all focus:opacity-100 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}"><i class="fa-solid fa-spell-check"></i></button>` : ''}
+                    ${showRefine ? `<button type="button" data-refine title="Perbaiki ${novelData.kind === 'anak' ? 'halaman' : 'bab'} ini dengan AI" aria-label="Perbaiki ${novelData.kind === 'anak' ? 'halaman' : 'bab'} ini dengan AI" class="w-7 h-7 shrink-0 rounded-md text-slate-500 hover:bg-slate-700/60 hover:text-brand-400 text-[11px] flex items-center justify-center transition-all focus:opacity-100 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}"><i class="fa-solid fa-spell-check"></i></button>` : ''}
                 `;
                 const rfBtn = div.querySelector('[data-refine]'); if (rfBtn) rfBtn.onclick = (e) => { e.stopPropagation(); openRefineModal(ch.id); };
                 div.querySelector('[data-status]').onclick = (e) => { e.stopPropagation(); cycleChapterStatus(ch.id); };
@@ -3288,13 +3333,13 @@
             } else if (type === 'event') {
                 const t = novelData.timeline.find(x => x.id === id);
                 document.getElementById('entity-view-title').textContent = 'Edit Kejadian';
-                const chOpts = '<option value="0">— tidak terkait bab —</option>' + novelData.chapters.map((c, i) => `<option value="${c.id}" ${c.id === t.chapterId ? 'selected' : ''}>Bab ${i + 1}: ${escapeHtml(c.title || 'Tanpa judul')}</option>`).join('');
+                const chOpts = '<option value="0">— tidak terkait bab —</option>' + novelData.chapters.map((c, i) => `<option value="${c.id}" ${c.id === t.chapterId ? 'selected' : ''}>${unitWord()} ${i + 1}: ${escapeHtml(c.title || 'Tanpa judul')}</option>`).join('');
                 container.innerHTML = `
                     <div><label class="${F_LABEL}">Waktu dalam cerita</label>
                         <input type="text" id="ev-when" value="${escapeHtml(t.when)}" oninput="updateEntityData()" placeholder="Mis. Tahun 1203, Hari ke-3, Musim hujan" class="${F_INPUT}"></div>
                     <div><label class="${F_LABEL}">Judul kejadian</label>
                         <input type="text" id="ev-title" value="${escapeHtml(t.title)}" oninput="updateEntityData()" class="${F_INPUT}"></div>
-                    <div><label class="${F_LABEL}">Bab terkait</label>
+                    <div><label class="${F_LABEL}">${unitWord()} terkait</label>
                         <select id="ev-ch" onchange="updateEntityData()" class="${F_INPUT}">${chOpts}</select></div>
                     <div><label class="${F_LABEL}">Deskripsi</label>
                         <textarea id="ev-desc" rows="6" oninput="updateEntityData()" class="${F_INPUT} resize-none">${escapeHtml(t.desc)}</textarea></div>
@@ -3420,7 +3465,7 @@
                     const formattedContent = mdToReaderHtml(ch.content);
                     chDiv.innerHTML = `
                         <div class="text-center mb-8">
-                            <span class="text-xs uppercase tracking-widest text-brand-400">Bab ${idx + 1}</span>
+                            <span class="text-xs uppercase tracking-widest text-brand-400">${unitWord()} ${idx + 1}</span>
                             <h3 class="text-2xl font-bold font-serif text-white mt-1">${escapeHtml(ch.title)}</h3>
                         </div>
                         <div class="reader-body">${formattedContent}</div>
@@ -4303,7 +4348,7 @@
             let done = 0;
             try {
                 for (const ch of todo) {
-                    statusEl.textContent = `Merangkum bab ${done + 1} dari ${todo.length}...`;
+                    statusEl.textContent = `Merangkum ${unitWordLower()} ${done + 1} dari ${todo.length}...`;
                     const snapshot = ch.content;          // hash diambil dari isi saat permintaan dikirim
                     const hash = hashText(snapshot);
                     const { text } = await callGemini({
@@ -4320,7 +4365,7 @@
                 }
                 statusEl.textContent = `Selesai: ${done} ringkasan diperbarui.`;
             } catch (err) {
-                statusEl.textContent = `Berhenti setelah ${done} bab: ${err.message || 'tidak diketahui'}`;
+                statusEl.textContent = `Berhenti setelah ${done} ${unitWordLower()}: ${err.message || 'tidak diketahui'}`;
             } finally {
                 btn.disabled = false;
             }
@@ -4354,15 +4399,15 @@
             try {
                 for (const i of todo) {
                     if (currentProjectId !== pid) break;
-                    statusEl.textContent = `Mencatat memori bab ${i + 1} (${done + 1} dari ${todo.length})...`;
+                    statusEl.textContent = `Mencatat memori ${unitWordLower()} ${i + 1} (${done + 1} dari ${todo.length})...`;
                     const ch = chs[i];
                     await auditRetry(() => genMakeMemo(ch, i));
                     await saveToLocalStorage();
                     done++;
                 }
-                statusEl.textContent = `Selesai: memori ${done} bab diperbarui.`;
+                statusEl.textContent = `Selesai: memori ${done} ${unitWordLower()} diperbarui.`;
             } catch (err) {
-                statusEl.textContent = `Berhenti setelah ${done} dari ${todo.length} bab: ${(err && err.message) || 'tidak diketahui'}. Yang sudah dicatat tersimpan; tekan lagi untuk melanjutkan.`;
+                statusEl.textContent = `Berhenti setelah ${done} dari ${todo.length} ${unitWordLower()}: ${(err && err.message) || 'tidak diketahui'}. Yang sudah dicatat tersimpan; tekan lagi untuk melanjutkan.`;
             } finally {
                 btn.disabled = false;
             }
@@ -4984,7 +5029,7 @@ Dunia/lore:
 ${world.slice(0, 2500)}
 
 ${storyMemoryBlock(idx)}
-Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
+${unitWord()} yang sedang diperbaiki: ${unitWord()} ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
         }
 
         function getRefineChapter() {
@@ -4999,7 +5044,7 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
             novelData.chapters.forEach((c, i) => {
                 const o = document.createElement('option');
                 o.value = c.id;
-                o.textContent = `Bab ${i + 1}: ${c.title || 'Tanpa judul'}`;
+                o.textContent = `${unitWord()} ${i + 1}: ${c.title || 'Tanpa judul'}`;
                 sel.appendChild(o);
             });
             sel.value = String(chapterId != null ? chapterId : activeChapterId);
@@ -5057,7 +5102,7 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
                 return;
             }
             const ch = getRefineChapter();
-            if (!ch || wordCount(ch.content) < 5) { statusEl.textContent = 'Bab ini masih kosong, tulis dulu isinya.'; return; }
+            if (!ch || wordCount(ch.content) < 5) { statusEl.textContent = unitWord() + ' ini masih kosong, tulis dulu isinya.'; return; }
 
             let modes = Array.from(document.querySelectorAll('input[name="rf-mode"]:checked')).map(i => i.value);
             if (!isFictionProject()) modes = modes.filter(m => !['describe', 'dialogue', 'plot'].includes(m));
@@ -5142,7 +5187,7 @@ ${chunks[i]}
                 const suspicious = !modes.includes('shorten') && after < before * 0.5;
                 statusEl.textContent = suspicious
                     ? 'Selesai, tetapi hasil jauh lebih pendek dari aslinya. Periksa dulu sebelum mengganti.'
-                    : 'Selesai. Periksa hasilnya (boleh diedit langsung), lalu ganti isi bab.';
+                    : 'Selesai. Periksa hasilnya (boleh diedit langsung), lalu ganti isi ' + unitWordLower() + '.';
                 ['rf-apply-btn', 'rf-copy-btn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
             } catch (err) {
                 if (err && err.name === 'AbortError') {
@@ -5180,8 +5225,8 @@ ${chunks[i]}
             selectChapter(ch.id);
             document.getElementById('rf-apply-btn').classList.add('hidden');
             document.getElementById('rf-undo-btn').classList.remove('hidden');
-            document.getElementById('rf-status').textContent = 'Isi bab sudah diganti. Tidak puas? Tekan "Kembalikan Versi Lama".';
-            showToast('Bab berhasil diperbaiki dengan AI.');
+            document.getElementById('rf-status').textContent = 'Isi ' + unitWordLower() + ' sudah diganti. Tidak puas? Tekan "Kembalikan Versi Lama".';
+            showToast(unitWord() + ' berhasil diperbaiki dengan AI.');
         }
 
         function undoRefine() {
@@ -5191,7 +5236,7 @@ ${chunks[i]}
             refineState.undo = null;
             document.getElementById('rf-undo-btn').classList.add('hidden');
             document.getElementById('rf-status').textContent = 'Versi lama sudah dikembalikan.';
-            showToast('Versi lama bab dikembalikan.');
+            showToast('Versi lama ' + unitWordLower() + ' dikembalikan.');
         }
 
         async function copyRefineResult() {
@@ -5299,12 +5344,12 @@ ${chunks[i]}
             sel.innerHTML = '';
             const all = document.createElement('option');
             all.value = 'all';
-            all.textContent = 'Semua bab';
+            all.textContent = 'Semua ' + unitWordLower();
             sel.appendChild(all);
             novelData.chapters.forEach((c, i) => {
                 const o = document.createElement('option');
                 o.value = c.id;
-                o.textContent = 'Bab ' + (i + 1) + ': ' + (c.title || 'Tanpa judul');
+                o.textContent = unitWord() + ' ' + (i + 1) + ': ' + (c.title || 'Tanpa judul');
                 sel.appendChild(o);
             });
             sel.value = String(activeChapterId);
@@ -5357,7 +5402,7 @@ ${chunks[i]}
                 if (m.role === 'user') return 'Penulis: ' + m.text;
                 if (m.error) return '';
                 let t = 'Kamu (editor): ' + (m.text || '');
-                (m.edits || []).forEach(e => { t += '\n  [usulan untuk Bab ' + e.chNo + ', ' + crStateLabel(e.state) + '] ' + (e.reason || ''); });
+                (m.edits || []).forEach(e => { t += '\n  [usulan untuk ' + unitWord() + ' ' + e.chNo + ', ' + crStateLabel(e.state) + '] ' + (e.reason || ''); });
                 return t;
             }).filter(Boolean).join('\n');
         }
@@ -5384,13 +5429,13 @@ ${chunks[i]}
                 if ((scope === 'all' || String(c.id) === scope) && (c.content || '').trim()) scoped.push({ ch: c, no: i + 1 });
             });
             if (!scoped.length) {
-                showToast('Bab yang dipilih masih kosong.', 'error');
+                showToast(unitWord() + ' yang dipilih masih kosong.', 'error');
                 return;
             }
             const total = scoped.reduce((s, x) => s + wordCount(x.ch.content), 0);
             if (total > CHATREV_MAX_WORDS) {
                 chatRev.msgs.push({ role: 'user', text });
-                chatRev.msgs.push({ role: 'ai', error: 'Naskah yang dipilih terlalu panjang (' + total.toLocaleString('id-ID') + ' kata, batasnya ' + CHATREV_MAX_WORDS.toLocaleString('id-ID') + '). Pilih satu bab saja di kolom "Cari di".' });
+                chatRev.msgs.push({ role: 'ai', error: 'Naskah yang dipilih terlalu panjang (' + total.toLocaleString('id-ID') + ' kata, batasnya ' + CHATREV_MAX_WORDS.toLocaleString('id-ID') + '). Pilih satu ' + unitWordLower() + ' saja di kolom "Cari di".' });
                 ta.value = '';
                 renderChatRev(true);
                 return;
@@ -5489,7 +5534,7 @@ ${chunks[i]}
         function crApplyEdit(mi, eid) {
             const e = crFindEdit(mi, eid);
             if (!e || e.state !== 'pending') return;
-            if (crApplyOne(e)) showToast('Perbaikan diterapkan ke Bab ' + e.chNo + '.');
+            if (crApplyOne(e)) showToast('Perbaikan diterapkan ke ' + unitWord() + ' ' + e.chNo + '.');
             else showToast('Bagian itu sudah berubah di naskah, jadi tidak bisa diterapkan.', 'error');
             renderChatRev(false);
         }
@@ -5509,7 +5554,7 @@ ${chunks[i]}
             const ch = novelData.chapters.find(c => c.id === e.chId);
             const loc = ch ? crLocate(ch.content, e.revised) : null;
             if (!loc) {
-                showToast('Teks hasil perbaikan sudah diubah lagi, jadi tidak bisa diurungkan otomatis. Pakai Riwayat versi bab.', 'error');
+                showToast('Teks hasil perbaikan sudah diubah lagi, jadi tidak bisa diurungkan otomatis. Pakai Riwayat versi ' + unitWordLower() + '.', 'error');
                 return;
             }
             applyChapterContent(ch.id, ch.content.slice(0, loc.start) + e.original + ch.content.slice(loc.end));
@@ -5542,8 +5587,8 @@ ${chunks[i]}
         function crEditHtml(e, mi) {
             const missing = e.state === 'missing';
             const head = missing
-                ? '<b>Bab ' + escapeHtml(String(e.chNo)) + '</b> · bagian ini tidak ditemukan persis di naskah'
-                : '<b>Bab ' + e.chNo + ': ' + escapeHtml(e.chTitle) + '</b>';
+                ? '<b>' + unitWord() + ' ' + escapeHtml(String(e.chNo)) + '</b> · bagian ini tidak ditemukan persis di naskah'
+                : '<b>' + unitWord() + ' ' + e.chNo + ': ' + escapeHtml(e.chTitle) + '</b>';
             const reason = e.reason ? '<div>' + escapeHtml(e.reason) + '</div>' : '';
             const args = mi + ',\'' + e.id + '\'';
             let actions;
@@ -5752,7 +5797,7 @@ ${chunks[i]}
                 if (g.pre) {
                     if (!words) return;
                     const single = mode === 'single';
-                    out.push({ title: single ? (docImp.fileName || 'Bab 1') : 'Pembuka', content, words, checked: single || words >= 30 });
+                    out.push({ title: single ? (docImp.fileName || (novelData.kind === 'anak' ? 'Halaman 1' : 'Bab 1')) : 'Pembuka', content, words, checked: single || words >= 30 });
                 } else {
                     out.push({ title: g.title, content, words, checked: words > 0 });
                 }
@@ -5785,7 +5830,7 @@ ${chunks[i]}
             const add = (v, label) => { const o = document.createElement('option'); o.value = v; o.textContent = label; sel.appendChild(o); };
             const label = v => {
                 if (v === 'pattern') return 'Baris "Bab 1", "Chapter 2", "Prolog" (' + docImp.patternCount + ' ditemukan)';
-                if (v === 'single') return 'Jadikan satu bab saja';
+                if (v === 'single') return 'Jadikan satu ' + unitWordLower() + ' saja';
                 const l = parseInt(v.slice(1), 10);
                 return 'Gaya Heading ' + l + ' (' + docImp.levels[l] + ' ditemukan)';
             };
@@ -5812,7 +5857,7 @@ ${chunks[i]}
                 const cb = document.createElement('input');
                 cb.type = 'checkbox';
                 cb.checked = c.checked;
-                cb.setAttribute('aria-label', 'Impor bab ini');
+                cb.setAttribute('aria-label', 'Impor ' + unitWordLower() + ' ini');
                 cb.onchange = () => { c.checked = cb.checked; row.classList.toggle('is-off', !c.checked); docImpUpdateCount(); };
                 const main = document.createElement('div');
                 main.className = 'di-main';
@@ -5821,7 +5866,7 @@ ${chunks[i]}
                 inp.className = 'field di-title';
                 inp.value = c.title;
                 inp.maxLength = 140;
-                inp.setAttribute('aria-label', 'Judul bab');
+                inp.setAttribute('aria-label', 'Judul ' + unitWordLower());
                 inp.oninput = () => { c.title = inp.value; };
                 const meta = document.createElement('div');
                 meta.className = 'di-meta';
@@ -5845,7 +5890,7 @@ ${chunks[i]}
             const sel = docImp.chapters.filter(c => c.checked && c.words > 0);
             const words = sel.reduce((s, c) => s + c.words, 0);
             diEl('di-count').textContent = '(' + sel.length + ' dipilih, ' + words.toLocaleString('id-ID') + ' kata)';
-            diEl('di-go-label').textContent = sel.length ? 'Impor ' + sel.length + ' bab' : 'Impor';
+            diEl('di-go-label').textContent = sel.length ? 'Impor ' + sel.length + ' ' + unitWordLower() : 'Impor';
             diEl('di-go-btn').disabled = !sel.length;
         }
 
@@ -5921,20 +5966,20 @@ ${chunks[i]}
 
         function docImpApply() {
             const sel = docImp.chapters.filter(c => c.checked && c.words > 0);
-            if (!sel.length) { showToast('Pilih minimal satu bab untuk diimpor.', 'error'); return; }
+            if (!sel.length) { showToast('Pilih minimal satu ' + unitWordLower() + ' untuk diimpor.', 'error'); return; }
             const targetEl = document.querySelector('input[name="di-target"]:checked');
             const replace = !!targetEl && targetEl.value === 'replace';
             if (replace) {
                 const existing = novelData.chapters.filter(c => (c.content || '').trim());
                 if (existing.length) {
                     const w = existing.reduce((s, c) => s + countWords(c.content), 0);
-                    if (!confirm('Semua bab yang ada (' + existing.length + ' bab, ' + w.toLocaleString('id-ID') + ' kata) akan diganti dengan hasil impor. Bab lama tersimpan di Riwayat versi sehingga masih bisa dikembalikan. Lanjutkan?')) return;
+                    if (!confirm('Semua ' + unitWordLower() + ' yang ada (' + existing.length + ' ' + unitWordLower() + ', ' + w.toLocaleString('id-ID') + ' kata) akan diganti dengan hasil impor. ' + unitWord() + ' lama tersimpan di Riwayat versi sehingga masih bisa dikembalikan. Lanjutkan?')) return;
                 }
                 novelData.chapters.forEach((ch, i) => { if ((ch.content || '').trim()) historyRecordDeleted(ch, i); });
             }
             let id = novelData.chapters.length ? Math.max(...novelData.chapters.map(c => c.id)) : 0;
             const base = replace ? 0 : novelData.chapters.length;
-            const fresh = sel.map((c, i) => ({ id: ++id, title: (c.title || '').trim() || ('Bab ' + (base + i + 1)), content: c.content }));
+            const fresh = sel.map((c, i) => ({ id: ++id, title: (c.title || '').trim() || (unitWord() + ' ' + (base + i + 1)), content: c.content }));
             if (replace) novelData.chapters = fresh;
             else novelData.chapters.push(...fresh);
             if (diEl('di-use-title').checked && docImp.docTitle) novelData.title = docImp.docTitle;
@@ -5944,7 +5989,7 @@ ${chunks[i]}
             saveToLocalStorage();
             closeDocImportModal();
             const words = fresh.reduce((s, c) => s + countWords(c.content), 0);
-            showToast(fresh.length + ' bab berhasil diimpor (' + words.toLocaleString('id-ID') + ' kata).');
+            showToast(fresh.length + ' ' + unitWordLower() + ' berhasil diimpor (' + words.toLocaleString('id-ID') + ' kata).');
         }
 
         (function () {
@@ -6110,7 +6155,7 @@ ${chunks[i]}
                         pdf.setFontSize(tocFontPt);
                         const entries = novelData.chapters.map((ch, i) => ({
                             idx: i,
-                            lines: pdf.splitTextToSize(`${i + 1}.  ${sanitizeForPdf(ch.title || 'Bab Tanpa Judul')}`, contentW - tocNumW - 4)
+                            lines: pdf.splitTextToSize(`${i + 1}.  ${sanitizeForPdf(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul'))}`, contentW - tocNumW - 4)
                         }));
                         let ty = m + 28, pg = 0;
                         tocPlan = [[]];
@@ -6250,7 +6295,7 @@ ${chunks[i]}
                         pdf.setFont('times', 'bold');
                         pdf.setFontSize(20);
                         pdf.setTextColor(17);
-                        pdf.splitTextToSize(sanitizeForPdf(ch.title || 'Bab Tanpa Judul'), contentW).forEach(l => {
+                        pdf.splitTextToSize(sanitizeForPdf(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')), contentW).forEach(l => {
                             pdf.text(l, PAGE_W / 2, y, { align: 'center' });
                             y += 9;
                         });
@@ -6336,7 +6381,7 @@ ${chunks[i]}
                         if (pdf.outline && pdf.outline.add) {
                             if (includeToc) pdf.outline.add(null, 'Daftar Isi', { pageNumber: tocFirstPage });
                             novelData.chapters.forEach((ch, i) => {
-                                pdf.outline.add(null, sanitizeForPdf(ch.title || ('Bab ' + (i + 1))), { pageNumber: chapterPage[i] });
+                                pdf.outline.add(null, sanitizeForPdf(ch.title || (unitWord() + ' ' + (i + 1))), { pageNumber: chapterPage[i] });
                             });
                         }
                     } catch (err) { console.warn('Bookmark PDF dilewati:', err); }
@@ -6407,7 +6452,7 @@ ${chunks[i]}
                     bodyContent += `
                         <div style="mso-page-break-before: always; page-break-before: always;">
                             <h2 style="text-align:center; font-size:18pt; font-weight:bold; margin-bottom:24pt;">Daftar Isi</h2>
-                            ${novelData.chapters.map((ch, i) => `<p style="margin:0 0 9pt 0; text-indent:0;"><a href="#bab${i + 1}" style="color:#111; text-decoration:none;">${i + 1}.&nbsp;&nbsp;${escapeHtml(ch.title || 'Bab Tanpa Judul')}</a></p>`).join('')}
+                            ${novelData.chapters.map((ch, i) => `<p style="margin:0 0 9pt 0; text-indent:0;"><a href="#bab${i + 1}" style="color:#111; text-decoration:none;">${i + 1}.&nbsp;&nbsp;${escapeHtml(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul'))}</a></p>`).join('')}
                         </div>
                     `;
                 }
@@ -6418,7 +6463,7 @@ ${chunks[i]}
                     bodyContent += `
                         <div style="${idx > 0 || includeCover || includeToc ? 'mso-page-break-before: always; page-break-before: always;' : ''}">
                             <a name="bab${idx + 1}"></a>
-                            <p style="text-align:center; font-size:10pt; text-transform:uppercase; letter-spacing:2px; color:#666; margin-bottom:2pt;">Bab ${idx + 1}</p>
+                            <p style="text-align:center; font-size:10pt; text-transform:uppercase; letter-spacing:2px; color:#666; margin-bottom:2pt;">${unitWord()} ${idx + 1}</p>
                             <h2 style="text-align:center; font-size:18pt; font-weight:bold; margin-bottom:24pt;">${escapeHtml(ch.title)}</h2>
                             ${paragraphs}
                         </div>
@@ -6621,14 +6666,14 @@ ${bodyContent}
 
             if (opts.includeToc) {
                 const tocItems = chapters.map((ch, i) =>
-                    '<li><a href="' + chapFiles[i] + '">' + (i + 1) + '. ' + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</a></li>').join('\n');
+                    '<li><a href="' + chapFiles[i] + '">' + (i + 1) + '. ' + escapeHtml(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')) + '</a></li>').join('\n');
                 files.push({ name: 'OEBPS/nav.xhtml', data: epubXhtmlDoc('Daftar Isi',
                     '<div class="toc"><h1>Daftar Isi</h1><nav epub:type="toc"><ol>\n' + tocItems + '\n</ol></nav></div>') });
             }
 
             const ncxPoints = chapters.map((ch, i) =>
                 '    <navPoint id="np' + (i + 1) + '" playOrder="' + (i + 1) + '"><navLabel><text>'
-                + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</text></navLabel><content src="' + chapFiles[i] + '"/></navPoint>').join('\n');
+                + escapeHtml(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')) + '</text></navLabel><content src="' + chapFiles[i] + '"/></navPoint>').join('\n');
             files.push({ name: 'OEBPS/toc.ncx', data: '<?xml version="1.0" encoding="utf-8"?>\n'
                 + '<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">\n'
                 + '<head><meta name="dtb:uid" content="' + escapeHtml(identifier) + '"/><meta name="dtb:depth" content="1"/>'
@@ -6637,7 +6682,7 @@ ${bodyContent}
                 + '<navMap>\n' + ncxPoints + '\n</navMap>\n</ncx>' });
 
             chapters.forEach((ch, i) => {
-                const body = '<h2 class="bab">BAB ' + (i + 1) + '</h2><h1>' + escapeHtml(ch.title || 'Bab Tanpa Judul') + '</h1>\n'
+                const body = '<h2 class="bab">' + unitWord().toUpperCase() + ' ' + (i + 1) + '</h2><h1>' + escapeHtml(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')) + '</h1>\n'
                     + epubChapterBody(ch.content, id => usedImgs.has(id) ? usedImgs.get(id).file : null);
                 files.push({ name: 'OEBPS/' + chapFiles[i], data: epubXhtmlDoc(ch.title || 'Bab ' + (i + 1), body) });
             });
@@ -6676,7 +6721,7 @@ ${bodyContent}
             const actionBtnWord = document.getElementById('export-action-btn-word');
             const actionBtnEpub = document.getElementById('export-action-btn-epub');
             if (!novelData.chapters || !novelData.chapters.length) {
-                showToast('Belum ada bab untuk diekspor.', 'error');
+                showToast('Belum ada ' + unitWordLower() + ' untuk diekspor.', 'error');
                 return;
             }
             loadingEl.classList.remove('hidden');
@@ -6819,7 +6864,7 @@ ${bodyContent}
         function refreshChapterLabel() {
             const ix = novelData.chapters.findIndex(c => c.id === activeChapterId);
             const lb = document.getElementById('active-chapter-label');
-            if (lb && ix >= 0) lb.textContent = `Bab ${ix + 1}`;
+            if (lb && ix >= 0) lb.textContent = `${unitWord()} ${ix + 1}`;
         }
 
         // toIndex = posisi sisip pada daftar sebelum bab dicabut
@@ -6951,7 +6996,7 @@ ${bodyContent}
                 total += ms.length;
                 const head = document.createElement('div');
                 head.className = 'sticky top-0 px-3 py-1.5 text-[11px] font-semibold text-slate-400 bg-slate-800 border-b border-slate-700/60';
-                head.textContent = `Bab ${ci + 1} · ${ch.title || 'Tanpa judul'} (${ms.length})`;
+                head.textContent = `${unitWord()} ${ci + 1} · ${ch.title || 'Tanpa judul'} (${ms.length})`;
                 frag.appendChild(head);
                 ms.forEach((mt, k) => {
                     if (shown >= MAX) return;
@@ -6986,7 +7031,7 @@ ${bodyContent}
             resEl.classList.toggle('hidden', !total);
             if (!total) { countEl.textContent = 'Tidak ditemukan'; return; }
             resEl.appendChild(frag);
-            countEl.textContent = `${total.toLocaleString('id-ID')} kemunculan di ${chaptersWith} bab` + (total > MAX ? ` (menampilkan ${MAX} pertama)` : '');
+            countEl.textContent = `${total.toLocaleString('id-ID')} kemunculan di ${chaptersWith} ${unitWordLower()}` + (total > MAX ? ` (menampilkan ${MAX} pertama)` : '');
         }
 
         // Posisi vertikal (px) karakter ke-index di dalam textarea, diukur lewat elemen cermin.
@@ -7112,7 +7157,7 @@ ${bodyContent}
                 const snippets = findMatches(ch.content, re).slice(0, 2).map(m => '<div class="text-xs text-slate-400 leading-relaxed" style="margin-top:.2rem">' + snippetHtml(ch.content, m) + '</div>').join('');
                 const more = r.count > 2 ? `<div class="text-[11px] text-slate-500">+${(r.count - 2).toLocaleString('id-ID')} kemunculan lain</div>` : '';
                 rows.push('<div style="padding:.6rem .75rem;border-bottom:1px solid #2e2547">'
-                    + '<div class="text-sm font-medium text-slate-200">Bab ' + (i + 1) + (ch.title ? ': ' + escapeHtml(ch.title) : '')
+                    + '<div class="text-sm font-medium text-slate-200">' + unitWord() + ' ' + (i + 1) + (ch.title ? ': ' + escapeHtml(ch.title) : '')
                     + ' <span class="text-xs text-slate-500">· ' + r.count.toLocaleString('id-ID') + ' kemunculan</span></div>'
                     + snippets + more + '</div>');
             });
@@ -7122,7 +7167,7 @@ ${bodyContent}
             const resEl = document.getElementById('sr-results');
             resEl.innerHTML = '<div class="text-xs text-amber-300" style="padding:.6rem .75rem;border-bottom:1px solid #2e2547">Pratinjau: "' + escapeHtml(q) + '"'
                 + (repl ? ' → "' + escapeHtml(repl) + '"' : ' akan dihapus')
-                + ' di ' + changes.length + ' bab (' + n.toLocaleString('id-ID') + ' kemunculan). Periksa dulu, lalu tekan Terapkan.</div>' + rows.join('');
+                + ' di ' + changes.length + ' ' + unitWordLower() + ' (' + n.toLocaleString('id-ID') + ' kemunculan). Periksa dulu, lalu tekan Terapkan.</div>' + rows.join('');
             resEl.classList.remove('hidden');
             document.getElementById('sr-count').textContent = 'Belum diterapkan. Ubah kata cari atau pengganti untuk membatalkan pratinjau.';
             document.getElementById('sr-replace-all').innerHTML = '<i class="fa-solid fa-check"></i> Terapkan ' + n.toLocaleString('id-ID') + ' kemunculan';
@@ -7501,16 +7546,16 @@ ${bodyContent}
             if (tab === 'chapter') {
                 const ch = novelData.chapters.find(c => c.id === activeChapterId);
                 const list = (ch && historyData.chapters[ch.id]) || [];
-                intro = `${escapeHtml((ch && ch.title) || 'Bab tanpa judul')}: ${list.length} versi. Dicatat otomatis tiap ±10 menit saat mengetik, dan sebelum AI atau ganti massal.`;
+                intro = `${escapeHtml((ch && ch.title) || (novelData.kind === 'anak' ? 'Halaman tanpa judul' : 'Bab tanpa judul'))}: ${list.length} versi. Dicatat otomatis tiap ±10 menit saat mengetik, dan sebelum AI atau ganti massal.`;
                 rows = list.map((v, i) => histRow(i, histWhen(v.t), `${escapeHtml(v.why)} · ${countWords(v.content).toLocaleString('id-ID')} kata`, histPreview(v.content), 'Pulihkan versi ini', `restoreChapterVersion(${i})`));
             } else if (tab === 'deleted') {
                 const list = deletedVisible();
-                intro = 'Bab yang pernah dihapus. Kembalikan ke posisi semula dengan satu ketukan.';
-                rows = list.map((d, i) => histRow(i, escapeHtml(d.chapter.title || 'Bab tanpa judul'), `Dihapus ${histWhen(d.t)} · ${countWords(d.chapter.content).toLocaleString('id-ID')} kata`, histPreview(d.chapter.content), 'Kembalikan bab', `restoreDeletedChapter(${i})`));
+                intro = (novelData.kind === 'anak' ? 'Halaman yang pernah dihapus. Kembalikan ke posisi semula dengan satu ketukan.' : 'Bab yang pernah dihapus. Kembalikan ke posisi semula dengan satu ketukan.');
+                rows = list.map((d, i) => histRow(i, escapeHtml(d.chapter.title || (novelData.kind === 'anak' ? 'Halaman tanpa judul' : 'Bab tanpa judul')), `Dihapus ${histWhen(d.t)} · ${countWords(d.chapter.content).toLocaleString('id-ID')} kata`, histPreview(d.chapter.content), (novelData.kind === 'anak' ? 'Kembalikan halaman' : 'Kembalikan bab'), `restoreDeletedChapter(${i})`));
             } else {
                 const list = historyData.full;
                 intro = 'Salinan seluruh naskah: otomatis sekali sehari (7 terakhir) dan sebelum Restore. Tersimpan di perangkat ini, bukan pengganti backup file.';
-                rows = list.map((f, i) => histRow(i, histWhen(f.t), `${escapeHtml(f.why)} · ${f.chapters} bab · ${(f.words || 0).toLocaleString('id-ID')} kata`, `Salinan seluruh naskah (${f.chapters} bab, ${(f.words || 0).toLocaleString('id-ID')} kata).`, 'Pulihkan seluruh naskah', `restoreFullSnapshot(${i})`));
+                rows = list.map((f, i) => histRow(i, histWhen(f.t), `${escapeHtml(f.why)} · ${f.chapters} ${unitWordLower()} · ${(f.words || 0).toLocaleString('id-ID')} kata`, `Salinan seluruh naskah (${f.chapters} bab, ${(f.words || 0).toLocaleString('id-ID')} kata).`, 'Pulihkan seluruh naskah', `restoreFullSnapshot(${i})`));
             }
             body.innerHTML = `<p class="text-[11px] text-slate-500">${intro}</p>` +
                 (rows.length ? `<div class="space-y-2">${rows.join('')}</div>` : '<p class="text-xs text-slate-500 text-center py-6">Belum ada yang tersimpan.</p>');
@@ -7531,13 +7576,13 @@ ${bodyContent}
             const ch = novelData.chapters.find(c => c.id === activeChapterId);
             const v = ch && (historyData.chapters[ch.id] || [])[i];
             if (!v) return;
-            if (!confirm('Pulihkan versi ini? Isi bab saat ini tetap tersimpan di riwayat.')) return;
+            if (!confirm('Pulihkan versi ini? Isi ' + unitWordLower() + ' saat ini tetap tersimpan di riwayat.')) return;
             snapshotChapter(ch, 'Sebelum pulihkan versi');
             ch.title = v.title; ch.content = v.content;
             selectChapter(ch.id);
             saveToLocalStorage();
             closeHistoryModal();
-            showToast('Versi bab dipulihkan.');
+            showToast('Versi ' + unitWordLower() + ' dipulihkan.');
         }
         function restoreDeletedChapter(i) {
             const d = deletedVisible()[i];
@@ -7551,7 +7596,7 @@ ${bodyContent}
             renderAll();
             saveToLocalStorage();
             closeHistoryModal();
-            showToast('Bab dikembalikan.');
+            showToast(novelData.kind === 'anak' ? 'Halaman dikembalikan.' : 'Bab dikembalikan.');
         }
         function restoreFullSnapshot(i) {
             const f = historyData.full[i];
@@ -7794,7 +7839,7 @@ ${bodyContent}
             }
             const rows = appearsInRows(type, id);
             html += `<div><div class="label">Muncul di</div>${rows.length
-                ? '<div class="flex flex-wrap gap-1.5">' + rows.map(r => `<button type="button" class="m-chip" onclick="closeQuickCard(); selectChapter(${r.id})">Bab ${r.no} <b>${r.n}×</b></button>`).join('') + '</div>'
+                ? '<div class="flex flex-wrap gap-1.5">' + rows.map(r => `<button type="button" class="m-chip" onclick="closeQuickCard(); selectChapter(${r.id})">${unitWord()} ${r.no} <b>${r.n}×</b></button>`).join('') + '</div>'
                 : '<p class="text-xs text-slate-500">Belum disebut di naskah.</p>'}</div>`;
             document.getElementById('qc-body').innerHTML = html;
             document.getElementById('quick-card').classList.remove('hidden');
@@ -7831,7 +7876,7 @@ ${bodyContent}
             const rows = appearsInRows(type, id);
             if (!rows.length) return '<p class="text-xs text-slate-500">Belum disebut di naskah. Nama dan nama panggilan dikenali otomatis.</p>';
             return '<div class="flex flex-wrap gap-1.5">' + rows.map(r =>
-                `<button type="button" onclick="selectChapter(${r.id})" class="m-chip" title="${r.n} kali">Bab ${r.no} <b>${r.n}×</b></button>`).join('') + '</div>';
+                `<button type="button" onclick="selectChapter(${r.id})" class="m-chip" title="${r.n} kali">${unitWord()} ${r.no} <b>${r.n}×</b></button>`).join('') + '</div>';
         }
         function aliasFieldHtml(val) {
             return `<div><label class="${F_LABEL}">Nama panggilan lain</label>
@@ -8039,7 +8084,7 @@ ${bodyContent}
         }
         function jumpToQuote(chId, quote) {
             const ch = novelData.chapters.find(c => c.id === chId);
-            if (!ch) { showToast('Bab itu sudah dihapus.', 'error'); return false; }
+            if (!ch) { showToast(novelData.kind === 'anak' ? 'Halaman itu sudah dihapus.' : 'Bab itu sudah dihapus.', 'error'); return false; }
             const range = locateQuote(ch.content, quote);
             if (!range) {
                 selectChapter(chId);
@@ -8091,11 +8136,11 @@ ${bodyContent}
         }
         function threadMeta(t) {
             const s = chapterNo(t.setupChapterId);
-            const setup = s ? `Bab ${s}` : 'bab terhapus';
-            if (t.status === 'paid') { const p = chapterNo(t.payoffChapterId); return `Dijanjikan ${setup} · ditutup ${p ? 'Bab ' + p : '—'}`; }
+            const setup = s ? `${unitWord()} ${s}` : unitWordLower() + ' terhapus';
+            if (t.status === 'paid') { const p = chapterNo(t.payoffChapterId); return `Dijanjikan ${setup} · ditutup ${p ? unitWord() + ' ' + p : '—'}`; }
             if (t.status === 'dropped') return `Dijanjikan ${setup} · sengaja dilepas`;
             const age = threadAge(t);
-            return `Dijanjikan ${setup}` + (age ? ` · terbuka ${age} bab` : '');
+            return `Dijanjikan ${setup}` + (age ? ` · terbuka ${age} ${unitWordLower()}` : '');
         }
         function renderThreadsList() {
             const el = document.getElementById('threads-list');
@@ -8133,7 +8178,7 @@ ${bodyContent}
             if (!t) { closeEntityView(); return; }
             document.getElementById('entity-view-title').textContent = 'Benang cerita';
             const chOpts = (sel, withNone) => (withNone ? `<option value="0" ${!sel ? 'selected' : ''}>— belum ditutup —</option>` : '')
-                + novelData.chapters.map((c, i) => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>Bab ${i + 1}: ${escapeHtml(c.title || 'Tanpa judul')}</option>`).join('');
+                + novelData.chapters.map((c, i) => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${unitWord()} ${i + 1}: ${escapeHtml(c.title || 'Tanpa judul')}</option>`).join('');
             const statusOpts = Object.keys(THREAD_STATUS).map(k => `<option value="${k}" ${t.status === k ? 'selected' : ''}>${THREAD_STATUS[k]}</option>`).join('');
             const block = (label, selId, selHtml, qId, q, which) => `
                 <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-2">
@@ -8183,7 +8228,7 @@ ${bodyContent}
             if (!t) return;
             const chId = which === 'setup' ? t.setupChapterId : t.payoffChapterId;
             const q = which === 'setup' ? t.setupQuote : t.payoffQuote;
-            if (!chId || !novelData.chapters.some(c => c.id === chId)) { showToast('Bab untuk bagian ini belum dipilih atau sudah dihapus.', 'error'); return; }
+            if (!chId || !novelData.chapters.some(c => c.id === chId)) { showToast(unitWord() + ' untuk bagian ini belum dipilih atau sudah dihapus.', 'error'); return; }
             if (!q || !q.trim()) { selectChapter(chId); return; }
             jumpToQuote(chId, q);
         }
@@ -8227,7 +8272,7 @@ ${bodyContent}
             document.getElementById('th-title').value = '';
             document.getElementById('th-note').value = '';
             document.getElementById('th-open-select').innerHTML = open.map(t =>
-                `<option value="${t.id}">${escapeHtml(t.title)} (Bab ${chapterNo(t.setupChapterId) || '?'})</option>`).join('');
+                `<option value="${t.id}">${escapeHtml(t.title)} (${unitWord()} ${chapterNo(t.setupChapterId) || '?'})</option>`).join('');
             document.querySelector('input[name="th-mode"][value="new"]').checked = true;
             document.querySelector('input[name="th-mode"][value="close"]').disabled = !open.length;
             setThreadMode();
@@ -8270,7 +8315,7 @@ ${bodyContent}
             const ch = novelData.chapters.find(c => c.id === chId);
             const st = document.getElementById('th-scan-status');
             const btn = document.getElementById('th-scan-btn');
-            if (!ch || wordCount(ch.content) < 50) { st.textContent = 'Bab ini masih terlalu pendek untuk dipindai.'; return; }
+            if (!ch || wordCount(ch.content) < 50) { st.textContent = unitWord() + ' ini masih terlalu pendek untuk dipindai.'; return; }
             if (!getApiKey()) { st.textContent = 'API key belum diisi. Isi di Pengaturan > AI.'; return; }
             const LIM = 60000;
             const body = ch.content.length > LIM ? ch.content.slice(0, LIM) : ch.content;
@@ -8281,7 +8326,7 @@ ${bodyContent}
             const systemPrompt = 'Kamu editor novel berbahasa Indonesia yang teliti. Tugasmu menemukan "benang cerita": janji atau petunjuk yang dibuat naskah dan harus dijawab nanti (benda atau kalimat penting yang sengaja ditonjolkan, misteri, ancaman, janji tokoh, konflik yang belum selesai), serta mengenali kapan benang yang sudah tercatat ditutup. Jangan menandai detail sepele. Salin kutipan PERSIS dari teks (jangan mengubah satu huruf pun), maksimal 160 karakter. Jawab HANYA dengan JSON valid.';
             const userPrompt = `Judul novel: "${novelData.title}"\nSinopsis: ${novelData.synopsis || '(belum diisi)'}\n\nBenang yang masih terbuka (id, judul, kutipan awal):\n${openTxt}\n\nBab yang dipindai: Bab ${chapterNo(ch.id)} "${ch.title}"\n"""\n${body}\n"""\n\nFormat jawaban:\n{"baru":[{"judul":"singkat, maksimal 8 kata","kutipan":"..."}],"tertutup":[{"id":0,"kutipan":"..."}]}\n\nAturan: "baru" maksimal 6 dan tidak boleh mengulang benang yang sudah tercatat. "tertutup" hanya untuk benang di daftar di atas yang JELAS terjawab atau terselesaikan di bab ini; kutipan menunjukkan momen penutupnya. Jika tidak ada, isi dengan array kosong.`;
             btn.disabled = true;
-            st.textContent = 'Memindai bab...';
+            st.textContent = 'Memindai ' + unitWordLower() + '...';
             thAbort = new AbortController();
             try {
                 const { text } = await callGemini({ systemPrompt, userPrompt, temperature: 0.3, maxOutputTokens: 4096, signal: thAbort.signal, json: true });
@@ -8352,7 +8397,7 @@ ${bodyContent}
         function openContinuityModal() {
             const sel = document.getElementById('ct-chapter');
             sel.innerHTML = novelData.chapters.map((c, i) =>
-                `<option value="${c.id}" ${c.id === activeChapterId ? 'selected' : ''}>Bab ${i + 1}: ${escapeHtml(c.title || 'Tanpa judul')}</option>`).join('');
+                `<option value="${c.id}" ${c.id === activeChapterId ? 'selected' : ''}>${unitWord()} ${i + 1}: ${escapeHtml(c.title || 'Tanpa judul')}</option>`).join('');
             document.getElementById('ct-no-key-banner').classList.toggle('hidden', !!getApiKey());
             document.getElementById('ct-status').textContent = 'Memeriksa pertentangan fakta, bukan gaya tulisan.';
             renderContinuityReport();
@@ -8373,13 +8418,13 @@ ${bodyContent}
             const box = document.getElementById('ct-report');
             const info = document.getElementById('ct-info');
             if (!ch) { box.innerHTML = ''; info.textContent = ''; return; }
-            info.textContent = `${wordCount(ch.content).toLocaleString('id-ID')} kata · dicocokkan dengan tokoh, relasi, lini masa, lore, dan bab lain`;
+            info.textContent = `${wordCount(ch.content).toLocaleString('id-ID')} kata · dicocokkan dengan tokoh, relasi, lini masa, lore, dan ${unitWordLower()} lain`;
             const a = ch.audit;
-            if (!a) { box.innerHTML = '<p class="text-xs text-slate-500">Belum ada pemeriksaan untuk bab ini. Tekan Periksa.</p>'; return; }
+            if (!a) { box.innerHTML = '<p class="text-xs text-slate-500">Belum ada pemeriksaan untuk ' + unitWordLower() + ' ini. Tekan Periksa.</p>'; return; }
             const stale = a.hash !== hashText(ch.content || '');
             const when = new Date(a.at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             let html = `<p class="text-[11px] text-slate-500">Diperiksa ${escapeHtml(when)}${a.truncated ? ' · hanya 60.000 karakter pertama yang diperiksa' : ''}</p>`;
-            if (stale) html += '<div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">Bab ini sudah diubah sejak pemeriksaan ini. Jalankan ulang untuk hasil terbaru.</div>';
+            if (stale) html += '<div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">' + unitWord() + ' ini sudah diubah sejak pemeriksaan ini. Jalankan ulang untuk hasil terbaru.</div>';
             const issues = a.issues || [];
             if (!issues.length) {
                 html += '<div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300"><i class="fa-solid fa-check mr-1.5"></i>Tidak ditemukan pertentangan fakta.</div>';
@@ -8500,7 +8545,7 @@ ${body}
             const ch = ctChapter();
             if (!ch) return;
             const stat = document.getElementById('ct-status');
-            if (wordCount(ch.content) < 30) { stat.textContent = 'Bab ini masih terlalu pendek untuk diperiksa.'; return; }
+            if (wordCount(ch.content) < 30) { stat.textContent = unitWord() + ' ini masih terlalu pendek untuk diperiksa.'; return; }
             if (!getApiKey()) {
                 document.getElementById('ct-no-key-banner').classList.remove('hidden');
                 stat.textContent = 'API key belum diisi.';
@@ -8589,7 +8634,7 @@ ${body}
         function auditFillScope() {
             const el = document.getElementById('au-scope');
             el.innerHTML = '<option value="0">Seluruh naskah</option>' + novelData.chapters.map((c, i) =>
-                `<option value="${c.id}">Bab ${i + 1}: ${escapeHtml(clipText(c.title || 'Tanpa judul', 50))}</option>`).join('');
+                `<option value="${c.id}">${unitWord()} ${i + 1}: ${escapeHtml(clipText(c.title || 'Tanpa judul', 50))}</option>`).join('');
             el.value = String(auScope);
         }
         function auditScopeChanged() {
@@ -8643,15 +8688,15 @@ ${body}
             const info = document.getElementById('au-info');
             const sch = auditScopeChapter();
             if (sch) {
-                info.textContent = `Bab ${chapterNo(sch.id)} · ${wordCount(sch.content).toLocaleString('id-ID')} kata · dibaca penuh langsung, bab lain hanya jadi pembanding`;
+                info.textContent = `${unitWord()} ${chapterNo(sch.id)} · ${wordCount(sch.content).toLocaleString('id-ID')} kata · dibaca penuh langsung, ${unitWordLower()} lain hanya jadi pembanding`;
             } else {
                 const chs = auditChapters();
                 const need = chs.filter(c => !digestFresh(c)).length;
                 const words = chs.reduce((n, c) => n + wordCount(c.content), 0);
-                info.textContent = `${chs.length} bab berisi · ${words.toLocaleString('id-ID')} kata` + (chs.length ? ` · ${need ? need + ' bab perlu dibaca AI' : 'semua bab sudah dibaca, tinggal analisis'}` : '');
+                info.textContent = `${chs.length} ${unitWordLower()} berisi · ${words.toLocaleString('id-ID')} kata` + (chs.length ? ` · ${need ? need + ' bab perlu dibaca AI' : 'semua bab sudah dibaca, tinggal analisis'}` : '');
             }
             const a = auditCur();
-            if (!a) { box.innerHTML = sch ? '<p class="text-xs text-slate-500">Bab ini belum pernah diaudit. Pilih lensa lalu tekan Audit; satu bab biasanya selesai dalam satu menit.</p>' : '<p class="text-xs text-slate-500">Belum pernah diaudit. Pilih lensa lalu tekan Audit. Naskah panjang bisa memakan beberapa menit.</p>'; return; }
+            if (!a) { box.innerHTML = sch ? '<p class="text-xs text-slate-500">' + unitWord() + ' ini belum pernah diaudit. Pilih lensa lalu tekan Audit; satu ' + unitWordLower() + ' biasanya selesai dalam satu menit.</p>' : '<p class="text-xs text-slate-500">Belum pernah diaudit. Pilih lensa lalu tekan Audit. Naskah panjang bisa memakan beberapa menit.</p>'; return; }
             const stale = a.sig !== auditCurSig();
             const when = new Date(a.at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
             const issues = a.issues || [];
@@ -8667,7 +8712,7 @@ ${body}
                     + (ready ? `<button type="button" onclick="auditApplyAll()" class="btn-ghost"><i class="fa-solid fa-check-double"></i> Terapkan ${ready} perbaikan yang siap</button>` : '')
                     + `</div>`;
             }
-            if (stale) html += '<div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">Naskah sudah berubah sejak audit ini. Jalankan ulang untuk hasil terbaru; hanya bab yang berubah yang dibaca ulang.</div>';
+            if (stale) html += '<div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">Naskah sudah berubah sejak audit ini. Jalankan ulang untuk hasil terbaru; hanya ' + unitWordLower() + ' yang berubah yang dibaca ulang.</div>';
             if (!issues.length) {
                 html += '<div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300"><i class="fa-solid fa-check mr-1.5"></i>Tidak ada temuan pada lensa yang dipilih.</div>';
             }
@@ -8681,7 +8726,7 @@ ${body}
                     const x = issues[i];
                     const sv = AUDIT_SEV[x.level] || AUDIT_SEV.sedang;
                     const chBtns = (x.chapterIds || []).filter(id => novelData.chapters.some(c => c.id === id)).map(id =>
-                        `<button type="button" class="m-chip" onclick="auditOpenChapter(${id})">Bab ${chapterNo(id)}</button>`).join('');
+                        `<button type="button" class="m-chip" onclick="auditOpenChapter(${id})">${unitWord()} ${chapterNo(id)}</button>`).join('');
                     html += `<div class="ct-card ${x.dismissed ? 'opacity-50' : ''}">
                         <div class="mb-1.5 flex items-center gap-2"><span class="sev ${sv.cls}">${sv.label}</span>${x.applied ? '<span class="sev" style="background:rgba(16,185,129,.14);color:#6ee7b7">Sudah diperbaiki</span>' : ''}</div>
                         <p class="text-sm font-semibold text-white">${escapeHtml(x.title)}</p>
@@ -8713,8 +8758,8 @@ ${body}
                 return `<div class="mt-2.5 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300 flex items-center justify-between gap-2"><span><i class="fa-solid fa-check mr-1.5"></i>Perbaikan sudah diterapkan ke naskah.</span>${auUndo[i] ? `<button type="button" onclick="auditUndoFix(${i})" class="underline hover:text-emerald-200">Urungkan</button>` : ''}</div>`;
             }
             if (auPlanBusy[i]) return '<div class="mt-2.5 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Menyusun perbaikan...</div>';
-            if (!auditHasTarget(x)) return '<p class="text-[11px] text-slate-500 mt-2">Temuan ini tidak menunjuk bab yang masih ada, jadi perbaikannya perlu kamu tulis sendiri.</p>';
-            const label = { ganti: 'Tulis ulang bagian ini', sisip: 'Buat sisipan', pisah: 'Pisahkan bab ini', putuskan: 'Susun perbaikan' }[x.act] || 'Susun perbaikan';
+            if (!auditHasTarget(x)) return '<p class="text-[11px] text-slate-500 mt-2">Temuan ini tidak menunjuk ' + unitWordLower() + ' yang masih ada, jadi perbaikannya perlu kamu tulis sendiri.</p>';
+            const label = { ganti: 'Tulis ulang bagian ini', sisip: 'Buat sisipan', pisah: 'Pisahkan ' + unitWordLower() + ' ini', putuskan: 'Susun perbaikan' }[x.act] || 'Susun perbaikan';
             const btn = (txt, ico) => `<button type="button" onclick="auditPlanOne(${i})" class="btn-primary mt-2.5" style="height:2rem"><i class="fa-solid ${ico}"></i> ${txt}</button>`;
             if (!p) return btn(label, 'fa-wand-magic-sparkles');
             if (p.error) return `<p class="text-xs text-rose-300 mt-2.5">${escapeHtml(p.error)}</p>` + btn('Coba lagi', 'fa-rotate');
@@ -8723,14 +8768,14 @@ ${body}
                 const sg = auditSplitSegments(p);
                 let h = '<div class="mt-2.5 space-y-2">';
                 if (!p.parts.length) {
-                    return h + `<div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300"><b>Tidak dipecah.</b> ${escapeHtml(p.ask || p.why || 'AI menilai bab ini sebaiknya tetap satu bab.')}</div></div>` + btn('Susun ulang', 'fa-rotate');
+                    return h + `<div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300"><b>Tidak dipecah.</b> ${escapeHtml(p.ask || p.why || ('AI menilai ' + unitWordLower() + ' ini sebaiknya tetap satu ' + unitWordLower() + '.'))}</div></div>` + btn('Susun ulang', 'fa-rotate');
                 }
                 if (!sg) return '<p class="text-xs text-amber-300 mt-2.5">Bagian yang dituju sudah berubah, jadi titik pisahnya tidak ditemukan lagi.</p>' + btn('Susun ulang', 'fa-rotate');
-                h += `<div class="text-[11px] text-slate-400">Bab ${chapterNo(sg.ch.id)} dipecah menjadi ${sg.segs.length} bab${p.why ? ' · ' + escapeHtml(p.why) : ''}</div>`;
+                h += `<div class="text-[11px] text-slate-400">${unitWord()} ${chapterNo(sg.ch.id)} dipecah menjadi ${sg.segs.length} ${unitWordLower()}${p.why ? ' · ' + escapeHtml(p.why) : ''}</div>`;
                 sg.segs.forEach((sgm, k) => {
                     const total = wordCount(sgm.text);
                     h += `<div class="rounded-lg p-2.5 space-y-1.5" style="border:1px solid #2e2547;background:#1a1430">
-                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-400"><span>${k === 0 ? 'Bab ' + chapterNo(sg.ch.id) + ' (tetap)' : 'Bab baru ' + k}</span><span>${total.toLocaleString('id-ID')} kata</span></div>
+                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-400"><span>${k === 0 ? unitWord() + ' ' + chapterNo(sg.ch.id) + ' (tetap)' : unitWord() + ' baru ' + k}</span><span>${total.toLocaleString('id-ID')} kata</span></div>
                         ${k === 0 ? `<div class="text-xs text-slate-300">${escapeHtml(sg.ch.title || 'Tanpa judul')}</div>` : `<input type="text" value="${escapeHtml(p.parts[k - 1].title)}" placeholder="Judul bab baru" oninput="auditEditSplitTitle(${i},${k - 1},this.value)" class="field" style="height:2rem">`}
                         <div class="font-serif text-[11px] leading-relaxed" style="color:#a78bfa">Mulai: “${escapeHtml(clipText(sgm.text, 130))}”</div>
                         ${k < sg.segs.length - 1 ? `<div class="font-serif text-[11px] leading-relaxed" style="color:#8b7cf6">Berakhir: “…${escapeHtml(sgm.text.slice(-110).replace(/\s+/g, ' '))}”</div>` : ''}
@@ -8748,7 +8793,7 @@ ${body}
             }
             p.edits.forEach((e, j) => {
                 h += `<div class="rounded-lg p-2.5 space-y-1.5" style="border:1px solid #2e2547;background:#1a1430">
-                    <div class="text-[11px] text-slate-400">Bab ${chapterNo(e.chapterId)} · ${e.mode === 'ganti' ? 'Bagian yang diganti' : 'Sisipan ditaruh sesudah bagian ini'}${e.why ? ' · ' + escapeHtml(e.why) : ''}</div>
+                    <div class="text-[11px] text-slate-400">${unitWord()} ${chapterNo(e.chapterId)} · ${e.mode === 'ganti' ? 'Bagian yang diganti' : 'Sisipan ditaruh sesudah bagian ini'}${e.why ? ' · ' + escapeHtml(e.why) : ''}</div>
                     <div class="font-serif text-xs leading-relaxed" style="${e.mode === 'ganti' ? 'color:#fda4af;text-decoration:line-through;text-decoration-color:rgba(253,164,175,.45)' : 'color:#a78bfa'}">${escapeHtml(clipText(e.old, 500))}</div>
                     <div class="text-[11px]" style="color:#6ee7b7">${e.mode === 'ganti' ? 'Diganti dengan (boleh kamu ubah):' : 'Teks sisipan (boleh kamu ubah):'}</div>
                     <textarea rows="${Math.min(10, Math.max(3, Math.ceil(e.neu.length / 70)))}" oninput="auditEditNew(${i},${j},this.value)" style="width:100%;background:#150f24;border:1px solid #4a3a6b;color:#e6e1f5;border-radius:.5rem;padding:.5rem;font-size:.8rem;line-height:1.55;resize:vertical" class="font-serif">${escapeHtml(e.neu)}</textarea>
@@ -8805,7 +8850,7 @@ Jawab HANYA dengan JSON valid dengan bentuk: {"ringkas":"3-4 kalimat","tempat":[
                 temperature: 0.2, maxOutputTokens: 8192, signal, json: true
             });
             const d = parseAiJson(text);
-            if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('Catatan bab tidak bisa dibaca. Coba jalankan lagi.');
+            if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('Catatan ' + unitWordLower() + ' tidak bisa dibaca. Coba jalankan lagi.');
             ch.digest = { v: AUDIT_DIGEST_V, hash, at: Date.now(), data: d };
         }
 
@@ -8892,7 +8937,7 @@ MODE SATU BAB: kamu menerima TEKS LENGKAP Bab ${no} yang diaudit (bukan catatan 
             const lenses = auditSelectedLenses();
             const scopeCh = auditScopeChapter();
             const chs = scopeCh ? (wordCount(scopeCh.content) >= 30 ? [scopeCh] : []) : auditChapters();
-            if (!chs.length) { stat.textContent = 'Belum ada bab yang cukup panjang untuk diaudit.'; return; }
+            if (!chs.length) { stat.textContent = 'Belum ada ' + unitWordLower() + ' yang cukup panjang untuk diaudit.'; return; }
             if (!lenses.length) { stat.textContent = 'Pilih minimal satu lensa.'; return; }
             if (!getApiKey()) { document.getElementById('au-no-key-banner').classList.remove('hidden'); stat.textContent = 'API key belum diisi.'; return; }
             const prog = document.getElementById('au-progress'), bar = document.getElementById('au-progress-bar'), pt = document.getElementById('au-progress-text');
@@ -8906,7 +8951,7 @@ MODE SATU BAB: kamu menerima TEKS LENGKAP Bab ${no} yang diaudit (bukan catatan 
                 const todo = scopeCh ? [] : chs.filter(c => !digestFresh(c));
                 let done = 0, failed = null, cursor = 0;
                 if (todo.length) {
-                    pt.textContent = `Membaca bab 0 dari ${todo.length}...`;
+                    pt.textContent = `Membaca ${unitWordLower()} 0 dari ${todo.length}...`;
                     const worker = async () => {
                         while (!failed && !signal.aborted) {
                             const ch = todo[cursor++];
@@ -8914,7 +8959,7 @@ MODE SATU BAB: kamu menerima TEKS LENGKAP Bab ${no} yang diaudit (bukan catatan 
                             try {
                                 await auditRetry(() => auditBuildDigest(ch, signal), signal);
                                 done++;
-                                pt.textContent = `Membaca bab ${done} dari ${todo.length}...`;
+                                pt.textContent = `Membaca ${unitWordLower()} ${done} dari ${todo.length}...`;
                                 bar.style.width = Math.round(done / todo.length * 70) + '%';
                                 scheduleSave();
                             } catch (e) { if (!failed) failed = e; }
@@ -8923,10 +8968,10 @@ MODE SATU BAB: kamu menerima TEKS LENGKAP Bab ${no} yang diaudit (bukan catatan 
                     await Promise.all([worker(), worker(), worker()]);
                     saveToLocalStorage();
                     if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
-                    if (failed) throw new Error(`Berhenti setelah ${done} dari ${todo.length} bab: ${failed.message || 'tidak diketahui'}. Bab yang sudah dibaca tersimpan; tekan Audit lagi untuk melanjutkan.`);
+                    if (failed) throw new Error(`Berhenti setelah ${done} dari ${todo.length} ${unitWordLower()}: ${failed.message || 'tidak diketahui'}. Bab yang sudah dibaca tersimpan; tekan Audit lagi untuk melanjutkan.`);
                 }
                 // Tahap 2: analisis seluruh novel dari catatan
-                pt.textContent = scopeCh ? `Membaca dan menganalisis Bab ${chapterNo(scopeCh.id)}...` : 'Menganalisis seluruh alur...';
+                pt.textContent = scopeCh ? `Membaca dan menganalisis ${unitWord()} ${chapterNo(scopeCh.id)}...` : 'Menganalisis seluruh alur...';
                 bar.style.width = '80%';
                 stat.textContent = 'Menganalisis... bisa memakan waktu sekitar satu menit.';
                 const ready = scopeCh ? [] : chs.filter(digestFresh);
@@ -9007,15 +9052,15 @@ Format elemen: {"lensa":"salah satu kunci lensa di atas","tingkat":"tinggi"|"sed
                         const range = `${chapterNo(list[0].id)}-${chapterNo(list[list.length - 1].id)}`;
                         if (parts[key] && Array.isArray(parts[key].arr)) {
                             arr = arr.concat(parts[key].arr);
-                            pt.textContent = `Bab ${range} sudah dianalisis (dipakai ulang)`;
+                            pt.textContent = `${unitWord()} ${range} sudah dianalisis (dipakai ulang)`;
                         } else {
-                            pt.textContent = multi ? `Menganalisis bab ${range} (kelompok ${w + 1} dari ${wins.length})...` : 'Menganalisis seluruh alur...';
+                            pt.textContent = multi ? `Menganalisis ${unitWordLower()} ${range} (kelompok ${w + 1} dari ${wins.length})...` : 'Menganalisis seluruh alur...';
                             let got;
                             try { got = await callWin(list); }
                             catch (e) {
                                 if (e && e.name === 'AbortError') throw e;
                                 saveToLocalStorage();
-                                throw new Error(`Berhenti di kelompok bab ${range} (${w} dari ${wins.length} kelompok selesai): ${(e && e.message) || 'tidak diketahui'}. Hasil yang sudah selesai tersimpan; tekan Audit lagi untuk melanjutkan dari sini.`);
+                                throw new Error(`Berhenti di kelompok ${unitWordLower()} ${range} (${w} dari ${wins.length} kelompok selesai): ${(e && e.message) || 'tidak diketahui'}. Hasil yang sudah selesai tersimpan; tekan Audit lagi untuk melanjutkan dari sini.`);
                             }
                             parts[key] = { at: Date.now(), arr: got.slice(0, 40) };
                             arr = arr.concat(got);
@@ -9064,7 +9109,7 @@ Format elemen: {"lensa":"salah satu kunci lensa di atas","tingkat":"tinggi"|"sed
                 renderAuditReport();
             } catch (err) {
                 renderAuditReport();
-                stat.textContent = (err && err.name === 'AbortError') ? 'Dihentikan. Bab yang sudah dibaca tersimpan.' : 'Gagal: ' + ((err && err.message) || 'tidak diketahui');
+                stat.textContent = (err && err.name === 'AbortError') ? 'Dihentikan. ' + unitWord() + ' yang sudah dibaca tersimpan.' : 'Gagal: ' + ((err && err.message) || 'tidak diketahui');
             } finally {
                 auAbort = null;
                 setAuRunning(false);
@@ -9146,7 +9191,7 @@ Jawab HANYA dengan JSON valid: {"ubah":[{"bab":1,"jenis":"ganti"|"sisip_setelah"
             renderAuditReport();
             try {
                 const ids = auditTargetChapters(x);
-                if (!ids.length) throw new Error('Temuan ini tidak menunjuk bab yang masih ada.');
+                if (!ids.length) throw new Error('Temuan ini tidak menunjuk ' + unitWordLower() + ' yang masih ada.');
                 if (x.act === 'pisah') { await auditPlanSplit(i, x, ids, signal); return; }
                 const base = auditFixPrompt(x, ids);
                 let note = '', valid = [], bad = [], ask = '';
@@ -9255,12 +9300,12 @@ Jawab HANYA dengan JSON valid: {"ubah":[{"bab":1,"jenis":"ganti"|"sisip_setelah"
             const work = {};
             for (const e of p.edits) {
                 const ch = novelData.chapters.find(c => c.id === e.chapterId);
-                if (!ch) return { ok: false, why: 'Bab target sudah dihapus.' };
+                if (!ch) return { ok: false, why: unitWord() + ' target sudah dihapus.' };
                 if (!work[ch.id]) work[ch.id] = { orig: ch.content || '', cur: ch.content || '' };
                 const w = work[ch.id];
                 const r = auditFindExact(w.cur, e.old);
-                if (!r) return { ok: false, stale: true, why: `Bab ${chapterNo(ch.id)}: bagian yang dituju sudah berbeda.` };
-                if (w.cur.indexOf(w.cur.slice(r[0], r[1]), r[0] + 1) !== -1) return { ok: false, stale: true, why: `Bab ${chapterNo(ch.id)}: bagian yang dituju muncul lebih dari sekali, perbaikan dibatalkan agar tidak salah tempat.` };
+                if (!r) return { ok: false, stale: true, why: `${unitWord()} ${chapterNo(ch.id)}: bagian yang dituju sudah berbeda.` };
+                if (w.cur.indexOf(w.cur.slice(r[0], r[1]), r[0] + 1) !== -1) return { ok: false, stale: true, why: `${unitWord()} ${chapterNo(ch.id)}: bagian yang dituju muncul lebih dari sekali, perbaikan dibatalkan agar tidak salah tempat.` };
                 const neu = String(e.neu || '').trim();
                 if (!neu) return { ok: false, why: 'Teks pengganti kosong.' };
                 w.cur = e.mode === 'ganti' ? w.cur.slice(0, r[0]) + neu + w.cur.slice(r[1]) : auditInsertAfter(w.cur, r[1], neu);
@@ -9314,7 +9359,7 @@ Jawab HANYA dengan JSON valid: {"ubah":[{"bab":1,"jenis":"ganti"|"sisip_setelah"
                 if (!ch || ch.content !== r.cur) return true;
                 return r.kind === 'split' && r.newChapters.some(n => { const c = novelData.chapters.find(k => k.id === n.id); return !c || c.content !== n.content; });
             });
-            if (blocked) { showToast('Bab sudah diubah lagi setelah perbaikan. Pulihkan lewat Riwayat versi.', 'error'); return; }
+            if (blocked) { showToast(unitWord() + ' sudah diubah lagi setelah perbaikan. Pulihkan lewat Riwayat versi.', 'error'); return; }
             u.forEach(r => {
                 applyChapterContent(r.id, r.orig);
                 if (r.kind === 'split') {
@@ -9346,7 +9391,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
 
         async function auditPlanSplit(i, x, ids, signal) {
             const ch = novelData.chapters.find(c => c.id === (x.targetId || ids[0]));
-            if (!ch) throw new Error('Bab yang dituju sudah dihapus.');
+            if (!ch) throw new Error(unitWord() + ' yang dituju sudah dihapus.');
             const content = ch.content || '';
             const base = `Judul novel: "${novelData.title}"\nSinopsis: ${novelData.synopsis || '(belum diisi)'}\n\n=== TEMUAN AUDIT ===\nJudul: ${x.title}\nPenjelasan: ${x.detail}\n${x.quote ? 'Titik pisah yang disarankan audit: "' + x.quote + '"\n' : ''}Saran editor: ${x.fix || '-'}\n\n=== BAB ${chapterNo(ch.id)} "${ch.title || 'Tanpa judul'}" (${wordCount(content).toLocaleString('id-ID')} kata) ===\n"""\n${auditWindow(content, x.quote, 60000)}\n"""`;
             let note = '', parts = [], bad = [], ask = '', why = '';
@@ -9422,7 +9467,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             let nid = nextId(novelData.chapters);
             const created = sg.segs.slice(1).map((sgm, k) => ({
                 id: nid++,
-                title: (p.parts[k].title || '').trim() || `Bab ${pos + 2 + k}`,
+                title: (p.parts[k].title || '').trim() || `${unitWord()} ${pos + 2 + k}`,
                 content: sgm.text,
                 status: ch.status || 'draft'
             }));
@@ -10037,11 +10082,11 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         // dihasilkan disimpan di novelData.gen.kind supaya penulisan bab
         // (genChapterPrompt, genRun) memakai jalur yang sama.
         let genKind = 'novel';
-        let genGenreNovelHtml = null, genToneNovelHtml = null, genWordsNovelHtml = null;
+        let genGenreNovelHtml = null, genToneNovelHtml = null, genWordsNovelHtml = null, genBatchNovelHtml = null, genBatch2NovelHtml = null;
         const EBOOK_CATEGORIES = ['Pengembangan diri', 'Bisnis & karier', 'Keuangan', 'Kesehatan', 'Pendidikan', 'Teknologi', 'Parenting & keluarga', 'Hobi & keterampilan', 'Spiritualitas', 'Lainnya'];
         const EBOOK_STYLES = ['Praktis & jelas', 'Santai & bersahabat', 'Formal & mendalam', 'Inspiratif & motivasional'];
         const ANAK_AGES = ['3–5 tahun', '6–8 tahun', '9–12 tahun'];
-        const ANAK_MORALS = ['Kejujuran', 'Berbagi & peduli', 'Keberanian', 'Kerja sama', 'Tanggung jawab', 'Kasih sayang'];
+        const ANAK_MORALS = ['Kejujuran', 'Berbagi & peduli', 'Keberanian', 'Kerja sama', 'Tanggung jawab', 'Kasih sayang', 'Percaya diri', 'Kesabaran', 'Rasa syukur', 'Empati', 'Kemandirian', 'Menghargai perbedaan'];
         const ANAK_WORDS = [['Sangat singkat (~30 kata)', 30], ['Singkat (~60 kata)', 60], ['Sedang (~100 kata)', 100]];
         function genApplyMode() {
             const ebook = genKind === 'ebook';
@@ -10066,6 +10111,16 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             setLabel('gen-words', anak ? 'Panjang tiap halaman' : 'Panjang tiap bab');
             setLabel('gen-batch', anak ? 'Tulis berapa halaman per sesi' : 'Tulis berapa bab per sesi');
             setLabel('gen-batch2', anak ? 'Halaman per sesi' : 'Bab per sesi');
+            const batchSel = genEl('gen-batch');
+            if (batchSel) {
+                if (genBatchNovelHtml === null) genBatchNovelHtml = batchSel.innerHTML;
+                batchSel.innerHTML = anak ? genBatchNovelHtml.replace(/bab/g, 'halaman') : genBatchNovelHtml;
+            }
+            const batch2Sel = genEl('gen-batch2');
+            if (batch2Sel) {
+                if (genBatch2NovelHtml === null) genBatch2NovelHtml = batch2Sel.innerHTML;
+                batch2Sel.innerHTML = anak ? genBatch2NovelHtml.replace(/bab/g, 'halaman') : genBatch2NovelHtml;
+            }
             const genreSel = genEl('gen-genre');
             if (genreSel) {
                 if (genGenreNovelHtml === null) genGenreNovelHtml = genreSel.innerHTML;
@@ -10090,6 +10145,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (charsLabel) charsLabel.classList.toggle('hidden', ebook);
             const charsBox = genEl('gen-o-chars');
             if (charsBox) charsBox.classList.toggle('hidden', ebook);
+            const olLabel = document.getElementById('gen-o-chapters-label');
+            if (olLabel) olLabel.textContent = anak ? 'Kerangka halaman' : 'Kerangka bab';
             const note3 = document.getElementById('gen-step3-note');
             if (note3) note3.textContent = ebook
                 ? 'Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat eBook AI.'
@@ -10148,7 +10205,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             genEl('gen-no-key').classList.toggle('hidden', !!getApiKey());
             const left = genUnfinished();
             genEl('gen-resume').classList.toggle('hidden', !left);
-            if (left) genEl('gen-resume-text').textContent = `Proyek "${novelData.title}" masih punya ${left} bab kosong dari generator.`;
+            if (left) genEl('gen-resume-text').textContent = `Proyek "${novelData.title}" masih punya ${left} ${unitWordLower()} kosong dari generator.`;
             if (!genOutlining()) genEl('gen-status').textContent = '';
             genShowStep(1);
             genEl('gen-modal').classList.remove('hidden');
@@ -10501,7 +10558,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
             const on = genRunning && genLive.i >= 0 && !!novelData.chapters[genLive.i];
             box.classList.toggle('hidden', !on);
             if (!on) return;
-            genEl('gen-live-title').textContent = novelData.chapters[genLive.i].title || ('Bab ' + (genLive.i + 1));
+            genEl('gen-live-title').textContent = novelData.chapters[genLive.i].title || (unitWord() + ' ' + (genLive.i + 1));
             genEl('gen-live-count').textContent = genLive.words
                 ? `${genLive.words.toLocaleString('id-ID')} / ~${genLive.target.toLocaleString('id-ID')} kata`
                 : 'AI sedang menyusun ide...';
@@ -10529,8 +10586,8 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
             const chs = novelData.chapters, total = chs.length || 1;
             const done = chs.filter(c => (c.content || '').trim()).length;
             genPaintFast(!genRunning);
-            genEl('gen-w-status').textContent = genRunning && genMemoing >= 0 ? `Mencatat memori bab ${genMemoing + 1}`
-                : genRunning && genCur >= 0 ? `Menulis bab ${genCur + 1} dari ${total}` : `${done} dari ${total} bab selesai`;
+            genEl('gen-w-status').textContent = genRunning && genMemoing >= 0 ? `Mencatat memori ${(novelData.gen && novelData.gen.kind === 'anak') ? 'halaman' : 'bab'} ${genMemoing + 1}`
+                : genRunning && genCur >= 0 ? `Menulis ${(novelData.gen && novelData.gen.kind === 'anak') ? 'halaman' : 'bab'} ${genCur + 1} dari ${total}` : `${done} dari ${total} ${(novelData.gen && novelData.gen.kind === 'anak') ? 'halaman' : 'bab'} selesai`;
             const words = chs.reduce((n, c) => n + countWords(c.content), 0);
             const sec = genT0 ? Math.round((Date.now() - genT0) / 1000) : 0;
             genEl('gen-w-meta').textContent = `${done}/${total} ${(novelData.gen && novelData.gen.kind === 'anak') ? 'halaman' : 'bab'} selesai · ${words.toLocaleString('id-ID')} kata · ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
@@ -10689,8 +10746,8 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                 }, 1200);
             } else {
                 const msg = failMsg ? `Penulisan berhenti: ${failMsg}`
-                    : paused ? `Sesi selesai: ${written} bab ditulis, ${left} bab lagi menunggu.`
-                    : 'Penulisan dihentikan. Bab yang sudah jadi tersimpan.';
+                    : paused ? `Sesi selesai: ${written} ${unitWordLower()} ditulis, ${left} ${unitWordLower()} lagi menunggu.`
+                    : 'Penulisan dihentikan. ' + unitWord() + ' yang sudah jadi tersimpan.';
                 const kind = failMsg ? 'error' : paused ? 'paused' : 'stopped';
                 if (genModalOpen() && currentProjectId === pid) {
                     // Biarkan jendela tetap terbuka: tampilkan hasilnya dan tawarkan Lanjutkan.
@@ -10699,13 +10756,13 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                     box.className = 'p-3 rounded-lg text-xs ' + (kind === 'error' ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300'
                         : kind === 'paused' ? 'bg-sky-500/10 border border-sky-500/30 text-sky-200'
                         : 'bg-amber-500/10 border border-amber-500/30 text-amber-300');
-                    box.innerHTML = escapeHtml(msg) + ' Progres tersimpan; klik Lanjutkan kapan saja untuk meneruskan bab yang masih kosong.'
+                    box.innerHTML = escapeHtml(msg) + ' Progres tersimpan; klik Lanjutkan kapan saja untuk meneruskan ' + unitWordLower() + ' yang masih kosong.'
                         + (exhausted ? ' <button type="button" class="underline font-medium" onclick="closeGenModal(); openSettingsModal(\'ai\');">Tambah API key</button>' : '');
                     genShowStep(3);
                 } else {
-                    showToast(failMsg ? `${msg}. Lanjutkan lewat Ganti AI Skill, Buat Novel AI.`
-                        : paused ? `${msg} Lanjutkan dari Buat Novel AI.`
-                        : 'Penulisan dihentikan. Bab yang kosong bisa dilanjutkan dari Buat Novel AI.', failMsg ? 'error' : 'success');
+                    showToast(failMsg ? `${msg}. Lanjutkan lewat Ganti AI Skill, ${novelData.kind === 'anak' ? 'Buat Cerita Anak' : 'Buat Novel AI'}.`
+                        : paused ? `${msg} Lanjutkan dari ${novelData.kind === 'anak' ? 'Buat Cerita Anak' : 'Buat Novel AI'}.`
+                        : (novelData.kind === 'anak' ? 'Penulisan dihentikan. Halaman yang kosong bisa dilanjutkan dari Buat Cerita Anak.' : 'Penulisan dihentikan. Bab yang kosong bisa dilanjutkan dari Buat Novel AI.'), failMsg ? 'error' : 'success');
                 }
             }
         }
