@@ -587,14 +587,20 @@
             animation: introGlow 3s ease-in-out infinite alternate; pointer-events: none;
         }
         @keyframes introGlow { from { transform: scale(.85); opacity: .6; } to { transform: scale(1.05); opacity: 1; } }
-        .intro-title { position: relative; display: flex; font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: clamp(2.6rem, 9vw, 4.5rem); letter-spacing: .06em; color: #ede9fe; }
+        .intro-title { position: relative; display: flex; font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: clamp(2.6rem, 9vw, 4.5rem); letter-spacing: .06em; }
         .intro-title span {
-            display: inline-block; opacity: 0; filter: blur(8px);
-            transform: translateY(20px) rotate(4deg);
-            animation: introLetter .9s cubic-bezier(.2,.7,.2,1) forwards;
-            animation-delay: calc(var(--i) * 80ms + 250ms);
+            display: inline-block; opacity: 0; filter: blur(6px);
+            transform: translateY(-38px) scale(.7) rotate(-6deg);
+            background: linear-gradient(180deg, #f5f3ff 20%, #c4b5fd 75%, #a855f7);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: introDrop .8s cubic-bezier(.3,1.4,.4,1) forwards;
+            animation-delay: calc(var(--i) * 90ms + 200ms);
         }
-        @keyframes introLetter { to { opacity: 1; filter: blur(0); transform: none; } }
+        @keyframes introDrop {
+            0% { opacity: 0; filter: blur(6px); transform: translateY(-38px) scale(.7) rotate(-6deg); }
+            60% { opacity: 1; filter: blur(0); transform: translateY(6px) scale(1.05) rotate(2deg); }
+            100% { opacity: 1; filter: blur(0); transform: none; }
+        }
         .intro-line {
             position: relative; height: 2px; width: 0; margin: 1rem 0 .9rem;
             background: linear-gradient(90deg, transparent, #a855f7, transparent);
@@ -623,9 +629,9 @@
 </head>
 <body class="h-full bg-slate-950 text-slate-100 font-sans antialiased overflow-hidden flex flex-col">
     <div id="intro-splash" role="presentation" aria-hidden="true">
-        <div class="intro-title" aria-label="Novelis"><span style="--i:0">N</span><span style="--i:1">o</span><span style="--i:2">v</span><span style="--i:3">e</span><span style="--i:4">l</span><span style="--i:5">i</span><span style="--i:6">s</span></div>
+        <div class="intro-title" aria-label="Nuliz"><span style="--i:0">N</span><span style="--i:1">u</span><span style="--i:2">l</span><span style="--i:3">i</span><span style="--i:4">z</span></div>
         <div class="intro-line"></div>
-        <div class="intro-tag">Tulis cerita, bab demi bab.</div>
+        <div class="intro-tag">Tulis apa saja, jadi buku.</div>
         <button type="button" class="intro-skip">Lewati</button>
     </div>
     <script>
@@ -713,8 +719,8 @@
 
             <div class="flex-1 overflow-y-auto px-2 pb-2" id="sidebar-panel-chapters">
                 <div class="flex items-center justify-between mb-1 pl-2">
-                    <span class="text-xs font-medium text-slate-400">Bab</span>
-                    <button onclick="addChapter()" class="icon-btn sm" title="Bab baru" aria-label="Bab baru"><i class="fa-solid fa-plus"></i></button>
+                    <span class="text-xs font-medium text-slate-400" id="chapters-panel-label">Bab</span>
+                    <button onclick="addChapter()" id="add-chapter-btn" class="icon-btn sm" title="Bab baru" aria-label="Bab baru"><i class="fa-solid fa-plus"></i></button>
                 </div>
                 <div id="chapters-status-summary" class="pl-2 pb-1.5 text-[11px] text-slate-500"></div>
                 <div id="chapters-list" class="space-y-0.5"></div>
@@ -1744,7 +1750,7 @@
             ebook: { label: 'eBook (non-fiksi)', badge: 'eBook', fiction: false, defaultTitle: 'eBook Tanpa Judul',
                      template: [{ title: 'Pendahuluan' }, { title: 'Bab 1' }, { title: 'Penutup' }] },
             anak: { label: 'Cerita Anak', badge: 'Cerita Anak', fiction: true, defaultTitle: 'Cerita Anak Tanpa Judul',
-                    template: [{ title: 'Bagian 1' }, { title: 'Bagian 2' }, { title: 'Bagian 3' }] },
+                    template: [{ title: 'Halaman 1' }, { title: 'Halaman 2' }, { title: 'Halaman 3' }] },
         };
         function kindDef(kind) { return PROJECT_KINDS[kind] || PROJECT_KINDS.novel; }
         function isNonFictionKind(kind) { return kindDef(kind).fiction === false; }
@@ -1923,7 +1929,9 @@
                     setupChapterId: Number(t.setupChapterId) || 0, setupQuote: str(t.setupQuote),
                     payoffChapterId: Number(t.payoffChapterId) || 0, payoffQuote: str(t.payoffQuote), created: Number(t.created) || 0 }))
             };
-            if (out.chapters.length === 0) out.chapters.push({ id: 1, title: 'Bab 1', content: '' });
+            if (out.chapters.length === 0) out.chapters.push({ id: 1, title: out.kind === 'anak' ? 'Halaman 1' : 'Bab 1', content: '' });
+            // Migrasi proyek Cerita Anak lama: judul otomatis 'Bagian N' menjadi 'Halaman N'.
+            if (out.kind === 'anak') out.chapters.forEach(c => { const m = /^Bagian (\d+)(:.*)?$/.exec(c.title || ''); if (m) c.title = 'Halaman ' + m[1] + (m[2] || ''); });
             return out;
         }
 
@@ -2167,6 +2175,16 @@
             if (ta) ta.placeholder = ebook
                 ? 'Mulai menulis bab Anda di sini... (gunakan ## untuk subjudul)'
                 : 'Mulai menulis cerita Anda di sini... (ketik @ untuk menyisipkan nama tokoh)';
+            const chTab = document.getElementById('tab-btn-chapters');
+            if (chTab) { chTab.textContent = novelData.kind === 'anak' ? 'Halaman' : 'Bab'; chTab.title = novelData.kind === 'anak' ? 'Daftar halaman' : 'Daftar bab'; }
+            const chLbl = document.getElementById('chapters-panel-label');
+            if (chLbl) chLbl.textContent = novelData.kind === 'anak' ? 'Halaman' : 'Bab';
+            const chAdd = document.getElementById('add-chapter-btn');
+            if (chAdd) { chAdd.title = novelData.kind === 'anak' ? 'Halaman baru' : 'Bab baru'; chAdd.setAttribute('aria-label', novelData.kind === 'anak' ? 'Halaman baru' : 'Bab baru'); }
+            const chPrev = document.getElementById('ch-prev-btn');
+            if (chPrev) { chPrev.title = novelData.kind === 'anak' ? 'Halaman sebelumnya' : 'Bab sebelumnya'; chPrev.setAttribute('aria-label', novelData.kind === 'anak' ? 'Halaman sebelumnya' : 'Bab sebelumnya'); }
+            const chNext = document.getElementById('ch-next-btn');
+            if (chNext) { chNext.title = novelData.kind === 'anak' ? 'Halaman berikutnya' : 'Bab berikutnya'; chNext.setAttribute('aria-label', novelData.kind === 'anak' ? 'Halaman berikutnya' : 'Bab berikutnya'); }
             applyAiStudioKindUI(ebook);
             ['describe', 'dialogue', 'plot'].forEach(v => {
                 const inp = document.querySelector('input[name="rf-mode"][value="' + v + '"]');
@@ -2333,6 +2351,7 @@
         function buildTourSteps() {
             const drawer = isDrawerMode();
             const ebook = !isFictionProject();
+            const anak = novelData.kind === 'anak';
             const openSb = () => { if (drawer) openSidebar(); switchSidebarTab('chapters'); };
             const closeSb = () => { if (drawer) closeSidebar(); };
             return [
@@ -2343,19 +2362,19 @@
                   body: 'Ini layar utamamu: semua buku berjejer dengan sampulnya, dikelompokkan per folder. Ketuk sampul untuk membuka naskahnya, tombol Baca untuk mode baca. Rak juga bisa dibuka kapan saja lewat menu titik tiga.' },
                 { title: 'Menu naskah',
                   el: () => drawer ? tourPick('#sidebar-toggle-btn') : tourPick('#sidebar'),
-                  body: drawer ? 'Ketuk tombol ini untuk membuka daftar bab bukumu.' : (ebook ? 'Panel ini berisi daftar bab bukumu.' : 'Panel ini berisi daftar bab dan catatan dunia ceritamu.'),
+                  body: drawer ? (anak ? 'Ketuk tombol ini untuk membuka daftar halaman bukumu.' : 'Ketuk tombol ini untuk membuka daftar bab bukumu.') : (ebook ? 'Panel ini berisi daftar bab bukumu.' : anak ? 'Panel ini berisi daftar halaman dan catatan dunia ceritamu.' : 'Panel ini berisi daftar bab dan catatan dunia ceritamu.'),
                   before: closeSb },
-                { title: ebook ? 'Bab dan subjudul' : 'Bab, Catatan, Plot',
+                { title: ebook ? 'Bab dan subjudul' : anak ? 'Halaman, Catatan, Plot' : 'Bab, Catatan, Plot',
                   el: () => { const b = document.getElementById('tab-btn-chapters'); return tourVisible(b) ? b.parentElement : null; },
-                  body: ebook ? 'Buku non-fiksi disusun per bab, dan tiap bab bisa dibagi lagi dengan subjudul (tulis ## di awal baris). Tidak ada panel tokoh atau plot, karena semua bantuan AI menyesuaikan ke penjelasan.' : 'Dua tab utama: Bab dan Catatan (tokoh, relasi antar tokoh, dan lore dunia cerita). Tab Plot muncul otomatis begitu kamu mengisinya, atau lewat tautan di bawah Catatan. Makin lengkap isinya, makin nyambung hasil AI.',
+                  body: ebook ? 'Buku non-fiksi disusun per bab, dan tiap bab bisa dibagi lagi dengan subjudul (tulis ## di awal baris). Tidak ada panel tokoh atau plot, karena semua bantuan AI menyesuaikan ke penjelasan.' : anak ? 'Dua tab utama: Halaman dan Catatan (tokoh, relasi antar tokoh, dan lore dunia cerita). Tab Plot muncul otomatis begitu kamu mengisinya, atau lewat tautan di bawah Catatan. Makin lengkap isinya, makin nyambung hasil AI.' : 'Dua tab utama: Bab dan Catatan (tokoh, relasi antar tokoh, dan lore dunia cerita). Tab Plot muncul otomatis begitu kamu mengisinya, atau lewat tautan di bawah Catatan. Makin lengkap isinya, makin nyambung hasil AI.',
                   before: openSb },
-                { title: 'Tambah bab', demo: 'add',
+                { title: anak ? 'Tambah halaman' : 'Tambah bab', demo: 'add',
                   el: () => tourPick('#sidebar-panel-chapters button[onclick="addChapter()"]'),
-                  body: 'Ketuk + untuk bab baru. Bab bisa diurutkan ulang, dan status Draf, Revisi, atau Selesai menandai progres tiap bab.',
+                  body: anak ? 'Ketuk + untuk halaman baru. Halaman bisa diurutkan ulang, dan status Draf, Revisi, atau Selesai menandai progres tiap halaman.' : 'Ketuk + untuk bab baru. Bab bisa diurutkan ulang, dan status Draf, Revisi, atau Selesai menandai progres tiap bab.',
                   before: openSb },
-                { title: 'Judul dan isi bab', demo: ebook ? 'typeBook' : 'type',
+                { title: anak ? 'Judul dan isi halaman' : 'Judul dan isi bab', demo: ebook ? 'typeBook' : 'type',
                   el: () => tourPick('#chapter-title-input'),
-                  body: ebook ? 'Tulis judul bab di sini, lalu isi penjelasanmu di bawahnya. Pakai subjudul ## supaya bab mudah dipindai, dan semuanya tersimpan otomatis.' : 'Tulis judul bab di sini, lalu isi ceritamu di bawahnya. Semuanya tersimpan otomatis. Ketuk pil status di atas judul untuk menandai Draf, Revisi, atau Selesai.',
+                  body: ebook ? 'Tulis judul bab di sini, lalu isi penjelasanmu di bawahnya. Pakai subjudul ## supaya bab mudah dipindai, dan semuanya tersimpan otomatis.' : anak ? 'Tulis judul halaman di sini, lalu isi ceritamu di bawahnya. Semuanya tersimpan otomatis. Ketuk pil status di atas judul untuk menandai Draf, Revisi, atau Selesai.' : 'Tulis judul bab di sini, lalu isi ceritamu di bawahnya. Semuanya tersimpan otomatis. Ketuk pil status di atas judul untuk menandai Draf, Revisi, atau Selesai.',
                   before: closeSb },
                 { title: 'Toolbar menulis',
                   el: () => tourPick('#editor-view .sticky'),
@@ -2703,7 +2722,7 @@
                 div.innerHTML = `
                     <span class="text-[11px] text-slate-500 tabular-nums w-5 shrink-0 text-center">${idx + 1}</span>
                     <div class="min-w-0 flex-1 ml-1.5">
-                        <div class="text-sm truncate leading-snug ${isActive ? 'font-medium' : ''}">${escapeHtml(ch.title) || 'Bab Tanpa Judul'}${sumFlag}</div>
+                        <div class="text-sm truncate leading-snug ${isActive ? 'font-medium' : ''}">${escapeHtml(ch.title) || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')}${sumFlag}</div>
                         <div class="text-[11px] text-slate-500 leading-snug">${words.toLocaleString('id-ID')} kata · <button type="button" data-status title="Ketuk untuk ganti status" class="${stm.txt} hover:underline">${stm.label}</button></div>
                     </div>
                     ${showRefine ? `<button type="button" data-refine title="Perbaiki bab ini dengan AI" aria-label="Perbaiki bab ini dengan AI" class="w-7 h-7 shrink-0 rounded-md text-slate-500 hover:bg-slate-700/60 hover:text-brand-400 text-[11px] flex items-center justify-center transition-all focus:opacity-100 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}"><i class="fa-solid fa-spell-check"></i></button>` : ''}
@@ -3074,28 +3093,28 @@
             const newId = novelData.chapters.length > 0 ? Math.max(...novelData.chapters.map(c => c.id)) + 1 : 1;
             novelData.chapters.push({
                 id: newId,
-                title: `Bab ${novelData.chapters.length + 1}`,
+                title: `${novelData.kind === 'anak' ? 'Halaman' : 'Bab'} ${novelData.chapters.length + 1}`,
                 content: ""
             });
             selectChapter(newId);
-            showToast("Bab baru berhasil ditambahkan.");
+            showToast(novelData.kind === 'anak' ? "Halaman baru berhasil ditambahkan." : "Bab baru berhasil ditambahkan.");
         }
 
         function deleteCurrentChapter() {
             if (novelData.chapters.length <= 1) {
-                showToast("Novel harus memiliki setidaknya satu bab.", "error");
+                showToast(novelData.kind === 'anak' ? "Cerita anak harus memiliki setidaknya satu halaman." : "Novel harus memiliki setidaknya satu bab.", "error");
                 return;
             }
             const idx = novelData.chapters.findIndex(c => c.id === activeChapterId);
             const ch = novelData.chapters[idx];
             if (!ch) return;
-            if (!confirm(`Hapus "${ch.title || 'Bab tanpa judul'}" (${countWords(ch.content).toLocaleString('id-ID')} kata)?`)) return;
+            if (!confirm(`Hapus "${ch.title || (novelData.kind === 'anak' ? 'Halaman tanpa judul' : 'Bab tanpa judul')}" (${countWords(ch.content).toLocaleString('id-ID')} kata)?`)) return;
             historyRecordDeleted(ch, idx);
             novelData.chapters.splice(idx, 1);
             activeChapterId = novelData.chapters[Math.min(idx, novelData.chapters.length - 1)].id;
             renderAll();
             saveToLocalStorage();
-            showToast("Bab dihapus.", "success", {
+            showToast(novelData.kind === 'anak' ? "Halaman dihapus." : "Bab dihapus.", "success", {
                 label: 'Urungkan',
                 run: () => {
                     if (novelData.chapters.some(c => c.id === ch.id)) ch.id = Math.max(0, ...novelData.chapters.map(c => c.id)) + 1;
@@ -3104,7 +3123,7 @@
                     activeEntity = null;
                     renderAll();
                     saveToLocalStorage();
-                    showToast("Bab dikembalikan.");
+                    showToast(novelData.kind === 'anak' ? "Halaman dikembalikan." : "Bab dikembalikan.");
                 }
             });
         }
@@ -4831,7 +4850,7 @@ Bab yang sedang diperbaiki: Bab ${idx + 1} - "${ch.title || 'Tanpa judul'}"`;
             const systemPrompt = !isFictionProject()
                 ? 'Kamu adalah editor buku non-fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis dan kebenaran materi. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus. Pertahankan subjudul markdown (##) yang ada. Bila ada bagan yang digambar dengan karakter teks, ubah menjadi daftar berjenjang. Pisahkan paragraf dengan satu baris kosong.'
                 : novelData.kind === 'anak'
-                ? 'Kamu adalah editor buku cerita anak profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis, nama tokoh, dan fakta cerita. Sederhanakan kata dan kalimat yang terlalu sulit untuk anak, tanpa mengubah jalan cerita. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bagian, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pisahkan paragraf dengan satu baris kosong.'
+                ? 'Kamu adalah editor buku cerita anak profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis, nama tokoh, dan fakta cerita. Sederhanakan kata dan kalimat yang terlalu sulit untuk anak, tanpa mengubah jalan cerita. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul halaman, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pertahankan baris catatan ilustrasi [Ilustrasi: ...] bila ada. Pisahkan paragraf dengan satu baris kosong.'
                 : 'Kamu adalah editor fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah novel sesuai instruksi, dengan menjaga suara penulis, nama tokoh, fakta cerita, dan urutan kejadian. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pisahkan paragraf dengan satu baris kosong.\n\n' + NOVEL_STYLE_RULES;
 
             const chunks = splitIntoChunks(ch.content, REFINE_CHUNK_WORDS);
@@ -9595,7 +9614,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const rowHtml = (p) => {
                 const on = p.id === currentProjectId;
                 const t = escapeHtml(p.title || 'Novel Tanpa Judul');
-                const stats = `${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} bab · ${projAgo(p.updated)}`;
+                const stats = `${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} ${p.kind === 'anak' ? 'halaman' : 'bab'} · ${projAgo(p.updated)}`;
                 const effKind = (p.kind && PROJECT_KINDS[p.kind]) ? p.kind : (on ? novelData.kind : 'novel');
                 const kindBadge = kindDef(effKind).badge ? '<span class="proj-badge" style="background:rgba(168,85,247,.16);color:#c084fc">' + escapeHtml(kindDef(effKind).badge) + '</span>' : '';
                 return `<div class="proj-row ${on ? 'on' : ''}" data-id="${escapeHtml(p.id)}">
@@ -9685,7 +9704,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                         <span class="shelf-badges">${badge}${active}</span>
                     </button>
                     <div class="shelf-title">${t}</div>
-                    <div class="shelf-meta">${a ? a + ' · ' : ''}${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} bab</div>
+                    <div class="shelf-meta">${a ? a + ' · ' : ''}${(p.words || 0).toLocaleString('id-ID')} kata · ${p.chapters || 0} ${p.kind === 'anak' ? 'halaman' : 'bab'}</div>
                     <div class="shelf-actions">
                         <button type="button" class="btn-ghost shelf-btn" onclick="openShelfProject('${escapeHtml(p.id)}', false)"><i class="fa-solid fa-pen"></i> Edit</button>
                         <button type="button" class="btn-ghost shelf-btn" onclick="openShelfProject('${escapeHtml(p.id)}', true)"><i class="fa-solid fa-book-reader"></i> Baca</button>
@@ -9790,7 +9809,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
         const EBOOK_STYLES = ['Praktis & jelas', 'Santai & bersahabat', 'Formal & mendalam', 'Inspiratif & motivasional'];
         const ANAK_AGES = ['3–5 tahun', '6–8 tahun', '9–12 tahun'];
         const ANAK_MORALS = ['Kejujuran', 'Berbagi & peduli', 'Keberanian', 'Kerja sama', 'Tanggung jawab', 'Kasih sayang'];
-        const ANAK_WORDS = [['Singkat (~200 kata)', 200], ['Sedang (~400 kata)', 400], ['Panjang (~700 kata)', 700]];
+        const ANAK_WORDS = [['Sangat singkat (~30 kata)', 30], ['Singkat (~60 kata)', 60], ['Sedang (~100 kata)', 100]];
         function genApplyMode() {
             const ebook = genKind === 'ebook';
             const anak = genKind === 'anak';
@@ -9810,8 +9829,10 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 : 'Contoh: Seorang arsiparis muda menemukan surat dari ibunya yang sudah meninggal 20 tahun, dan surat itu menunjuk ke sebuah desa yang tidak ada di peta.';
             setLabel('gen-genre', ebook ? 'Kategori' : anak ? 'Usia anak' : 'Genre');
             setLabel('gen-tone', ebook ? 'Gaya bahasa' : anak ? 'Tema / pesan moral' : 'Nuansa');
-            setLabel('gen-chcount', anak ? 'Jumlah bagian' : 'Jumlah bab');
-            setLabel('gen-words', anak ? 'Panjang tiap bagian' : 'Panjang tiap bab');
+            setLabel('gen-chcount', anak ? 'Jumlah halaman' : 'Jumlah bab');
+            setLabel('gen-words', anak ? 'Panjang tiap halaman' : 'Panjang tiap bab');
+            setLabel('gen-batch', anak ? 'Tulis berapa halaman per sesi' : 'Tulis berapa bab per sesi');
+            setLabel('gen-batch2', anak ? 'Halaman per sesi' : 'Bab per sesi');
             const genreSel = genEl('gen-genre');
             if (genreSel) {
                 if (genGenreNovelHtml === null) genGenreNovelHtml = genreSel.innerHTML;
@@ -9824,11 +9845,13 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const wordsSel = genEl('gen-words');
             if (wordsSel) {
                 if (genWordsNovelHtml === null) genWordsNovelHtml = wordsSel.innerHTML;
-                wordsSel.innerHTML = anak ? ANAK_WORDS.map(w => '<option value="' + w[1] + '"' + (w[1] === 400 ? ' selected' : '') + '>' + w[0] + '</option>').join('') : genWordsNovelHtml;
+                wordsSel.innerHTML = anak ? ANAK_WORDS.map(w => '<option value="' + w[1] + '"' + (w[1] === 60 ? ' selected' : '') + '>' + w[0] + '</option>').join('') : genWordsNovelHtml;
             }
             }
             const povWrap = genEl('gen-pov') ? genEl('gen-pov').closest('div') : null;
             if (povWrap) povWrap.classList.toggle('hidden', ebook || anak);
+            const chCountEl = genEl('gen-chcount');
+            if (anak && chCountEl && chCountEl.value === '10') chCountEl.value = '12';
             setLabel('gen-o-syn', ebook ? 'Deskripsi' : 'Sinopsis');
             const charsLabel = document.getElementById('gen-o-chars-label');
             if (charsLabel) charsLabel.classList.toggle('hidden', ebook);
@@ -9838,7 +9861,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (note3) note3.textContent = ebook
                 ? 'Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat eBook AI.'
                 : anak
-                ? 'Biarkan tab ini terbuka. Tiap bagian langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat Cerita Anak.'
+                ? 'Biarkan tab ini terbuka. Tiap halaman langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat Cerita Anak.'
                 : 'Biarkan tab ini terbuka. Tiap bab langsung tersimpan; kalau berhenti di tengah, kamu bisa melanjutkannya nanti dari menu Buat Novel AI.';
         }
 
@@ -9875,7 +9898,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             el.classList.toggle('hidden', !show);
             if (!show) return;
             const total = novelData.chapters.length;
-            genEl('gen-float-txt').textContent = genCur >= 0 ? `Menulis bab ${genCur + 1} dari ${total}` : 'Menulis naskah...';
+            genEl('gen-float-txt').textContent = genCur >= 0 ? `${novelData.gen && novelData.gen.kind === 'anak' ? 'Menulis halaman' : 'Menulis bab'} ${genCur + 1} dari ${total}` : 'Menulis naskah...';
         }
         function openGenModal(kind) {
             if (kind) genKind = kind;
@@ -9968,7 +9991,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const userPrompt = genKind === 'ebook'
                 ? `Buat kerangka buku non-fiksi berbahasa ${o.lang}.\nTopik: ${o.idea}\nKategori: ${o.genre}\nGaya bahasa: ${o.tone}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul buku","synopsis":"deskripsi 3-5 kalimat","chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat: subtopik dan poin utama yang dibahas bab ini"}]}\n\nStruktur harus logis dan runtut: mulai dari dasar, lanjut ke penerapan, tutup dengan rangkuman dan langkah selanjutnya. Setiap bab membahas satu topik yang jelas, tanpa tokoh fiksi.`
                 : genKind === 'anak'
-                ? `Buat kerangka buku cerita anak berbahasa ${o.lang}.\nIde: ${o.idea}\nUsia pembaca: ${o.genre}\nTema / pesan moral: ${o.tone}\nJumlah bagian: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul cerita","synopsis":"sinopsis 2-4 kalimat","characters":[{"name":"","role":"","desc":"1 kalimat"}],"chapters":[{"title":"judul bagian tanpa nomor","summary":"2-3 kalimat peristiwa bagian ini"}]}\n\nBuat 2-4 tokoh yang mudah diingat anak. Cerita harus hangat, aman, dan sesuai usia: tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit. Alur sederhana: pembuka, satu masalah kecil yang bisa dipahami anak, usaha tokoh, dan penutup bahagia yang menyampaikan pesan moral secara tersirat, bukan menggurui. Setiap bagian harus bisa dibaca dalam beberapa menit.`
+                ? `Buat kerangka buku cerita anak berbahasa ${o.lang}.\nIde: ${o.idea}\nUsia pembaca: ${o.genre}\nTema / pesan moral: ${o.tone}\nJumlah halaman: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul cerita","synopsis":"sinopsis 2-4 kalimat","characters":[{"name":"","role":"","desc":"1 kalimat"}],"chapters":[{"title":"judul halaman tanpa nomor","summary":"2-3 kalimat peristiwa bagian ini"}]}\n\nBuat 2-4 tokoh yang mudah diingat anak. Cerita harus hangat, aman, dan sesuai usia: tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit. Alur sederhana: pembuka, satu masalah kecil yang bisa dipahami anak, usaha tokoh, dan penutup bahagia yang menyampaikan pesan moral secara tersirat, bukan menggurui. Setiap halaman adalah satu adegan dengan teks singkat yang mudah dibaca anak.`
                 : `Buat kerangka novel berbahasa ${o.lang}.\nIde: ${o.idea}\nGenre: ${o.genre}\nNuansa: ${o.tone}\nSudut pandang: ${o.pov}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul novel","synopsis":"sinopsis 3-5 kalimat","characters":[{"name":"","role":"","desc":"1-2 kalimat"}],"chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat peristiwa utama bab ini"}]}\n\nBuat 3-6 tokoh. Alur harus punya pembuka, konflik yang meningkat, klimaks, dan penutup yang memuaskan. Setiap bab harus memajukan cerita.`;
             let stoppedByUser = false;
             try {
@@ -10010,7 +10033,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 `<div class="gen-ch-row"><div class="flex gap-2"><input class="field gc-name" placeholder="Nama" value="${escapeHtml(c.name || '')}"><input class="field gc-role" placeholder="Peran" value="${escapeHtml(c.role || '')}"></div><textarea class="field gc-desc" rows="2" placeholder="Deskripsi">${escapeHtml(c.desc || '')}</textarea></div>`).join('')
                 || '<div class="text-xs text-slate-500">Tidak ada tokoh.</div>';
             genEl('gen-o-chapters').innerHTML = j.chapters.slice(0, 40).map((c, i) =>
-                `<div class="gen-ch-row"><div class="text-[11px] text-slate-500">${genKind === 'anak' ? 'Bagian' : 'Bab'} ${i + 1}</div><input class="field gh-title" placeholder="Judul bab" value="${escapeHtml(c.title || '')}"><textarea class="field gh-sum" rows="2" placeholder="Ringkasan">${escapeHtml(c.summary || '')}</textarea></div>`).join('');
+                `<div class="gen-ch-row"><div class="text-[11px] text-slate-500">${genKind === 'anak' ? 'Halaman' : 'Bab'} ${i + 1}</div><input class="field gh-title" placeholder="Judul bab" value="${escapeHtml(c.title || '')}"><textarea class="field gh-sum" rows="2" placeholder="Ringkasan">${escapeHtml(c.summary || '')}</textarea></div>`).join('');
         }
         function genReadOutline() {
             const chapters = [...document.querySelectorAll('#gen-o-chapters .gen-ch-row')].map(r => ({
@@ -10046,7 +10069,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (genBusy || genRunning) return;
             const ol = genReadOutline();
             if (!ol.title) { genEl('gen-status').textContent = 'Judul tidak boleh kosong.'; return; }
-            if (!ol.chapters.length) { genEl('gen-status').textContent = 'Kerangka belum punya bab.'; return; }
+            if (!ol.chapters.length) { genEl('gen-status').textContent = genKind === 'anak' ? 'Kerangka belum punya halaman.' : 'Kerangka belum punya bab.'; return; }
             if (!getApiKey()) { genEl('gen-no-key').classList.remove('hidden'); genShowStep(1); genEl('gen-status').textContent = 'API key belum diisi.'; return; }
             genBusy = true;
             genEl('gen-main-btn').disabled = true;
@@ -10054,7 +10077,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             const d = normalizeNovelData({
                 title: ol.title, author: novelData.author || 'Anonim', synopsis: ol.synopsis,
                 kind: genKind,
-                chapters: ol.chapters.map((c, i) => ({ id: i + 1, title: `${genKind === 'anak' ? 'Bagian' : 'Bab'} ${i + 1}${c.title ? ': ' + c.title : ''}`, content: '' })),
+                chapters: ol.chapters.map((c, i) => ({ id: i + 1, title: `${genKind === 'anak' ? 'Halaman' : 'Bab'} ${i + 1}${c.title ? ': ' + c.title : ''}`, content: '' })),
                 characters: ol.characters.map((c, i) => ({ id: i + 1, name: c.name, role: c.role, desc: c.desc, alias: '' })),
                 gen: { kind: genKind, idea: o.idea, genre: o.genre, tone: o.tone, pov: o.pov, lang: o.lang, words: o.words, batch: parseInt(genEl('gen-batch').value, 10) || 0, outline: ol.chapters.map(c => c.summary || '') }
             });
@@ -10101,13 +10124,13 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 const outline = chs.map((c, i) => `${i + 1}. ${c.title} :: ${g.outline[i] || ''}`).join('\n');
                 const prev = idx > 0 ? (chs[idx - 1].content || '').slice(-1500) : '';
                 const memory = genStoryMemoryText(idx);
-                const system = `Kamu adalah penulis buku cerita anak profesional yang menulis dalam bahasa ${g.lang}. Usia pembaca ${g.genre}, tema / pesan moral ${g.tone}. Tulis cerita yang hangat dan aman untuk anak: kalimat pendek dan sederhana, kosakata sesuai usia, dialog ringan dan natural, tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit tanpa penjelasan. Jaga konsistensi nama tokoh dan fakta cerita. Sampaikan pesan moral lewat perbuatan tokoh, bukan ceramah. Keluarkan HANYA isi bagian: tanpa judul, tanpa nomor bagian, tanpa komentar atau markdown.` +
-                    (memory ? ` Kamu juga menerima MEMORI CERITA berisi fakta yang sudah ditetapkan bagian-bagian sebelumnya. Perlakukan sebagai kenyataan mutlak: jangan bertentangan dengan fakta di dalamnya, pakai sebutan tokoh sebagaimana tercatat, dan jangan lupakan benang cerita yang masih terbuka.` : '');
+                const system = `Kamu adalah penulis buku cerita anak profesional yang menulis dalam bahasa ${g.lang}. Usia pembaca ${g.genre}, tema / pesan moral ${g.tone}. Tulis cerita yang hangat dan aman untuk anak: kalimat pendek dan sederhana, kosakata sesuai usia, dialog ringan dan natural, tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit tanpa penjelasan. Satu halaman memuat tepat satu adegan, dengan teks singkat seperti buku anak bergambar. Jaga konsistensi nama tokoh dan fakta cerita. Sampaikan pesan moral lewat perbuatan tokoh, bukan ceramah. Keluarkan HANYA isi halaman: tanpa judul, tanpa nomor halaman, tanpa komentar atau markdown. Akhiri halaman dengan satu baris catatan ilustrasi persis dengan format: [Ilustrasi: deskripsi singkat adegan halaman ini untuk gambar].` +
+                    (memory ? ` Kamu juga menerima MEMORI CERITA berisi fakta yang sudah ditetapkan halaman-halaman sebelumnya. Perlakukan sebagai kenyataan mutlak: jangan bertentangan dengan fakta di dalamnya, pakai sebutan tokoh sebagaimana tercatat, dan jangan lupakan benang cerita yang masih terbuka.` : '');
                 const user = `JUDUL: ${novelData.title}\nSINOPSIS: ${novelData.synopsis}\n\nTOKOH:\n${chars}\n\nKERANGKA SELURUH CERITA:\n${outline}\n\n` +
-                    (memory ? `MEMORI CERITA (dari bagian 1 sampai ${idx}):\n${memory}\n\n` : '') +
-                    (prev ? `AKHIR BAGIAN SEBELUMNYA (lanjutkan dengan mulus, jangan diulang):\n---\n${prev}\n---\n\n` : '') +
-                    `TUGAS: Tulis Bagian ${idx + 1} dari ${total}, "${chs[idx].title}". Peristiwa bagian ini: ${g.outline[idx] || '(kembangkan sesuai kerangka)'}.\nPanjang minimal ${Math.round(g.words * 0.9)} kata, idealnya sekitar ${g.words} kata. Jangan berhenti sebelum panjang minimal tercapai. ` +
-                    (idx === total - 1 ? 'Ini bagian terakhir: tutup cerita dengan akhir bahagia yang menyampaikan pesan moral secara tersirat.' : 'Akhiri dengan rasa ingin tahu yang lembut, jangan menyelesaikan cerita.');
+                    (memory ? `MEMORI CERITA (dari halaman 1 sampai ${idx}):\n${memory}\n\n` : '') +
+                    (prev ? `AKHIR HALAMAN SEBELUMNYA (lanjutkan dengan mulus, jangan diulang):\n---\n${prev}\n---\n\n` : '') +
+                    `TUGAS: Tulis Halaman ${idx + 1} dari ${total}, "${chs[idx].title}". Peristiwa halaman ini: ${g.outline[idx] || '(kembangkan sesuai kerangka)'}.\nPanjang minimal ${Math.round(g.words * 0.9)} kata, idealnya sekitar ${g.words} kata. Jangan berhenti sebelum panjang minimal tercapai. Tutup halaman dengan satu baris catatan ilustrasi: [Ilustrasi: deskripsi singkat adegan halaman ini untuk gambar]. ` +
+                    (idx === total - 1 ? 'Ini halaman terakhir: tutup cerita dengan akhir bahagia yang menyampaikan pesan moral secara tersirat.' : 'Akhiri dengan rasa ingin tahu yang lembut, jangan menyelesaikan cerita.');
                 return { system, user };
             }
             const chars = novelData.characters.map(c => `- ${c.name}${c.role ? ' (' + c.role + ')' : ''}: ${c.desc}`).join('\n') || '(bebas)';
@@ -10277,7 +10300,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                 : genRunning && genCur >= 0 ? `Menulis bab ${genCur + 1} dari ${total}` : `${done} dari ${total} bab selesai`;
             const words = chs.reduce((n, c) => n + countWords(c.content), 0);
             const sec = genT0 ? Math.round((Date.now() - genT0) / 1000) : 0;
-            genEl('gen-w-meta').textContent = `${done}/${total} bab selesai · ${words.toLocaleString('id-ID')} kata · ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+            genEl('gen-w-meta').textContent = `${done}/${total} ${(novelData.gen && novelData.gen.kind === 'anak') ? 'halaman' : 'bab'} selesai · ${words.toLocaleString('id-ID')} kata · ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
             genEl('gen-list').innerHTML = chs.map((c, i) => {
                 const isDone = !!(c.content || '').trim();
                 const cur = !isDone && genRunning && i === genCur;
