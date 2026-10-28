@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <!-- Batasi tujuan pengiriman data (mencegah kebocoran API key/naskah ke situs lain bila ada skrip berbahaya). -->
-    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://generativelanguage.googleapis.com https://api.deepseek.com https://ai.sumopod.com https://api.kagiro.net; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://generativelanguage.googleapis.com https://api.deepseek.com https://ai.sumopod.com https://api.kagiro.net https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta name="referrer" content="no-referrer">
     <meta name="description" content="Novelis: editor penulisan novel dengan asisten AI. Naskah tersimpan di perangkat dan bisa dipakai offline.">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1371,6 +1371,23 @@
                         </select>
                     </label>
                     <p class="text-[11px] text-slate-500">Browser tidak bisa mengunduh file otomatis tanpa aksi Anda, jadi Novelis akan mengingatkan dan Anda cukup menekan satu tombol.</p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 space-y-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <span class="text-xs text-slate-300">Google Drive (per pengguna)</span>
+                            <p id="drive-status-info" class="text-[11px] text-slate-500 mt-0.5">Belum terhubung</p>
+                            <p id="drive-last-info" class="text-[11px] text-slate-500 mt-0.5"></p>
+                        </div>
+                    </div>
+                    <div id="drive-actions" class="flex gap-1.5 flex-wrap">
+                        <button onclick="driveConnect()" class="btn-ghost" style="height:2rem;padding:0 .75rem" title="Login dengan akun Google Anda"><i class="fa-brands fa-google-drive"></i> Hubungkan</button>
+                        <button onclick="driveBackupNow()" class="btn-ghost" style="height:2rem;padding:0 .75rem" title="Simpan proyek ini ke Google Drive Anda"><i class="fa-solid fa-cloud-arrow-up"></i> Cadangkan ke Drive</button>
+                        <button onclick="driveRestoreNow()" class="btn-ghost" style="height:2rem;padding:0 .75rem" title="Ambil cadangan proyek ini dari Google Drive Anda"><i class="fa-solid fa-cloud-arrow-down"></i> Pulihkan dari Drive</button>
+                        <button id="drive-disconnect-btn" onclick="driveDisconnect()" class="btn-ghost hidden" style="height:2rem;padding:0 .75rem" title="Putuskan Google Drive">Putuskan</button>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Tiap pengguna login dengan akun Google-nya sendiri, jadi cadangan hanya masuk ke Drive akun itu — tidak lewat server mana pun, langsung dari perangkat ke Google. Perlu internet; bila jendela login tidak muncul, izinkan popup untuk situs ini.</p>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 space-y-2.5">
@@ -3664,6 +3681,7 @@
             refreshCoverPreview();
             document.getElementById('setting-backup-remind').value = String(getBackupRemindDays());
             document.getElementById('backup-last-info').textContent = describeLastBackup();
+            refreshDriveBlock();
             document.getElementById('settings-modal').classList.remove('hidden');
             switchSettingsTab(typeof tab === 'string' ? tab : 'novel');
         }
@@ -3948,6 +3966,188 @@
             showToast("Backup JSON berhasil diunduh.");
         }
 
+        // ===== Google Drive: cadangan per pengguna =====
+        // Satu Client ID milik pemilik aplikasi; tiap pengguna login dengan akun
+        // Google-nya sendiri, jadi cadangan hanya masuk ke Drive akun itu.
+        // PEMILIK APLIKASI: isi GOOGLE_DRIVE_CLIENT_ID dengan OAuth Client ID
+        // (Web application) dari Google Cloud Console, dengan Authorized
+        // JavaScript origin https://coachumi86.github.io. Selama kosong, blok
+        // Drive menampilkan pemberitahuan dan tidak mencoba login.
+        // Token akses hanya disimpan di memori (tidak di localStorage), jadi
+        // tiap sesi baru pengguna mengetuk Hubungkan/Cadangkan sekali lagi;
+        // Google biasanya memberi token baru tanpa menampilkan jendela bila
+        // izinnya masih berlaku.
+        const GOOGLE_DRIVE_CLIENT_ID = '';
+        const DRIVE_FILES_KEY = 'novelis_drive_files';
+        const DRIVE_LAST_KEY = 'novelis_drive_last';
+        const DRIVE_MIME = 'application/json';
+        let driveToken = null, driveTokenClient = null, driveGisPromise = null, driveBusy = false;
+        function driveReady() { return !!GOOGLE_DRIVE_CLIENT_ID; }
+        function driveBackupFileName() { return 'Novelis_' + String(novelData.title || 'Tanpa_Judul').replace(/[\/\s]+/g, '_') + '_Backup.json'; }
+        function driveFileMap() { try { return JSON.parse(localStorage.getItem(DRIVE_FILES_KEY) || '{}') || {}; } catch (e) { return {}; } }
+        function driveGetFileId() { return driveFileMap()[currentProjectId] || ''; }
+        function driveSetFileId(id) { const m = driveFileMap(); m[currentProjectId] = id; try { localStorage.setItem(DRIVE_FILES_KEY, JSON.stringify(m)); } catch (e) {} }
+        function driveClearFileId() { const m = driveFileMap(); delete m[currentProjectId]; try { localStorage.setItem(DRIVE_FILES_KEY, JSON.stringify(m)); } catch (e) {} }
+        function driveLastKey() { return DRIVE_LAST_KEY + ':' + currentProjectId; }
+        function driveSearchQuery(name) { return "name = '" + String(name).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "' and trashed = false"; }
+        function driveBuildMultipart(name, json, boundary) {
+            const meta = JSON.stringify({ name: name, mimeType: DRIVE_MIME });
+            return '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta +
+                '\r\n--' + boundary + '\r\nContent-Type: ' + DRIVE_MIME + '\r\n\r\n' + json + '\r\n--' + boundary + '--';
+        }
+        function driveSetStatus(text) { const el = document.getElementById('drive-status-info'); if (el) el.textContent = text; }
+        function refreshDriveBlock() {
+            const lastEl = document.getElementById('drive-last-info');
+            const actions = document.getElementById('drive-actions');
+            const disc = document.getElementById('drive-disconnect-btn');
+            if (lastEl) {
+                const last = Number(localStorage.getItem(driveLastKey())) || 0;
+                lastEl.textContent = last ? 'Terakhir dicadangkan ke Drive: ' + new Date(last).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Belum pernah dicadangkan ke Drive.';
+            }
+            if (!driveReady()) {
+                driveSetStatus('Belum disiapkan pemilik aplikasi (butuh Client ID Google).');
+                if (actions) actions.classList.add('hidden');
+                return;
+            }
+            if (actions) actions.classList.remove('hidden');
+            if (disc) disc.classList.toggle('hidden', !driveToken);
+            driveSetStatus(driveToken ? 'Terhubung ke Google Drive.' : 'Belum terhubung — ketuk Hubungkan, lalu login dengan akun Google Anda.');
+        }
+        function ensureGis() {
+            if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+            if (driveGisPromise) return driveGisPromise;
+            driveGisPromise = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://accounts.google.com/gsi/client';
+                s.async = true; s.defer = true;
+                s.onload = () => resolve();
+                s.onerror = () => { driveGisPromise = null; reject(new Error('Gagal memuat login Google. Periksa internet Anda.')); };
+                document.head.appendChild(s);
+            });
+            return driveGisPromise;
+        }
+        function driveRequestToken() {
+            return new Promise((resolve, reject) => {
+                if (!driveTokenClient) {
+                    driveTokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: GOOGLE_DRIVE_CLIENT_ID,
+                        scope: 'https://www.googleapis.com/auth/drive.file',
+                        callback: (resp) => {
+                            if (resp && resp.access_token) { driveToken = resp.access_token; resolve(true); }
+                            else reject(new Error('Login Google dibatalkan atau ditolak.'));
+                        }
+                    });
+                }
+                try { driveTokenClient.requestAccessToken(); }
+                catch (e) { reject(e); }
+            });
+        }
+        async function driveEnsureToken() {
+            if (driveToken) return true;
+            await ensureGis();
+            const ok = await driveRequestToken();
+            refreshDriveBlock();
+            return ok;
+        }
+        async function driveApi(path, opts) {
+            const res = await fetch('https://www.googleapis.com' + path, {
+                ...(opts || {}),
+                headers: { Authorization: 'Bearer ' + driveToken, ...((opts && opts.headers) || {}) }
+            });
+            if (res.status === 401) { driveToken = null; refreshDriveBlock(); throw new Error('Sesi Google Drive berakhir. Ketuk Hubungkan, lalu coba lagi.'); }
+            if (!res.ok) {
+                let msg = 'Google Drive menolak permintaan (' + res.status + ').';
+                try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch (e) {}
+                throw new Error(msg);
+            }
+            return res;
+        }
+        async function driveConnect() {
+            if (!driveReady()) { showToast('Fitur Google Drive belum disiapkan pemilik aplikasi.', 'error'); return false; }
+            if (driveBusy) return false;
+            driveBusy = true;
+            try {
+                await driveEnsureToken();
+                showToast('Terhubung ke Google Drive.');
+                return true;
+            } catch (e) { showToast(e.message || 'Gagal menghubungkan Google Drive.', 'error'); return false; }
+            finally { driveBusy = false; refreshDriveBlock(); }
+        }
+        async function driveBackupNow() {
+            if (!driveReady()) { showToast('Fitur Google Drive belum disiapkan pemilik aplikasi.', 'error'); return; }
+            if (driveBusy) { showToast('Tunggu proses Drive selesai dulu.'); return; }
+            driveBusy = true;
+            try {
+                await driveEnsureToken();
+                const json = JSON.stringify(novelData, null, 2);
+                const name = driveBackupFileName();
+                let fileId = driveGetFileId();
+                if (fileId) {
+                    try {
+                        await driveApi('/upload/drive/v3/files/' + encodeURIComponent(fileId) + '?uploadType=media', {
+                            method: 'PATCH', headers: { 'Content-Type': DRIVE_MIME }, body: json
+                        });
+                    } catch (e) {
+                        if (/404/.test(e.message)) { driveClearFileId(); fileId = ''; }
+                        else throw e;
+                    }
+                }
+                if (!fileId) {
+                    const boundary = '-------novelis-drive-' + Date.now();
+                    const res = await driveApi('/upload/drive/v3/files?uploadType=multipart', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
+                        body: driveBuildMultipart(name, json, boundary)
+                    });
+                    const created = await res.json();
+                    if (!created || !created.id) throw new Error('Google Drive tidak mengembalikan ID file.');
+                    driveSetFileId(created.id);
+                }
+                const now = Date.now();
+                try { localStorage.setItem(driveLastKey(), String(now)); } catch (e) {}
+                try { localStorage.setItem(backupKey(), String(now)); } catch (e) {}
+                const bi = document.getElementById('backup-last-info');
+                if (bi) bi.textContent = describeLastBackup();
+                updateBackupChip();
+                refreshDriveBlock();
+                showToast('Cadangan tersimpan di Google Drive.');
+            } catch (e) { showToast(e.message || 'Gagal mencadangkan ke Google Drive.', 'error'); }
+            finally { driveBusy = false; }
+        }
+        async function driveRestoreNow() {
+            if (!driveReady()) { showToast('Fitur Google Drive belum disiapkan pemilik aplikasi.', 'error'); return; }
+            if (driveBusy) { showToast('Tunggu proses Drive selesai dulu.'); return; }
+            driveBusy = true;
+            try {
+                await driveEnsureToken();
+                let fileId = driveGetFileId();
+                if (!fileId) {
+                    const q = encodeURIComponent(driveSearchQuery(driveBackupFileName()));
+                    const res = await driveApi('/drive/v3/files?q=' + q + '&fields=files(id,name,modifiedTime)');
+                    const list = await res.json();
+                    if (list && list.files && list.files.length) { fileId = list.files[0].id; driveSetFileId(fileId); }
+                    else { showToast('Tidak ada cadangan proyek ini di Google Drive.', 'error'); return; }
+                }
+                let text;
+                try {
+                    const res = await driveApi('/drive/v3/files/' + encodeURIComponent(fileId) + '?alt=media');
+                    text = await res.text();
+                } catch (e) {
+                    if (/404/.test(e.message)) { driveClearFileId(); showToast('File cadangan tidak ditemukan lagi di Drive.', 'error'); return; }
+                    throw e;
+                }
+                restoreProjectFromJsonText(text);
+            } catch (e) { showToast(e.message || 'Gagal memulihkan dari Google Drive.', 'error'); }
+            finally { driveBusy = false; }
+        }
+        function driveDisconnect() {
+            const token = driveToken;
+            driveToken = null;
+            try { if (token && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(token); } catch (e) {}
+            refreshDriveBlock();
+            showToast('Google Drive diputuskan. File cadangan tetap ada di Drive Anda.');
+        }
+
         // ===== Pengingat backup berkala =====
         // Browser tidak mengizinkan unduhan otomatis tanpa klik pengguna, jadi yang otomatis
         // adalah pengingatnya: saat dibuka dan tiap 6 jam, Novelis mengecek usia backup terakhir.
@@ -4002,34 +4202,36 @@
             });
         }
 
+        // Restore dari teks JSON — dipakai bersama oleh impor file lokal dan pulihkan dari Drive.
+        function restoreProjectFromJsonText(text) {
+            try {
+                const parsed = JSON.parse(text);
+                if (parsed && Array.isArray(parsed.chapters) && parsed.title) {
+                    if (!confirm('Restore akan MENIMPA seluruh naskah di proyek ini. (Untuk menambahkan sebagai proyek baru, pakai Proyek saya, Impor .json.) Lanjutkan?')) return false;
+                    snapshotFull('Sebelum restore file');
+                    novelData = normalizeNovelData(parsed);
+                    activeChapterId = novelData.chapters[0]?.id || 1;
+                    activeEntity = null;
+                    if (typeof refineState !== 'undefined') refineState.undo = null;
+                    renderAll();
+                    saveToLocalStorage();
+                    closeSettingsModal();
+                    showToast("Project berhasil direstore.");
+                    return true;
+                }
+                showToast("Format file JSON tidak valid.", "error");
+            } catch (err) {
+                showToast("Gagal membaca file JSON.", "error");
+            }
+            return false;
+        }
         function importProjectJson(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed && Array.isArray(parsed.chapters) && parsed.title) {
-                        if (!confirm('Restore akan MENIMPA seluruh naskah di proyek ini. (Untuk menambahkan sebagai proyek baru, pakai Proyek saya, Impor .json.) Lanjutkan?')) {
-                            event.target.value = '';
-                            return;
-                        }
-                        snapshotFull('Sebelum restore file');
-                        novelData = normalizeNovelData(parsed);
-                        activeChapterId = novelData.chapters[0]?.id || 1;
-                        activeEntity = null;
-                        if (typeof refineState !== 'undefined') refineState.undo = null;
-                        renderAll();
-                        saveToLocalStorage();
-                        closeSettingsModal();
-                        event.target.value = '';
-                        showToast("Project berhasil direstore.");
-                    } else {
-                        showToast("Format file JSON tidak valid.", "error");
-                    }
-                } catch (err) {
-                    showToast("Gagal membaca file JSON.", "error");
-                }
+                restoreProjectFromJsonText(e.target.result);
+                event.target.value = '';
             };
             reader.readAsText(file);
         }
