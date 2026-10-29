@@ -1,6 +1,6 @@
 /* Novelis service worker: membuat aplikasi bisa dibuka offline.
    Naik-kan VERSION setiap kali file aplikasi berubah agar cache lama dibuang. */
-const VERSION = 'novelis-v21';
+const VERSION = 'novelis-v22';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 // Library pihak ketiga yang aman di-cache (hanya GET; API AI TIDAK pernah lewat sini).
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];

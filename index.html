@@ -4521,16 +4521,16 @@ ${recentText || '(bab ini masih kosong)'}
             document.getElementById('ai-copy-btn').classList.add('hidden');
 
             const systemPrompt = ebook
-                ? "Kamu adalah penulis dan editor buku non-fiksi profesional berbahasa Indonesia. Gunakan konteks buku yang diberikan agar hasilnya konsisten dengan gaya dan materi yang sudah ada. Tulis penjelasan yang jelas dan praktis; pakai subjudul bila membantu. Jangan mengarang data, angka, atau kutipan ahli. Bagan struktur tidak boleh digambar dengan karakter teks (misalnya |, -, atau [ ]) — sampaikan sebagai daftar berjenjang atau paragraf penjelasan. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta."
+                ? "Kamu adalah penulis dan editor buku non-fiksi profesional berbahasa Indonesia. Gunakan konteks buku yang diberikan agar hasilnya konsisten dengan gaya dan materi yang sudah ada. Tulis penjelasan yang jelas dan praktis; pakai subjudul bila membantu. Jangan mengarang data, angka, atau kutipan ahli. Bagan struktur tidak boleh digambar dengan karakter teks (misalnya |, -, atau [ ]) — sampaikan sebagai daftar berjenjang atau paragraf penjelasan. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta.\n\n" + EBOOK_CLEAN_RULES
                 : novelData.kind === 'anak'
-                ? "Kamu adalah penulis buku cerita anak profesional berbahasa Indonesia. Lanjutkan cerita dengan gaya yang sama: kalimat pendek dan sederhana, kosakata sesuai usia anak, hangat dan aman, tanpa kekerasan atau hal menakutkan. Jaga nama tokoh dan fakta cerita yang sudah ada. Sampaikan pesan moral lewat perbuatan tokoh, bukan ceramah. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta."
+                ? "Kamu adalah penulis buku cerita anak profesional berbahasa Indonesia. Lanjutkan cerita dengan gaya yang sama: kalimat pendek dan sederhana, kosakata sesuai usia anak, hangat dan aman, tanpa kekerasan atau hal menakutkan. Jaga nama tokoh dan fakta cerita yang sudah ada. Sampaikan pesan moral lewat perbuatan tokoh, bukan ceramah. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta.\n\n" + ANAK_CLEAN_RULES
                 : "Kamu adalah co-writer novel profesional berbahasa Indonesia. Gunakan konteks novel yang diberikan agar hasil tulisanmu konsisten dengan gaya, tokoh, dan alur cerita yang sudah ada. Jangan mengulang informasi konteks dalam jawabanmu — langsung tulis hasil yang diminta.\n\n" + NOVEL_STYLE_RULES;
             const userPrompt = `${ebook ? buildEbookContext() : buildNovelContext()}\n\nInstruksi: ${instruction}`;
 
             try {
                 const { text } = await callGemini({ systemPrompt, userPrompt, temperature: 0.8 });
 
-                currentAiGeneratedText = text;
+                currentAiGeneratedText = cleanAiText(text, ebook ? 'ebook' : novelData.kind);
                 outputArea.value = text;
                 statusEl.textContent = "Selesai.";
                 insertBtn.classList.remove('hidden');
@@ -5126,9 +5126,9 @@ ${unitWord()} yang sedang diperbaiki: ${unitWord()} ${idx + 1} - "${ch.title || 
             if (custom) instructionLines.push(`- Permintaan khusus dari penulis: ${custom}`);
 
             const systemPrompt = !isFictionProject()
-                ? 'Kamu adalah editor buku non-fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis dan kebenaran materi. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus. Pertahankan subjudul markdown (##) yang ada. Bila ada bagan yang digambar dengan karakter teks, ubah menjadi daftar berjenjang. Pisahkan paragraf dengan satu baris kosong.'
+                ? 'Kamu adalah editor buku non-fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis dan kebenaran materi. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus. Pertahankan subjudul markdown (##) yang ada. Bila ada bagan yang digambar dengan karakter teks, ubah menjadi daftar berjenjang. Pisahkan paragraf dengan satu baris kosong.' + '\n\n' + EBOOK_CLEAN_RULES
                 : novelData.kind === 'anak'
-                ? 'Kamu adalah editor buku cerita anak profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis, nama tokoh, dan fakta cerita. Sederhanakan kata dan kalimat yang terlalu sulit untuk anak, tanpa mengubah jalan cerita. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul halaman, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pertahankan baris catatan ilustrasi [Ilustrasi: ...] bila ada. Pisahkan paragraf dengan satu baris kosong.'
+                ? 'Kamu adalah editor buku cerita anak profesional berbahasa Indonesia. Tugasmu memperbaiki naskah sesuai instruksi, dengan menjaga suara penulis, nama tokoh, dan fakta cerita. Sederhanakan kata dan kalimat yang terlalu sulit untuk anak, tanpa mengubah jalan cerita. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul halaman, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pertahankan baris catatan ilustrasi [Ilustrasi: ...] bila ada. Pisahkan paragraf dengan satu baris kosong.' + '\n\n' + ANAK_CLEAN_RULES
                 : 'Kamu adalah editor fiksi profesional berbahasa Indonesia. Tugasmu memperbaiki naskah novel sesuai instruksi, dengan menjaga suara penulis, nama tokoh, fakta cerita, dan urutan kejadian. Keluarkan HANYA teks naskah hasil perbaikan: tanpa pembuka, tanpa penjelasan, tanpa komentar, tanpa judul bab, tanpa tanda kutip pembungkus, dan tanpa format markdown. Pisahkan paragraf dengan satu baris kosong.\n\n' + NOVEL_STYLE_RULES;
 
             const chunks = splitIntoChunks(ch.content, REFINE_CHUNK_WORDS);
@@ -5176,7 +5176,7 @@ ${chunks[i]}
                     if (finishReason === 'MAX_TOKENS') throw new Error('Hasil terpotong karena terlalu panjang. Coba kurangi jenis perbaikan atau pilih tingkat perubahan lebih ringan.');
 
                     results.push(cleanAiChapterText(text));
-                    outEl.value = results.join('\n\n');
+                    outEl.value = cleanAiText(results.join('\n\n'), novelData.kind);
                     outEl.scrollTop = outEl.scrollHeight;
                 }
 
@@ -5257,7 +5257,7 @@ ${chunks[i]}
         const CHATREV_MAX_WORDS = 20000;
         let chatRev = { msgs: [], busy: false, abort: null, projectId: null, seq: 0 };
 
-        const CHATREV_SYSTEM = 'Kamu adalah editor fiksi berbahasa Indonesia yang membantu penulis memperbaiki bagian cerita yang bermasalah (tidak masuk akal, janggal, bertentangan dengan bagian lain, dan sejenisnya) lewat percakapan. Penulis menjelaskan keluhannya dengan bahasa biasa. Tugasmu: (1) temukan bagian naskah yang dimaksud, (2) tulis ulang HANYA bagian itu agar masalahnya hilang, dengan tetap menjaga suara penulis, nama tokoh, fakta cerita, dan kejadian lain. Jangan menulis ulang seluruh bab.\n\n'
+        const CHATREV_SYSTEM = 'Kamu adalah editor fiksi berbahasa Indonesia yang membantu penulis memperbaiki bagian cerita yang bermasalah (tidak masuk akal, janggal, bertentangan dengan bagian lain, dan sejenisnya) lewat percakapan. Penulis menjelaskan keluhannya dengan bahasa biasa. Tugasmu: (1) temukan bagian naskah yang dimaksud, (2) tulis ulang HANYA bagian itu agar masalahnya hilang, dengan tetap menjaga suara penulis, nama tokoh, fakta cerita, dan kejadian lain. Jangan menulis ulang seluruh bab. Tulis ulang dengan teks bersih: tanpa *, _, `, ---, tautan, emoji, simbol dekoratif, tabel, tag HTML, atau bagan karakter; padat tanpa pengulangan.\n\n'
             + 'Jawab HANYA dengan JSON berbentuk: {"reply": "penjelasan singkat dalam bahasa Indonesia tentang apa yang kamu ubah dan kenapa", "edits": [{"chapter": nomor_bab, "original": "...", "revised": "...", "reason": "alasan singkat"}]}\n\n'
             + 'Aturan:\n'
             + '- "original" harus SALINAN PERSIS dari naskah, karakter demi karakter (jangan diringkas, jangan membetulkan ejaan, jangan mengganti tanda kutip). Pilih satu atau beberapa paragraf berurutan seperlunya, cukup panjang agar unik tetapi tidak lebih dari yang diperlukan.\n'
@@ -5467,7 +5467,7 @@ ${chunks[i]}
                 const edits = [];
                 rawEdits.forEach(r => {
                     const original = String((r && r.original) || '');
-                    const revised = String((r && r.revised) || '').trim();
+                    const revised = cleanAiText(String((r && r.revised) || '').trim(), novelData.kind);
                     if (!original.trim() || !revised) return;
                     let hit = null;
                     const stated = Number(r.chapter);
@@ -10279,10 +10279,10 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 ? 'Kamu adalah perencana buku cerita anak profesional. Balas HANYA dengan satu objek JSON valid, tanpa teks lain dan tanpa blok kode.'
                 : 'Kamu adalah perencana novel profesional. Balas HANYA dengan satu objek JSON valid, tanpa teks lain dan tanpa blok kode.';
             const userPrompt = genKind === 'ebook'
-                ? `Buat kerangka buku non-fiksi berbahasa ${o.lang}.\nTopik: ${o.idea}\nKategori: ${o.genre}\nGaya bahasa: ${o.tone}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul buku","synopsis":"deskripsi 3-5 kalimat","chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat: subtopik dan poin utama yang dibahas bab ini"}]}\n\nStruktur harus logis dan runtut: mulai dari dasar, lanjut ke penerapan, tutup dengan rangkuman dan langkah selanjutnya. Setiap bab membahas satu topik yang jelas, tanpa tokoh fiksi.`
+                ? `Buat kerangka buku non-fiksi berbahasa ${o.lang}.\nTopik: ${o.idea}\nKategori: ${o.genre}\nGaya bahasa: ${o.tone}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul buku","synopsis":"deskripsi 3-5 kalimat","chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat: subtopik dan poin utama yang dibahas bab ini"}]}\n\nStruktur harus logis dan runtut: mulai dari dasar, lanjut ke penerapan, tutup dengan rangkuman dan langkah selanjutnya. Setiap bab membahas satu topik yang jelas, tanpa tokoh fiksi. Judul dan ringkasan ditulis bersih: tanpa karakter markdown, tanpa emoji, dan tanpa simbol dekoratif.`
                 : genKind === 'anak'
-                ? `Buat kerangka buku cerita anak berbahasa ${o.lang}.\nIde: ${o.idea}\nUsia pembaca: ${o.genre}\nTema / pesan moral: ${o.tone}\nJumlah halaman: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul cerita","synopsis":"sinopsis 2-4 kalimat","characters":[{"name":"","role":"","desc":"1 kalimat"}],"chapters":[{"title":"judul halaman tanpa nomor","summary":"2-3 kalimat peristiwa bagian ini"}]}\n\nBuat 2-4 tokoh yang mudah diingat anak. Cerita harus hangat, aman, dan sesuai usia: tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit. Alur sederhana: pembuka, satu masalah kecil yang bisa dipahami anak, usaha tokoh, dan penutup bahagia yang menyampaikan pesan moral secara tersirat, bukan menggurui. Setiap halaman adalah satu adegan dengan teks singkat yang mudah dibaca anak.`
-                : `Buat kerangka novel berbahasa ${o.lang}.\nIde: ${o.idea}\nGenre: ${o.genre}\nNuansa: ${o.tone}\nSudut pandang: ${o.pov}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul novel","synopsis":"sinopsis 3-5 kalimat","characters":[{"name":"","role":"","desc":"1-2 kalimat"}],"chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat peristiwa utama bab ini"}]}\n\nBuat 3-6 tokoh. Alur harus punya pembuka, konflik yang meningkat, klimaks, dan penutup yang memuaskan. Setiap bab harus memajukan cerita.`;
+                ? `Buat kerangka buku cerita anak berbahasa ${o.lang}.\nIde: ${o.idea}\nUsia pembaca: ${o.genre}\nTema / pesan moral: ${o.tone}\nJumlah halaman: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul cerita","synopsis":"sinopsis 2-4 kalimat","characters":[{"name":"","role":"","desc":"1 kalimat"}],"chapters":[{"title":"judul halaman tanpa nomor","summary":"2-3 kalimat peristiwa bagian ini"}]}\n\nBuat 2-4 tokoh yang mudah diingat anak. Cerita harus hangat, aman, dan sesuai usia: tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit. Alur sederhana: pembuka, satu masalah kecil yang bisa dipahami anak, usaha tokoh, dan penutup bahagia yang menyampaikan pesan moral secara tersirat, bukan menggurui. Setiap halaman adalah satu adegan dengan teks singkat yang mudah dibaca anak. Judul dan ringkasan ditulis bersih: tanpa karakter markdown, tanpa emoji, dan tanpa simbol dekoratif.`
+                : `Buat kerangka novel berbahasa ${o.lang}.\nIde: ${o.idea}\nGenre: ${o.genre}\nNuansa: ${o.tone}\nSudut pandang: ${o.pov}\nJumlah bab: tepat ${o.chapters}.\n\nFormat JSON:\n{"title":"judul novel","synopsis":"sinopsis 3-5 kalimat","characters":[{"name":"","role":"","desc":"1-2 kalimat"}],"chapters":[{"title":"judul bab tanpa nomor","summary":"2-3 kalimat peristiwa utama bab ini"}]}\n\nBuat 3-6 tokoh. Alur harus punya pembuka, konflik yang meningkat, klimaks, dan penutup yang memuaskan. Setiap bab harus memajukan cerita. Judul dan ringkasan ditulis bersih: tanpa karakter markdown, tanpa emoji, dan tanpa simbol dekoratif.`;
             let stoppedByUser = false;
             try {
                 let j = null;
@@ -10388,6 +10388,48 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
 
         // ===== Aturan gaya penulisan (dipakai semua fitur tulis AI) =====
         // Tujuan: prosa lugas, dialog padat dan hidup, minim kalimat puitis atau pola khas AI.
+        const EBOOK_CLEAN_RULES = `ATURAN KERAPIAN & KEPADATAN (wajib):
+- Keluarkan hanya teks naskah bersih. Subjudul hanya dengan format ## di baris sendiri; daftar hanya sebagai blok tersendiri yang setiap barisnya diawali - . Selain itu tanpa karakter markdown lain (tanpa *, _, \`, ---, >, tautan, atau tanda kurung siku), tanpa emoji, tanpa simbol dekoratif, tanpa tabel, tanpa tag HTML, tanpa bagan karakter.
+- Pembahasan padat seperti buku non-fiksi yang baik: setiap paragraf menyampaikan satu gagasan utuh dengan contoh konkret atau langkah yang bisa diterapkan; jangan mengulang gagasan yang sama dengan kata berbeda dan jangan menambah kalimat pengisi hanya untuk mencapai panjang.`;
+        const ANAK_CLEAN_RULES = `ATURAN KERAPIAN & KEPADATAN (wajib):
+- Keluarkan hanya teks halaman yang bersih: tanpa karakter markdown (tanpa #, *, _, \`, ---, >, tautan, atau tanda kurung siku), tanpa emoji, tanpa simbol dekoratif, tanpa tabel, tanpa tag HTML, tanpa bagan karakter. Satu-satunya pengecualian adalah baris catatan ilustrasi [Ilustrasi: ...] di akhir halaman, yang wajib dipertahankan.
+- Setiap kalimat bermakna dan memajukan adegan; jangan mengulang kejadian atau dialog yang sama dengan kata berbeda.`;
+        // Pembersih keluaran AI: model kadang tetap mengeluarkan karakter yang tidak
+        // dirender aplikasi (#, ###, ---, `, tautan, emoji, tabel, tag HTML). Fungsi ini
+        // membuangnya dari teks yang akan masuk ke naskah, supaya textarea, Mode baca,
+        // dan ekspor selalu bersih. Hanya dipakai untuk keluaran AI, bukan ketikan user.
+        function cleanAiInline(l) {
+            let t = String(l);
+            t = t.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+            t = t.replace(/\*\*([^*]+?)\*\*/g, '$1').replace(/__([^_]+?)__/g, '$1');
+            t = t.replace(/~~([^~]+?)~~/g, '$1');
+            t = t.replace(/\*([^\*\s][^\*]*?)\*/g, '$1').replace(/_([^_\s][^_]*?)_/g, '$1');
+            t = t.replace(/`([^`]*)`/g, '$1');
+            t = t.replace(/<[^>]+>/g, '');
+            t = t.replace(/\|/g, ' ');
+            t = t.replace(/\[[^\]]*\]/g, m => /^\[Ilustrasi:/.test(m) ? m : '');
+            t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu, '');
+            t = t.replace(/^\s*[\*_]\s+|\s+[\*_]\s*$/g, '');
+            return t.replace(/[ \t]+/g, ' ').trim();
+        }
+        function cleanAiText(text, kind) {
+            const isEbook = kind === 'ebook';
+            const out = [];
+            for (const raw of String(text == null ? '' : text).split('\n')) {
+                const t = raw.trim();
+                if (!t) { out.push(''); continue; }
+                if (IMG_LINE_RE.test(t) || /^\[Ilustrasi:\s*[^\]]+\]$/.test(t)) { out.push(t); continue; }
+                if (SCENE_BREAK_RE.test(t)) { out.push('* * *'); continue; }
+                if (/^[-_=~]{3,}$/.test(t) || /^[\*\#`_]+$/.test(t)) continue;
+                const hm = t.match(/^#+\s+(.*)$/);
+                if (hm) { const h = cleanAiInline(hm[1]); if (h) out.push(isEbook ? '## ' + h : h); continue; }
+                if (/^!\[.*\]\(.+\)$/.test(t)) continue;
+                let l = t.replace(/^(\*|•)\s+/, '');
+                l = cleanAiInline(l);
+                if (l) out.push(l);
+            }
+            return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+        }
         const NOVEL_STYLE_RULES = `ATURAN GAYA (wajib):
 - Tulis dengan bahasa lugas dan konkret. Batasi metafora dan kiasan: paling banyak satu per adegan, dan hanya jika menambah makna. Hindari kalimat puitis seperti "hatinya retak seperti kaca", "waktu seakan berhenti", "angin berbisik", "bayangan menari", "cahaya menyapu wajahnya".
 - Hindari klise dan pola khas tulisan AI: "tak terlukiskan", "sesuatu dalam dirinya berubah", "napasnya tertahan", "dunia seolah berhenti", "keheningan yang panjang", "untuk pertama kalinya ia mengerti", kalimat penutup paragraf yang merangkum perasaan, pola "bukan X, melainkan Y" yang berulang, dan rangkaian tiga sifat atau benda yang selalu muncul bersamaan.
@@ -10395,14 +10437,16 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
 - Variasikan panjang kalimat dan awali paragraf dengan cara yang berbeda-beda. Jangan membuka tiap paragraf dengan keterangan waktu atau nama tokoh.
 - DIALOG HIDUP: percakapan harus saling merespons. Tokoh bisa menyela, menjawab tidak langsung, mengalihkan topik, berbohong kecil, atau membantah. Selingi dialog dengan gestur atau tindakan singkat yang konkret. Hindari deretan dialog satu kalimat yang rapi dan bergantian terus-menerus, serta monolog panjang tanpa sela.
 - Setiap adegan harus bergerak: tokoh menginginkan sesuatu, menghadapi halangan, dan keadaannya berubah di akhir adegan.
-- PANJANG: tulis mendekati target kata yang diminta. Tambah panjang lewat tindakan, dialog, dan detail konkret, bukan lewat pengulangan atau kalimat puitis tambahan.`;
+- PANJANG: tulis mendekati target kata yang diminta. Tambah panjang lewat tindakan, dialog, dan detail konkret, bukan lewat pengulangan atau kalimat puitis tambahan.
+- KERAPIAN: keluarkan hanya teks naskah bersih, tanpa karakter markdown (tanpa #, *, _, \`, ---, >, tautan, atau tanda kurung siku), tanpa emoji, tanpa simbol dekoratif, tanpa tabel, tanpa tag HTML, tanpa bagan karakter. Pemisah adegan, bila perlu, hanya baris * * *. Paragraf dipisahkan satu baris kosong.
+- KEPADATAN: setiap paragraf harus membawa gagasan, peristiwa, atau informasi baru. Jangan mengulang gagasan yang sama dengan kata berbeda dan jangan menambah kalimat pengisi hanya untuk mencapai panjang.`;
 
         function genChapterPrompt(idx) {
             const g = novelData.gen, chs = novelData.chapters, total = chs.length;
             if (g && isNonFictionKind(g.kind)) {
                 const outline = chs.map((c, i) => `${i + 1}. ${c.title} :: ${g.outline[i] || ''}`).join('\n');
                 const prev = idx > 0 ? (chs[idx - 1].content || '').slice(-1500) : '';
-                const system = `Kamu adalah penulis buku non-fiksi profesional yang menulis dalam bahasa ${g.lang}. Kategori ${g.genre}, gaya bahasa ${g.tone}. Tulis penjelasan yang jelas, terstruktur, dan praktis: pakai subjudul markdown (##) untuk membagi pembahasan, beri contoh konkret dan langkah yang bisa langsung diterapkan bila relevan. Jangan mengarang cerita fiksi, tokoh, atau dialog khayalan. Jangan mengarang data, angka, atau kutipan ahli; kalau tidak yakin, sampaikan secara umum tanpa angka spesifik. Bagan struktur tidak boleh digambar dengan karakter teks (misalnya |, -, atau [ ]) — sampaikan sebagai daftar berjenjang (butir dan sub-butir). Keluarkan HANYA isi bab dalam markdown: tanpa judul bab, tanpa nomor bab, tanpa komentar pembuka atau penutup.`;
+                const system = `Kamu adalah penulis buku non-fiksi profesional yang menulis dalam bahasa ${g.lang}. Kategori ${g.genre}, gaya bahasa ${g.tone}. Tulis penjelasan yang jelas, terstruktur, dan praktis: pakai subjudul markdown (##) untuk membagi pembahasan, beri contoh konkret dan langkah yang bisa langsung diterapkan bila relevan. Jangan mengarang cerita fiksi, tokoh, atau dialog khayalan. Jangan mengarang data, angka, atau kutipan ahli; kalau tidak yakin, sampaikan secara umum tanpa angka spesifik. Bagan struktur tidak boleh digambar dengan karakter teks (misalnya |, -, atau [ ]) — sampaikan sebagai daftar berjenjang (butir dan sub-butir). Keluarkan HANYA isi bab dalam markdown: tanpa judul bab, tanpa nomor bab, tanpa komentar pembuka atau penutup.\n\n${EBOOK_CLEAN_RULES}`;
                 const user = `JUDUL BUKU: ${novelData.title}\nDESKRIPSI: ${novelData.synopsis}\n\nKERANGKA SELURUH BUKU:\n${outline}\n\n` +
                     (prev ? `AKHIR BAB SEBELUMNYA (lanjutkan dengan mulus, jangan diulang):\n"""${prev}"""\n\n` : '') +
                     `TUGAS: Tulis Bab ${idx + 1} dari ${total}, "${chs[idx].title}". Materi bab ini: ${g.outline[idx] || '(kembangkan sesuai kerangka)'}.\nPanjang minimal ${Math.round(g.words * 0.9)} kata, idealnya sekitar ${g.words} kata. Jangan berhenti sebelum panjang minimal tercapai. ` +
@@ -10414,7 +10458,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 const outline = chs.map((c, i) => `${i + 1}. ${c.title} :: ${g.outline[i] || ''}`).join('\n');
                 const prev = idx > 0 ? (chs[idx - 1].content || '').slice(-1500) : '';
                 const memory = genStoryMemoryText(idx);
-                const system = `Kamu adalah penulis buku cerita anak profesional yang menulis dalam bahasa ${g.lang}. Usia pembaca ${g.genre}, tema / pesan moral ${g.tone}. Tulis cerita yang hangat dan aman untuk anak: kalimat pendek dan sederhana, kosakata sesuai usia, dialog ringan dan natural, tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit tanpa penjelasan. Satu halaman memuat tepat satu adegan, dengan teks singkat seperti buku anak bergambar. Jaga konsistensi nama tokoh dan fakta cerita. Sampaikan pesan moral lewat perbuatan tokoh, bukan ceramah. Keluarkan HANYA isi halaman: tanpa judul, tanpa nomor halaman, tanpa komentar atau markdown. Akhiri halaman dengan satu baris catatan ilustrasi persis dengan format: [Ilustrasi: deskripsi singkat adegan halaman ini untuk gambar].` +
+                const system = `Kamu adalah penulis buku cerita anak profesional yang menulis dalam bahasa ${g.lang}. Usia pembaca ${g.genre}, tema / pesan moral ${g.tone}. Tulis cerita yang hangat dan aman untuk anak: kalimat pendek dan sederhana, kosakata sesuai usia, dialog ringan dan natural, tanpa kekerasan, tanpa hal menakutkan, tanpa kata sulit tanpa penjelasan. Satu halaman memuat tepat satu adegan, dengan teks singkat seperti buku anak bergambar. Jaga konsistensi nama tokoh dan fakta cerita. Sampaikan pesan moral lewat perbuatan tokoh, bukan ceramah. Keluarkan HANYA isi halaman: tanpa judul, tanpa nomor halaman, tanpa komentar atau markdown. Akhiri halaman dengan satu baris catatan ilustrasi persis dengan format: [Ilustrasi: deskripsi singkat adegan halaman ini untuk gambar].\n\n${ANAK_CLEAN_RULES}` +
                     (memory ? ` Kamu juga menerima MEMORI CERITA berisi fakta yang sudah ditetapkan halaman-halaman sebelumnya. Perlakukan sebagai kenyataan mutlak: jangan bertentangan dengan fakta di dalamnya, pakai sebutan tokoh sebagaimana tercatat, dan jangan lupakan benang cerita yang masih terbuka.` : '');
                 const user = `JUDUL: ${novelData.title}\nSINOPSIS: ${novelData.synopsis}\n\nTOKOH:\n${chars}\n\nKERANGKA SELURUH CERITA:\n${outline}\n\n` +
                     (memory ? `MEMORI CERITA (dari halaman 1 sampai ${idx}):\n${memory}\n\n` : '') +
@@ -10652,8 +10696,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                 const m = text.match(/^[\s\S]*[.!?…”"')](?=\s|$)/);
                 if (m && m[0].length > text.length * 0.6) text = m[0];
             }
-            const isEbook = novelData.gen && isNonFictionKind(novelData.gen.kind);
-            return (isEbook ? text : text.replace(/^#+\s.*\n+/, '')).trim();
+            return cleanAiText(text, novelData.gen ? novelData.gen.kind : novelData.kind);
         }
 
         async function genRun() {
