@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <!-- Batasi tujuan pengiriman data (mencegah kebocoran API key/naskah ke situs lain bila ada skrip berbahaya). -->
-    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://generativelanguage.googleapis.com https://api.deepseek.com https://ai.sumopod.com https://api.kagiro.net https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://generativelanguage.googleapis.com https://api.deepseek.com https://ai.sumopod.com https://api.kagiro.net https://api.anthropic.com https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta name="referrer" content="no-referrer">
     <meta name="description" content="Novelis: editor penulisan novel dengan asisten AI. Naskah tersimpan di perangkat dan bisa dipakai offline.">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1156,10 +1156,10 @@
                 <p class="text-[13px] text-slate-400">Penyedia aktif: <span id="model-modal-provider" class="text-slate-100 font-medium"></span></p>
                 <div>
                     <label class="label">Model yang dipakai semua fitur AI</label>
-                    <select id="setting-menu-gm-model" class="field" onchange="menuModelChanged('gemini')">
-                        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
-                        <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
-                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    <select id="setting-menu-cl-model" class="field hidden" onchange="menuModelChanged('claude')">
+                        <option value="claude-opus-5-5">claude-opus-5-5 (terbaik untuk menulis)</option>
+                        <option value="claude-sonnet-5-5">claude-sonnet-5-5 (lebih cepat & murah)</option>
+                        <option value="claude-opus-5">claude-opus-5</option>
                     </select>
                     <select id="setting-menu-ds-model" class="field hidden" onchange="menuModelChanged('deepseek')">
                         <option value="deepseek-flash">deepseek-flash (cepat dan murah)</option>
@@ -1169,7 +1169,7 @@
                     <input type="text" id="setting-menu-sp-model" class="field font-mono hidden" placeholder="seed-2-0-pro" autocomplete="off" spellcheck="false" oninput="menuModelChanged('sumopod')">
                     <input type="text" id="setting-menu-kg-model" class="field font-mono hidden" placeholder="Nama model dari dashboard Kagiro" autocomplete="off" spellcheck="false" oninput="menuModelChanged('kagiro')">
                 </div>
-                <p class="text-[11px] text-slate-500">Tersimpan langsung saat diubah, tanpa perlu menekan Simpan di Pengaturan.</p>
+                <p class="text-[11px] text-slate-500">Untuk Gemini, model dipilih otomatis (semua model dicoba berurutan). Untuk penyedia lain, pilihan tersimpan langsung saat diubah, tanpa perlu menekan Simpan di Pengaturan.</p>
             </div>
             <div class="modal-foot">
                 <button type="button" class="btn-ghost" onclick="closeModelModal(); openSettingsModal('ai');"><i class="fa-solid fa-gear"></i> Penyedia & API key</button>
@@ -1204,10 +1204,10 @@
             <div class="modal-body">
                 <div class="pb-3 mb-1 border-b border-slate-800/60">
                     <label class="label">Model AI</label>
-                    <select id="setting-main-gm-model" class="field" onchange="mainModelChanged('gemini')">
-                        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
-                        <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
-                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    <select id="setting-main-cl-model" class="field hidden" onchange="mainModelChanged('claude')">
+                        <option value="claude-opus-5-5">claude-opus-5-5 (terbaik untuk menulis)</option>
+                        <option value="claude-sonnet-5-5">claude-sonnet-5-5 (lebih cepat & murah)</option>
+                        <option value="claude-opus-5">claude-opus-5</option>
                     </select>
                     <select id="setting-main-ds-model" class="field hidden" onchange="mainModelChanged('deepseek')">
                         <option value="deepseek-flash">deepseek-flash (cepat dan murah)</option>
@@ -1216,7 +1216,7 @@
                     </select>
                     <input type="text" id="setting-main-sp-model" class="field font-mono hidden" placeholder="seed-2-0-pro" autocomplete="off" spellcheck="false" oninput="mainModelChanged('sumopod')">
                     <input type="text" id="setting-main-kg-model" class="field font-mono hidden" placeholder="Nama model dari dashboard Kagiro" autocomplete="off" spellcheck="false" oninput="mainModelChanged('kagiro')">
-                    <p class="text-[11px] text-slate-500 mt-1.5">Model yang dipakai semua fitur AI, langsung terlihat begitu Pengaturan dibuka. Penyedia & API key ada di tab AI.</p>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Model yang dipakai semua fitur AI, langsung terlihat begitu Pengaturan dibuka. Untuk Gemini, aplikasi otomatis mencoba semua model Gemini secara berurutan. Penyedia & API key ada di tab AI.</p>
                 </div>
                 <div role="tablist" aria-label="Bagian pengaturan" class="flex gap-1.5">
                     <button type="button" role="tab" id="set-tab-novel" aria-selected="true" aria-controls="set-panel-novel" onclick="switchSettingsTab('novel')" class="set-tab">Proyek</button>
@@ -1265,6 +1265,7 @@
                         <option value="deepseek">DeepSeek</option>
                         <option value="sumopod">Sumopod (model seed, dll.)</option>
                         <option value="kagiro">Kagiro</option>
+                        <option value="claude">Claude (Anthropic)</option>
                     </select>
                 </div>
                 <div id="prov-gemini">
@@ -1342,6 +1343,25 @@
                         <p class="text-[11px] text-slate-500 mt-1.5">Ketik nama model persis seperti di dashboard Kagiro.</p>
                     </div>
                     <p class="text-[11px] text-slate-500">Teks naskah yang diproses AI dikirim langsung dari browser ini ke server Kagiro. Pertimbangkan itu untuk naskah yang belum ingin dibagikan.</p>
+                </div>
+                <div id="prov-claude" class="hidden flex-col gap-4">
+                    <div>
+                        <label class="label">Claude API key</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="setting-cl-key" placeholder="Tempel API key Claude di sini (sk-ant-...)" class="field font-mono">
+                            <button type="button" onclick="toggleApiKeyVisibility()" class="icon-btn toggle-key-btn" style="background:#2e2547;border:1px solid #4a3a6b" title="Tampilkan / sembunyikan" aria-label="Tampilkan atau sembunyikan key"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1.5">Disimpan hanya di browser ini. <a href="https://console.anthropic.com/" target="_blank" rel="noopener" class="text-brand-400 hover:underline">Buat API key</a> (berbayar sesuai pemakaian, perlu saldo). Model terbaik untuk menulis: claude-opus-5-5.</p>
+                    </div>
+                    <div>
+                        <label class="label">Model Claude</label>
+                        <select id="setting-cl-model" class="field" onchange="document.getElementById('setting-main-cl-model').value = this.value">
+                            <option value="claude-opus-5-5">claude-opus-5-5 (terbaik untuk menulis)</option>
+                            <option value="claude-sonnet-5-5">claude-sonnet-5-5 (lebih cepat & murah)</option>
+                            <option value="claude-opus-5">claude-opus-5</option>
+                        </select>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Teks naskah yang diproses AI dikirim langsung dari browser ini ke server Anthropic. Pertimbangkan itu untuk naskah yang belum ingin dibagikan.</p>
                 </div>
 
                 </div>
@@ -3730,6 +3750,8 @@
             document.getElementById('setting-sp-model').value = getSumopodModel();
             document.getElementById('setting-kg-key').value = getProviderKey('kagiro');
             document.getElementById('setting-kg-model').value = getKagiroModel();
+            document.getElementById('setting-cl-key').value = getProviderKey('claude');
+            document.getElementById('setting-cl-model').value = getClaudeModel();
             syncProviderFields();
             syncMainModelControls();
             refreshCoverPreview();
@@ -3752,12 +3774,14 @@
             allOk = setProviderKey('deepseek', document.getElementById('setting-ds-key').value.trim()) && allOk;
             allOk = setProviderKey('sumopod', document.getElementById('setting-sp-key').value.trim()) && allOk;
             allOk = setProviderKey('kagiro', document.getElementById('setting-kg-key').value.trim()) && allOk;
+            allOk = setProviderKey('claude', document.getElementById('setting-cl-key').value.trim()) && allOk;
             try {
                 localStorage.setItem(AI_PROVIDER_KEY, document.getElementById('setting-ai-provider').value);
                 localStorage.setItem(DS_MODEL_KEY, document.getElementById('setting-ds-model').value);
                 localStorage.setItem(DS_ENDPOINT_KEY, document.getElementById('setting-ds-endpoint').value);
                 localStorage.setItem(SP_MODEL_KEY, document.getElementById('setting-sp-model').value.trim().replace(/\s+/g, '') || 'seed-2-0-pro');
                 localStorage.setItem(KG_MODEL_KEY, document.getElementById('setting-kg-model').value.trim());
+                localStorage.setItem(CL_MODEL_KEY, document.getElementById('setting-cl-model').value);
             } catch (e) { allOk = false; }
             try { localStorage.setItem(BACKUP_REMIND_KEY, document.getElementById('setting-backup-remind').value); } catch (e) {}
             try { renderAll(); } catch (e) { console.warn(e); }
@@ -3843,15 +3867,14 @@
         // kontrol model di tab AI: mengubah salah satu memperbarui yang lain,
         // dan Simpan tetap membaca kontrol tab AI seperti sebelumnya.
         function mainModelControlId(prov) {
-            return { gemini: 'setting-main-gm-model', deepseek: 'setting-main-ds-model', sumopod: 'setting-main-sp-model', kagiro: 'setting-main-kg-model' }[prov] || 'setting-main-gm-model';
+            return { gemini: 'setting-main-gm-model', deepseek: 'setting-main-ds-model', sumopod: 'setting-main-sp-model', kagiro: 'setting-main-kg-model', claude: 'setting-main-cl-model' }[prov] || 'setting-main-gm-model';
         }
         function syncMainModelControls() {
             const prov = getAiProvider();
-            ['gemini', 'deepseek', 'sumopod', 'kagiro'].forEach(pr => {
+            ['gemini', 'deepseek', 'sumopod', 'kagiro', 'claude'].forEach(pr => {
                 const el = document.getElementById(mainModelControlId(pr));
                 if (el) el.classList.toggle('hidden', pr !== prov);
             });
-            const gm = document.getElementById('setting-main-gm-model'); if (gm) gm.value = GEMINI_MODEL_CANDIDATES.includes(geminiActiveModel) ? geminiActiveModel : GEMINI_MODEL_CANDIDATES[0];
             const ds = document.getElementById('setting-main-ds-model');
             const dsAi = document.getElementById('setting-ds-model');
             if (ds) ds.value = dsAi ? dsAi.value : getDeepseekModel();
@@ -3861,6 +3884,9 @@
             const kg = document.getElementById('setting-main-kg-model');
             const kgAi = document.getElementById('setting-kg-model');
             if (kg) kg.value = kgAi ? kgAi.value : getKagiroModel();
+            const cl = document.getElementById('setting-main-cl-model');
+            const clAi = document.getElementById('setting-cl-model');
+            if (cl) cl.value = clAi ? clAi.value : getClaudeModel();
         }
         function mainModelChanged(prov) {
             const el = document.getElementById(mainModelControlId(prov));
@@ -3876,6 +3902,9 @@
                 const s = document.getElementById('setting-sp-model'); if (s) s.value = v;
             } else if (prov === 'kagiro') {
                 const s = document.getElementById('setting-kg-model'); if (s) s.value = v;
+            } else if (prov === 'claude') {
+                const s = document.getElementById('setting-cl-model'); if (s) s.value = v;
+                try { localStorage.setItem(CL_MODEL_KEY, v); } catch (e) {}
             }
         }
         // ===== Model AI dari menu titik tiga =====
@@ -3883,20 +3912,20 @@
         // tanpa masuk Pengaturan dulu. Perubahan disimpan seketika dan
         // dicerminkan ke kontrol Pengaturan agar tidak saling menimpa.
         function menuModelControlId(prov) {
-            return { gemini: 'setting-menu-gm-model', deepseek: 'setting-menu-ds-model', sumopod: 'setting-menu-sp-model', kagiro: 'setting-menu-kg-model' }[prov] || 'setting-menu-gm-model';
+            return { gemini: 'setting-menu-gm-model', deepseek: 'setting-menu-ds-model', sumopod: 'setting-menu-sp-model', kagiro: 'setting-menu-kg-model', claude: 'setting-menu-cl-model' }[prov] || 'setting-menu-gm-model';
         }
         function syncMenuModelControls() {
             const prov = getAiProvider();
-            const names = { gemini: 'Google Gemini', deepseek: 'DeepSeek', sumopod: 'Sumopod', kagiro: 'Kagiro' };
+            const names = { gemini: 'Google Gemini', deepseek: 'DeepSeek', sumopod: 'Sumopod', kagiro: 'Kagiro', claude: 'Claude' };
             const pn = document.getElementById('model-modal-provider'); if (pn) pn.textContent = names[prov] || prov;
-            ['gemini', 'deepseek', 'sumopod', 'kagiro'].forEach(pr => {
+            ['gemini', 'deepseek', 'sumopod', 'kagiro', 'claude'].forEach(pr => {
                 const el = document.getElementById(menuModelControlId(pr));
                 if (el) el.classList.toggle('hidden', pr !== prov);
             });
-            const gm = document.getElementById('setting-menu-gm-model'); if (gm) gm.value = GEMINI_MODEL_CANDIDATES.includes(geminiActiveModel) ? geminiActiveModel : GEMINI_MODEL_CANDIDATES[0];
             const ds = document.getElementById('setting-menu-ds-model'); if (ds) ds.value = getDeepseekModel();
             const sp = document.getElementById('setting-menu-sp-model'); if (sp) sp.value = getSumopodModel();
             const kg = document.getElementById('setting-menu-kg-model'); if (kg) kg.value = getKagiroModel();
+            const cl = document.getElementById('setting-menu-cl-model'); if (cl) cl.value = getClaudeModel();
         }
         function menuModelChanged(prov) {
             const el = document.getElementById(menuModelControlId(prov));
@@ -3911,8 +3940,10 @@
                 try { localStorage.setItem(SP_MODEL_KEY, v.trim().replace(/\s+/g, '') || 'seed-2-0-pro'); } catch (e) {}
             } else if (prov === 'kagiro') {
                 try { localStorage.setItem(KG_MODEL_KEY, v.trim()); } catch (e) {}
+            } else if (prov === 'claude') {
+                try { localStorage.setItem(CL_MODEL_KEY, v); } catch (e) {}
             }
-            const aiId = { deepseek: 'setting-ds-model', sumopod: 'setting-sp-model', kagiro: 'setting-kg-model' }[prov];
+            const aiId = { deepseek: 'setting-ds-model', sumopod: 'setting-sp-model', kagiro: 'setting-kg-model', claude: 'setting-cl-model' }[prov];
             if (aiId) { const s = document.getElementById(aiId); if (s) s.value = v; }
             const mn = document.getElementById(mainModelControlId(prov)); if (mn) mn.value = v;
         }
@@ -3935,6 +3966,9 @@
             const kg = document.getElementById('prov-kagiro');
             kg.classList.toggle('hidden', p !== 'kagiro');
             kg.classList.toggle('flex', p === 'kagiro');
+            const cl = document.getElementById('prov-claude');
+            cl.classList.toggle('hidden', p !== 'claude');
+            cl.classList.toggle('flex', p === 'claude');
             syncMainModelControls();
         }
 
@@ -3948,6 +3982,9 @@
         const SP_URL = 'https://ai.sumopod.com/v1/chat/completions';
         const KG_URL = 'https://api.kagiro.net/v1/chat/completions';
         const KG_MODEL_KEY = 'novelis_kagiro_model';
+        const CL_MODEL_KEY = 'novelis_claude_model';
+        const CL_URL = 'https://api.anthropic.com/v1/messages';
+        const CLAUDE_MODEL_CANDIDATES = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-opus-5'];
         const DS_ENDPOINTS = {
             sumopod: { url: 'https://ai.sumopod.com/v1/chat/completions', name: 'Sumopod', topup: 'sumopod.com' },
             official: { url: 'https://api.deepseek.com/chat/completions', name: 'DeepSeek', topup: 'platform.deepseek.com' }
@@ -3955,9 +3992,9 @@
         function getDsEndpoint() {
             try { return localStorage.getItem(DS_ENDPOINT_KEY) === 'official' ? 'official' : 'sumopod'; } catch (e) { return 'sumopod'; }
         }
-        const KEY_STORE = { gemini: 'inkspire_gemini_api_key', deepseek: 'novelis_deepseek_api_key', sumopod: 'novelis_sumopod_api_key', kagiro: 'novelis_kagiro_api_key' };
+        const KEY_STORE = { gemini: 'inkspire_gemini_api_key', deepseek: 'novelis_deepseek_api_key', sumopod: 'novelis_sumopod_api_key', kagiro: 'novelis_kagiro_api_key', claude: 'novelis_claude_api_key' };
         function getAiProvider() {
-            try { const v = localStorage.getItem(AI_PROVIDER_KEY); return (v === 'deepseek' || v === 'sumopod' || v === 'kagiro') ? v : 'gemini'; } catch (e) { return 'gemini'; }
+            try { const v = localStorage.getItem(AI_PROVIDER_KEY); return (v === 'deepseek' || v === 'sumopod' || v === 'kagiro' || v === 'claude') ? v : 'gemini'; } catch (e) { return 'gemini'; }
         }
         function getDeepseekModel() {
             let m = '';
@@ -3973,6 +4010,11 @@
             let m = '';
             try { m = localStorage.getItem(KG_MODEL_KEY) || ''; } catch (e) {}
             return m.trim();
+        }
+        function getClaudeModel() {
+            let m = '';
+            try { m = localStorage.getItem(CL_MODEL_KEY) || ''; } catch (e) {}
+            return CLAUDE_MODEL_CANDIDATES.includes(m) ? m : CLAUDE_MODEL_CANDIDATES[0];
         }
         function getProviderKey(prov) { return localStorage.getItem(KEY_STORE[prov]) || ''; }
         function setProviderKey(prov, key) {
@@ -4729,6 +4771,71 @@ ${recentText || '(bab ini masih kosong)'}
             if (buf.trim()) flush(buf);
         }
 
+        // Penyedia Claude (Anthropic Messages API). Dipanggil langsung dari browser
+        // dengan header anthropic-dangerous-direct-browser-access, seperti halnya
+        // Gemini/DeepSeek yang juga dipanggil langsung. Claude tidak punya mode JSON
+        // baku (response_format); perintah JSON-nya sudah ada di system prompt.
+        async function callClaude({ systemPrompt, userPrompt, temperature = 0.8, maxOutputTokens = 8192, signal, json = false, onChunk, _hud }) {
+            const apiKey = getProviderKey('claude');
+            if (!apiKey) throw new Error('API key Claude belum diisi di Pengaturan, tab AI.');
+            const model = getClaudeModel();
+            aiHudSet(_hud, { model: 'Claude · ' + model });
+            const body = {
+                model,
+                max_tokens: maxOutputTokens,
+                system: systemPrompt,
+                messages: [{ role: 'user', content: userPrompt }],
+                temperature,
+                stream: !!onChunk
+            };
+            for (let attempt = 0; attempt < 3; attempt++) {
+                let response;
+                try {
+                    response = await fetch(CL_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+                        signal,
+                        body: JSON.stringify(body)
+                    });
+                } catch (e) {
+                    if (e && e.name === 'AbortError') throw e;
+                    throw new Error('Tidak bisa terhubung ke Claude. Periksa koneksi internet. Bila koneksi normal, kemungkinan server menolak permintaan langsung dari browser (CORS); pakai Gemini sebagai gantinya.');
+                }
+                if (response.ok) {
+                    let text = '', fr;
+                    if (onChunk) {
+                        await readSse(response, ev => {
+                            if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && ev.delta.text) {
+                                text += ev.delta.text;
+                                try { onChunk(text); } catch (e) {}
+                            }
+                            if (ev.stop_reason) fr = ev.stop_reason;
+                        });
+                    } else {
+                        const result = await response.json();
+                        text = (result.content || []).filter(b => b && b.type === 'text').map(b => b.text).join('');
+                        fr = result.stop_reason;
+                    }
+                    if (!text.trim()) throw new Error(`Respons kosong dari Claude (alasan: ${fr || 'tidak diketahui'}).`);
+                    return { text, finishReason: fr === 'max_tokens' ? 'MAX_TOKENS' : fr, model };
+                }
+                const errBody = await response.json().catch(() => null);
+                let msg = (errBody && errBody.error && errBody.error.message) || `HTTP ${response.status}`;
+                const status = response.status;
+                if (status === 401) msg = 'API key Claude tidak valid. Pastikan key dari console.anthropic.com dan mengizinkan model ' + model + '.';
+                else if (status === 402 || status === 403) msg = 'Claude menolak permintaan (HTTP ' + status + '). ' + msg;
+                else if (status === 404) msg = 'Claude menolak model ' + model + ' (HTTP 404). Cek apakah key diizinkan memakai model itu. ' + msg;
+                if ((status === 429 || status === 500 || status === 503) && attempt < 2) {
+                    aiHudSet(_hud, { note: 'Server sibuk, mencoba lagi...' });
+                    await sleepMs(4000 * (attempt + 1), signal);
+                    aiHudSet(_hud, { note: '' });
+                    continue;
+                }
+                throw new Error(msg);
+            }
+            throw new Error('Claude tidak merespons. Coba lagi sebentar lagi.');
+        }
+
         async function callDeepSeek({ systemPrompt, userPrompt, temperature = 0.8, maxOutputTokens = 8192, signal, json = false, onChunk, _hud }) {
             const prov = getAiProvider();
             const kg = prov === 'kagiro';
@@ -4808,11 +4915,12 @@ ${recentText || '(bab ini masih kosong)'}
 
         async function callGemini(opts) {
             const prov = getAiProvider();
-            const ds = prov !== 'gemini';
-            const hud = aiHudStart(prov === 'sumopod' ? 'Sumopod' : prov === 'kagiro' ? 'Kagiro' : ds ? 'DeepSeek' : 'Gemini');
+            const cl = prov === 'claude';
+            const ds = prov !== 'gemini' && !cl;
+            const hud = aiHudStart(cl ? 'Claude' : prov === 'sumopod' ? 'Sumopod' : prov === 'kagiro' ? 'Kagiro' : ds ? 'DeepSeek' : 'Gemini');
             try {
-                const r = ds ? await callDeepSeek({ ...opts, _hud: hud }) : await callGeminiApi({ ...opts, _hud: hud });
-                aiHudFinish(hud, true, r && r.model ? (prov === 'sumopod' ? 'Sumopod · ' : prov === 'kagiro' ? 'Kagiro · ' : ds ? DS_ENDPOINTS[getDsEndpoint()].name + ' · ' : 'Gemini · ') + r.model : '');
+                const r = cl ? await callClaude({ ...opts, _hud: hud }) : ds ? await callDeepSeek({ ...opts, _hud: hud }) : await callGeminiApi({ ...opts, _hud: hud });
+                aiHudFinish(hud, true, r && r.model ? (cl ? 'Claude · ' : prov === 'sumopod' ? 'Sumopod · ' : prov === 'kagiro' ? 'Kagiro · ' : ds ? DS_ENDPOINTS[getDsEndpoint()].name + ' · ' : 'Gemini · ') + r.model : '');
                 return r;
             } catch (e) {
                 const aborted = e && e.name === 'AbortError';
@@ -4875,7 +4983,8 @@ ${recentText || '(bab ini masih kosong)'}
 
         async function callGeminiApiOne(apiKey, fastFail, { systemPrompt, userPrompt, temperature = 0.8, maxOutputTokens = 8192, signal, json = false, onChunk, _hud }) {
 
-            let order = [geminiActiveModel, ...GEMINI_MODEL_CANDIDATES.filter(m => m !== geminiActiveModel)];
+            // Gemini tanpa pilihan model: semua kandidat dicoba berurutan sampai ada yang berhasil.
+            let order = [...GEMINI_MODEL_CANDIDATES];
             const triedModels = [];
             let lastErr = null, quotaErr = null;
 
@@ -4923,10 +5032,6 @@ ${recentText || '(bab ini masih kosong)'}
                         if (!text.trim()) {
                             const why = blockReason || finishReason || 'tidak diketahui';
                             throw new Error(`Respons kosong dari API (alasan: ${why}) — kemungkinan diblokir filter keamanan.`);
-                        }
-                        if (model !== geminiActiveModel) {
-                            geminiActiveModel = model;
-                            try { localStorage.setItem('novelis_gemini_model', model); } catch (e) {}
                         }
                         return { text, finishReason, model };
                     }
