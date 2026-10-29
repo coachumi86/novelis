@@ -51,7 +51,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2204,6 +2204,15 @@
         // chip Perbaiki Bab. Dipanggil dari renderAll, jadi berlaku setiap
         // ganti proyek maupun setiap render ulang.
         function applyProjectKindUI() {
+            // Font editor, Mode baca, dan judul baca mengikuti jenis buku.
+            const ef = bookEditorFont(novelData.kind);
+            const taEl = document.getElementById('chapter-content-textarea');
+            if (taEl) taEl.style.fontFamily = ef;
+            const rcEl = document.getElementById('reader-content-container');
+            if (rcEl) rcEl.style.fontFamily = ef;
+            const rtEl = document.getElementById('reader-novel-title');
+            if (rtEl) rtEl.style.fontFamily = ef;
+            try { if (novelData.kind === 'anak' && document.fonts) document.fonts.load('700 40px Fredoka'); } catch (e) {}
             // 'ebook' di sini artinya mode non-fiksi secara umum (bukan hanya eBook).
             const ebook = !isFictionProject();
             const notesBtn = document.getElementById('tab-btn-notes');
@@ -6011,15 +6020,32 @@ ${chunks[i]}
             document.getElementById('export-modal').classList.add('hidden');
         }
 
+        // Font mengikuti jenis buku (bukan lagi satu serif untuk semua):
+        // novel = serif sastra, eBook = sans bersih, cerita anak = bulat ramah + huruf lebih besar.
+        // PDF hanya punya font bawaan jsPDF, jadi eBook & anak dipetakan ke helvetica (sans terdekat).
+        function bookFonts(kind) {
+            if (kind === 'ebook') return { pdf: 'helvetica', word: "'Inter', 'Calibri', sans-serif", epub: "Inter, Calibri, sans-serif", bump: 0, epubSize: '' };
+            if (kind === 'anak') return { pdf: 'helvetica', word: "'Fredoka', 'Comic Sans MS', cursive", epub: "Fredoka, 'Comic Sans MS', cursive", bump: 2, epubSize: '1.15em' };
+            return { pdf: 'times', word: "'Times New Roman', serif", epub: 'Georgia, "Times New Roman", serif', bump: 0, epubSize: '' };
+        }
+        function bookEditorFont(kind) {
+            if (kind === 'ebook') return "'Inter', sans-serif";
+            if (kind === 'anak') return "'Fredoka', 'Comic Sans MS', cursive";
+            return "'Playfair Display', serif";
+        }
         // Returns layout settings (font, size, spacing, margin) per export style,
         // shared by both the PDF and Word generators so the two outputs stay consistent.
-        function getLayoutSettings(layoutStyle) {
+        // Font mengikuti jenis buku; layout Manuskrip sengaja tetap Courier untuk semua jenis.
+        function getLayoutSettings(layoutStyle, kind) {
+            const k = kind || novelData.kind;
             if (layoutStyle === 'manuscript') {
                 return { fontFamily: "'Courier New', monospace", fontSize: '12pt', lineHeight: '2.2', marginMm: 25 };
-            } else if (layoutStyle === 'compact') {
-                return { fontFamily: "'Times New Roman', serif", fontSize: '10.5pt', lineHeight: '1.3', marginMm: 15 };
             }
-            return { fontFamily: "'Times New Roman', serif", fontSize: '12pt', lineHeight: '1.8', marginMm: 20 };
+            const bf = bookFonts(k);
+            if (layoutStyle === 'compact') {
+                return { fontFamily: bf.word, fontSize: (10.5 + bf.bump) + 'pt', lineHeight: '1.3', marginMm: 15 };
+            }
+            return { fontFamily: bf.word, fontSize: (12 + bf.bump) + 'pt', lineHeight: '1.8', marginMm: 20 };
         }
 
         // Ukuran halaman PDF dalam mm (lebar, tinggi). Kunci tak dikenal kembali ke A4.
@@ -6080,11 +6106,12 @@ ${chunks[i]}
             // Let the loading indicator paint before the (synchronous) PDF build starts.
             setTimeout(() => {
                 try {
+                    const bf = bookFonts(novelData.kind);
                     const isManuscript = layoutStyle === 'manuscript';
-                    const fontName = isManuscript ? 'courier' : 'times';
+                    const fontName = isManuscript ? 'courier' : bf.pdf;
                     const justify = !isManuscript;
                     const PT = 0.3528;                          // 1pt in mm
-                    const fontPt = (fontSizeEl && parseFloat(fontSizeEl.value)) || parseFloat(layout.fontSize);
+                    const fontPt = ((fontSizeEl && parseFloat(fontSizeEl.value)) || parseFloat(layout.fontSize)) + bf.bump;
                     const lineMm = fontPt * parseFloat(layout.lineHeight) * PT;
                     const fontMm = fontPt * PT;
                     const indentMm = isManuscript ? 12.7 : 8;
@@ -6113,7 +6140,7 @@ ${chunks[i]}
                         if (coverImg) {
                             pdf.addImage(coverImg, 'JPEG', 0, 0, PAGE_W, PAGE_H);
                         } else {
-                        pdf.setFont('times', 'bold');
+                        pdf.setFont(bf.pdf, 'bold');
                         pdf.setFontSize(28);
                         const titleLines = pdf.splitTextToSize(safeTitle, contentW - 20);
                         let cy = 95;
@@ -6122,18 +6149,18 @@ ${chunks[i]}
                         pdf.setLineWidth(0.5);
                         pdf.line(PAGE_W / 2 - 15, cy, PAGE_W / 2 + 15, cy);
                         cy += 14;
-                        pdf.setFont('times', 'italic');
+                        pdf.setFont(bf.pdf, 'italic');
                         pdf.setFontSize(13);
                         pdf.setTextColor(90);
                         pdf.text('Sebuah Novel Karya', PAGE_W / 2, cy, { align: 'center' });
                         cy += 14;
-                        pdf.setFont('times', 'bold');
+                        pdf.setFont(bf.pdf, 'bold');
                         pdf.setFontSize(17);
                         pdf.setTextColor(30);
                         pdf.splitTextToSize(safeAuthor, contentW - 20).forEach(l => { pdf.text(l, PAGE_W / 2, cy, { align: 'center' }); cy += 8; });
                         if (novelData.synopsis) {
                             cy += 22;
-                            pdf.setFont('times', 'italic');
+                            pdf.setFont(bf.pdf, 'italic');
                             pdf.setFontSize(11);
                             pdf.setTextColor(70);
                             pdf.splitTextToSize(sanitizeForPdf(novelData.synopsis).replace(/\n+/g, ' '), 120).slice(0, 14)
@@ -6175,7 +6202,7 @@ ${chunks[i]}
                         tocPlan.forEach((items, k) => {
                             pdf.setPage(tocFirstPage + k);
                             if (k === 0) {
-                                pdf.setFont('times', 'bold');
+                                pdf.setFont(bf.pdf, 'bold');
                                 pdf.setFontSize(20);
                                 pdf.setTextColor(17);
                                 pdf.text('Daftar Isi', PAGE_W / 2, m + 14, { align: 'center' });
@@ -6286,13 +6313,13 @@ ${chunks[i]}
                         startSection();
                         chapterPage[idx] = pdf.internal.getNumberOfPages();
 
-                        pdf.setFont('times', 'normal');
+                        pdf.setFont(bf.pdf, 'normal');
                         pdf.setFontSize(10.5);
                         pdf.setTextColor(110);
                         pdf.text(`BAB ${idx + 1}`, PAGE_W / 2, y + 6, { align: 'center', charSpace: 1.2 });
                         y += 16;
 
-                        pdf.setFont('times', 'bold');
+                        pdf.setFont(bf.pdf, 'bold');
                         pdf.setFontSize(20);
                         pdf.setTextColor(17);
                         pdf.splitTextToSize(sanitizeForPdf(ch.title || (novelData.kind === 'anak' ? 'Halaman Tanpa Judul' : 'Bab Tanpa Judul')), contentW).forEach(l => {
@@ -6392,7 +6419,7 @@ ${chunks[i]}
                         const firstNumbered = chapterPage[0] || (includeCover ? 2 : 1);
                         for (let i = firstNumbered; i <= total; i++) {
                             pdf.setPage(i);
-                            pdf.setFont('times', 'normal');
+                            pdf.setFont(bf.pdf, 'normal');
                             pdf.setFontSize(9);
                             pdf.setTextColor(120);
                             pdf.text(String(i - firstNumbered + 1), PAGE_W / 2, PAGE_H - Math.min(10, m / 2), { align: 'center' });
@@ -6623,7 +6650,8 @@ ${bodyContent}
             const srcImgs = (novel.images && typeof novel.images === 'object' && !Array.isArray(novel.images)) ? novel.images : {};
             const usedImgs = new Map();
             chapters.forEach(ch => { parseBlocks(ch.content).forEach(b => { if (b.type !== 'image') return; if (usedImgs.has(b.imgId)) return; const im = srcImgs[b.imgId]; if (!im || typeof im.data !== 'string') return; const mm = im.data.match(/^data:(image\/[a-z]+);base64,/); if (!mm) return; const ext = mm[1] === 'image/jpeg' ? 'jpg' : mm[1].split('/')[1]; usedImgs.set(b.imgId, { file: 'img/' + b.imgId + '.' + ext, mime: mm[1], bytes: epubDataUrlToBytes(im.data) }); }); });
-            const styleCss = 'body { font-family: Georgia, "Times New Roman", serif; line-height: 1.6; margin: 5%; }\n'
+            const bfEpub = bookFonts(novel.kind);
+            const styleCss = 'body { font-family: ' + bfEpub.epub + '; line-height: 1.6; margin: 5%;' + (bfEpub.epubSize ? ' font-size: ' + bfEpub.epubSize + ';' : '') + ' }\n'
                 + 'h1 { text-align: center; font-size: 1.6em; margin: 0.4em 0 1em 0; }\n'
                 + 'h2.bab { text-align: center; font-size: 0.9em; letter-spacing: 0.2em; font-weight: normal; margin: 2em 0 0.4em 0; }\n'
                 + 'h3 { font-size: 1.15em; margin: 1.2em 0 0.4em 0; }\n'
@@ -6837,7 +6865,7 @@ ${bodyContent}
                 if (b.type === 'break') return '<p class="mt-8 mb-4 text-center text-slate-500" style="letter-spacing:.5em">* * *</p>';
                 if (b.type === 'image') { const src = chapterImageData(b.imgId); if (!src) return '<p class="mt-4 text-center text-sm text-slate-500">[gambar tidak ditemukan]</p>'; return '<figure class="mt-4 mb-2 text-center"><img src="' + src + '" alt="' + escapeHtml(b.alt) + '" style="max-width:100%;border-radius:.5rem"/>' + (b.alt ? '<figcaption class="mt-1 text-sm text-slate-400">' + escapeHtml(b.alt) + '</figcaption>' : '') + '</figure>'; }
                 const inner = b.lines.map(inlineMdToHtml);
-                if (b.type === 'heading') return `<h4 class="mt-8 mb-1 text-lg font-bold font-serif text-white">${inner.join(' ')}</h4>`;
+                if (b.type === 'heading') return `<h4 class="mt-8 mb-1 text-lg font-bold text-white">${inner.join(' ')}</h4>`;
                 if (b.type === 'center') return `<p class="mt-4 text-center">${inner.join('<br>')}</p>`;
                 if (b.type === 'quote') return `<blockquote class="mt-4 pl-4 border-l-2 border-brand-500/60 italic text-slate-300">${inner.join('<br>')}</blockquote>`;
                 if (b.type === 'list') return `<ul class="mt-4 pl-6 list-disc space-y-1">${inner.map(l => `<li>${l}</li>`).join('')}</ul>`;
@@ -9943,13 +9971,13 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (cur.mode === 'custom') return cur.img;
             const cv = document.createElement('canvas');
             cv.width = 252; cv.height = 356;
-            drawAutoCover(cv, d.title, d.author, d.synopsis, cur.seed);
+            drawAutoCover(cv, d.title, d.author, d.synopsis, cur.seed, d.kind);
             return cv.toDataURL('image/jpeg', 0.85);
         }
         function shelfFallbackCover(meta) {
             const cv = document.createElement('canvas');
             cv.width = 252; cv.height = 356;
-            drawAutoCover(cv, meta.title, meta.author || '', '', null);
+            drawAutoCover(cv, meta.title, meta.author || '', '', null, meta.kind);
             return cv.toDataURL('image/jpeg', 0.85);
         }
         async function renderShelf() {
@@ -10860,7 +10888,8 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
             return lines;
         }
         // Menggambar sampul otomatis. Semua ukuran relatif terhadap lebar kanvas, jadi sama untuk pratinjau dan PDF.
-        function drawAutoCover(canvas, title, author, synopsis, seed) {
+        function drawAutoCover(canvas, title, author, synopsis, seed, kind) {
+            const cf = bookEditorFont(kind || novelData.kind);
             const W = canvas.width, H = canvas.height, ctx = canvas.getContext('2d');
             const { pal, motif } = coverPick(title, synopsis, seed);
             const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -10878,7 +10907,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = pal.ink;
             const t = String(title || 'Novel Tanpa Judul').trim().toUpperCase();
             const tSize = Math.round(W * (t.length > 24 ? 0.085 : t.length > 12 ? 0.105 : 0.12));
-            ctx.font = `700 ${tSize}px 'Playfair Display', Georgia, serif`;
+            ctx.font = `700 ${tSize}px ${cf}`;
             const tl = coverWrap(ctx, t, W * 0.78);
             const lh = tSize * 1.15;
             let y = H * 0.36 - ((tl.length - 1) * lh) / 2;
@@ -10893,7 +10922,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
                 const excerpt = syn.length > 170 ? syn.slice(0, 167).replace(/\s+\S*$/, '') + '…' : syn;
                 const sSize = Math.round(W * 0.034);
                 ctx.fillStyle = pal.ink; ctx.globalAlpha = 0.85;
-                ctx.font = `italic 400 ${sSize}px Georgia, serif`;
+                ctx.font = `italic 400 ${sSize}px ${cf}`;
                 const sl = coverWrap(ctx, excerpt, W * 0.7);
                 for (const l of sl) {
                     if (y > H * 0.78) break;
@@ -10904,7 +10933,7 @@ Jawab HANYA dengan JSON valid: {"fakta":[""],"tokoh":[{"nama":"","perubahan":""}
             const a = String(author || '').trim();
             if (a && a !== 'Anonim') {
                 ctx.fillStyle = pal.ink;
-                ctx.font = `600 ${Math.round(W * 0.052)}px 'Playfair Display', Georgia, serif`;
+                ctx.font = `600 ${Math.round(W * 0.052)}px ${cf}`;
                 ctx.fillText(a, W / 2, H * 0.86);
             }
         }
