@@ -10183,7 +10183,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
                 else localStorage.removeItem(SKILL_KEY);
             } catch (e) {}
             document.getElementById('skill-modal').classList.add('hidden');
-            if (kind === 'generator') openGenModal();
+            if (kind === 'generator') openGenModal('novel');
             else if (kind === 'ebook') openGenModal('ebook');
             else if (kind === 'storybook') openGenModal('anak');
             else setTimeout(maybeAutoStartTour, 400);
@@ -10194,7 +10194,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (saved === 'generator' || saved === 'ebook' || saved === 'storybook') {
                 // Wizard hanya dibuka otomatis bila ada bab generator yang belum selesai atau naskahnya masih kosong.
                 const empty = !novelData.chapters.some(c => (c.content || '').trim());
-                if (genUnfinished() || empty) openGenModal(saved === 'ebook' ? 'ebook' : saved === 'storybook' ? 'anak' : undefined);
+                if (genUnfinished() || empty) openGenModal(saved === 'ebook' ? 'ebook' : saved === 'storybook' ? 'anak' : 'novel');
                 return;
             }
             if (saved === 'editor') return;
