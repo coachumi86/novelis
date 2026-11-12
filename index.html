@@ -574,100 +574,100 @@
         .gen-item.cur { color: #fff; border-color: rgba(168,85,247,.6); background: rgba(168,85,247,.12); } .gen-item.cur i { color: #c084fc; }
         .gen-item i { width: 1rem; text-align: center; flex-shrink: 0; }
 
-/* ===== Redesain Gelap Elegan: Wizard Generate, Pilih Skill & Rak Buku (PR #25) ===== */
-        /* Palet: tinta hangat + kuningan, tanpa ungu. Hanya tiga permukaan ini yang berubah;
+/* ===== Tema Hitam & Ungu: Wizard Generate, Pilih Skill & Rak Buku ===== */
+        /* Palet: hitam + ungu. Hanya tiga permukaan ini yang berubah;
            editor, Pengaturan, dan permukaan lain tetap seperti semula. */
         #gen-modal .modal-card, #skill-modal .modal-card, #shelf-modal .modal-card {
-            background: #12100d; border-color: #2f2a22; border-radius: 1.1rem;
+            background: #0b0a12; border-color: #2b2440; border-radius: 1.1rem;
             box-shadow: 0 30px 70px -12px rgba(0, 0, 0, .75);
         }
         #gen-modal .modal-card::before, #skill-modal .modal-card::before, #shelf-modal .modal-card::before {
             content: ''; display: block; height: 3px; flex-shrink: 0;
-            background: linear-gradient(90deg, #9c7f45, #d8b877, #9c7f45);
+            background: linear-gradient(90deg, #7e22ce, #c084fc, #7e22ce);
         }
         #gen-modal .modal-head, #skill-modal .modal-head, #shelf-modal .modal-head {
-            border-bottom-color: #26211a; padding: .85rem 1.1rem .85rem 1.25rem;
+            border-bottom-color: #1e1830; padding: .85rem 1.1rem .85rem 1.25rem;
         }
         #gen-modal .modal-foot, #skill-modal .modal-foot, #shelf-modal .modal-foot {
-            border-top-color: #26211a; background: #171410;
+            border-top-color: #1e1830; background: #100d1a;
         }
         #gen-modal .modal-title, #skill-modal .modal-title, #shelf-modal .modal-title {
             font-family: 'Playfair Display', Georgia, serif; font-size: 1.05rem; font-weight: 700;
-            letter-spacing: .01em; color: #ece4d3;
+            letter-spacing: .01em; color: #ede9f7;
         }
-        #gen-modal .modal-title i, #skill-modal .modal-title i, #shelf-modal .modal-title i { color: #c9a35c; font-size: .95rem; }
+        #gen-modal .modal-title i, #skill-modal .modal-title i, #shelf-modal .modal-title i { color: #a855f7; font-size: .95rem; }
         #gen-modal .modal-body, #skill-modal .modal-body, #shelf-modal .modal-body { padding: 1.25rem; }
-        #gen-modal .icon-btn, #skill-modal .icon-btn, #shelf-modal .icon-btn { color: #a89c87; }
-        #gen-modal .icon-btn:hover, #skill-modal .icon-btn:hover, #shelf-modal .icon-btn:hover { background: #221e18; color: #ece4d3; }
+        #gen-modal .icon-btn, #skill-modal .icon-btn, #shelf-modal .icon-btn { color: #9a8fc4; }
+        #gen-modal .icon-btn:hover, #skill-modal .icon-btn:hover, #shelf-modal .icon-btn:hover { background: #1e1836; color: #ede9f7; }
         #gen-modal .btn-primary, #skill-modal .btn-primary, #shelf-modal .btn-primary {
-            background: #c9a35c; border: 1px solid #c9a35c; color: #1c150a; font-weight: 600;
+            background: #a855f7; border: 1px solid #a855f7; color: #ffffff; font-weight: 600;
         }
-        #gen-modal .btn-primary:hover, #skill-modal .btn-primary:hover, #shelf-modal .btn-primary:hover { background: #d8b877; border-color: #d8b877; }
+        #gen-modal .btn-primary:hover, #skill-modal .btn-primary:hover, #shelf-modal .btn-primary:hover { background: #c084fc; border-color: #c084fc; }
         #gen-modal .btn-ghost, #skill-modal .btn-ghost, #shelf-modal .btn-ghost {
-            background: transparent; color: #d8cfbf; border-color: #3a332a;
+            background: transparent; color: #d5cdeb; border-color: #453a6b;
         }
-        #gen-modal .btn-ghost:hover, #skill-modal .btn-ghost:hover, #shelf-modal .btn-ghost:hover { background: #221e18; color: #ece4d3; border-color: #4a4234; }
+        #gen-modal .btn-ghost:hover, #skill-modal .btn-ghost:hover, #shelf-modal .btn-ghost:hover { background: #1e1836; color: #ede9f7; border-color: #5b4a8a; }
         #gen-modal .field, #skill-modal .field, #shelf-modal .field {
-            background: #1b1813; border-color: #38322a; color: #ece4d3;
+            background: #151022; border-color: #3a2f5c; color: #ede9f7;
         }
         #gen-modal .field:focus, #skill-modal .field:focus, #shelf-modal .field:focus {
-            border-color: #c9a35c; box-shadow: 0 0 0 3px rgba(201, 163, 92, .15);
+            border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168, 85, 247, .15);
         }
-        #gen-modal .field::placeholder, #skill-modal .field::placeholder, #shelf-modal .field::placeholder { color: #7e7466; }
+        #gen-modal .field::placeholder, #skill-modal .field::placeholder, #shelf-modal .field::placeholder { color: #6f6396; }
         #gen-modal .label, #skill-modal .label, #shelf-modal .label {
-            color: #b3a78f; font-weight: 600; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase;
+            color: #a99fd0; font-weight: 600; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase;
         }
-        #gen-modal .text-slate-500, #skill-modal .text-slate-500, #shelf-modal .text-slate-500 { color: #8a7f6e; }
-        #gen-modal .text-slate-400, #skill-modal .text-slate-400, #shelf-modal .text-slate-400 { color: #a89c87; }
-        #gen-modal .text-slate-200 { color: #e6ddcb; }
-        #gen-modal button:focus-visible, #gen-modal select:focus-visible, #skill-modal button:focus-visible, #skill-modal select:focus-visible, #shelf-modal button:focus-visible { outline-color: rgba(201, 163, 92, .8); }
+        #gen-modal .text-slate-500, #skill-modal .text-slate-500, #shelf-modal .text-slate-500 { color: #7e72a8; }
+        #gen-modal .text-slate-400, #skill-modal .text-slate-400, #shelf-modal .text-slate-400 { color: #9a8fc4; }
+        #gen-modal .text-slate-200 { color: #e9e4f9; }
+        #gen-modal button:focus-visible, #gen-modal select:focus-visible, #skill-modal button:focus-visible, #skill-modal select:focus-visible, #shelf-modal button:focus-visible { outline-color: rgba(168, 85, 247, .8); }
         /* --- Kartu Pilih AI Skill --- */
-        #skill-modal .skill-card { background: #1b1813; border-color: #332d25; }
-        #skill-modal .skill-card:hover, #skill-modal .skill-card:focus-visible { border-color: #c9a35c; background: #211d17; }
-        #skill-modal .skill-ttl { color: #ece4d3; font-family: 'Playfair Display', Georgia, serif; font-size: .95rem; }
-        #skill-modal .skill-dsc { color: #a89c87; }
-        #skill-modal .toggle-row { background: #1b1813; border-color: #332d25; color: #d8cfbf; }
-        #skill-modal .toggle-row input { accent-color: #c9a35c; }
-        #skill-modal .ns-trigger .ns-caret, #gen-modal .ns-trigger .ns-caret { color: #c9a35c; }
-        #skill-modal .ns-trigger[aria-expanded="true"], #gen-modal .ns-trigger[aria-expanded="true"] { border-color: #c9a35c; }
-        .ns-menu-elegan { background: #1b1813; border-color: #332d25; }
-        .ns-menu-elegan .ns-item { color: #cfc3ab; }
-        .ns-menu-elegan .ns-item .ns-check { color: #c9a35c; }
-        .ns-menu-elegan .ns-item[aria-selected="true"] { color: #f2ead8; background: rgba(201, 163, 92, .12); }
-        .ns-menu-elegan .ns-item.ns-active { background: #26211a; color: #ece4d3; }
-        .ns-menu-elegan .ns-item[aria-selected="true"].ns-active { background: rgba(201, 163, 92, .18); color: #f2ead8; }
+        #skill-modal .skill-card { background: #151022; border-color: #2e2547; }
+        #skill-modal .skill-card:hover, #skill-modal .skill-card:focus-visible { border-color: #a855f7; background: #1c1533; }
+        #skill-modal .skill-ttl { color: #ede9f7; font-family: 'Playfair Display', Georgia, serif; font-size: .95rem; }
+        #skill-modal .skill-dsc { color: #9a8fc4; }
+        #skill-modal .toggle-row { background: #151022; border-color: #2e2547; color: #d5cdeb; }
+        #skill-modal .toggle-row input { accent-color: #a855f7; }
+        #skill-modal .ns-trigger .ns-caret, #gen-modal .ns-trigger .ns-caret { color: #a855f7; }
+        #skill-modal .ns-trigger[aria-expanded="true"], #gen-modal .ns-trigger[aria-expanded="true"] { border-color: #a855f7; }
+        .ns-menu-elegan { background: #151022; border-color: #2e2547; }
+        .ns-menu-elegan .ns-item { color: #c9bfe6; }
+        .ns-menu-elegan .ns-item .ns-check { color: #a855f7; }
+        .ns-menu-elegan .ns-item[aria-selected="true"] { color: #f3eefa; background: rgba(168, 85, 247, .12); }
+        .ns-menu-elegan .ns-item.ns-active { background: #1e1830; color: #ede9f7; }
+        .ns-menu-elegan .ns-item[aria-selected="true"].ns-active { background: rgba(168, 85, 247, .18); color: #f3eefa; }
         /* --- Progres & pratinjau generator --- */
-        #gen-modal .gen-bar { background: #26211a; }
-        #gen-modal .gen-bar > div { background: linear-gradient(90deg, #9c7f45, #d8b877); }
-        #gen-modal .gen-pct { color: #d8b877; font-family: 'Playfair Display', Georgia, serif; }
-        #gen-modal .gen-item { background: #1b1813; border-color: #2e2822; color: #a89c87; }
-        #gen-modal .gen-item .gi-w { color: #7e7466; }
-        #gen-modal .gen-item.done { color: #ece4d3; }
-        #gen-modal .gen-item.cur { border-color: rgba(201, 163, 92, .55); background: rgba(201, 163, 92, .10); color: #f2ead8; }
-        #gen-modal .gen-item.cur i { color: #d8b877; }
-        #gen-modal .gen-item .gi-fill { background: #c9a35c; }
-        #gen-modal .gen-ch-row { background: #1b1813; border-color: #332d25; }
-        #gen-modal .gen-live { border-color: rgba(201, 163, 92, .4); background: rgba(201, 163, 92, .06); }
-        #gen-modal .gen-live .gl-dot { background: #c9a35c; }
-        #gen-modal .gen-live .gl-t { color: #ece4d3; }
-        #gen-modal .gen-live .gl-c { color: #d8b877; }
-        #gen-modal .gen-live .gl-track { background: #26211a; }
-        #gen-modal .gen-live .gl-track > div { background: linear-gradient(90deg, #9c7f45, #d8b877); }
-        #gen-modal .gen-live .gl-text { color: #cfc3ab; }
-        #gen-modal .gen-live .gl-text::after { background: #c9a35c; }
-        #gen-float { background: #171410; border-color: #332d25; }
-        #gen-float .gf-main { color: #ece4d3; }
-        #gen-float .gf-main i { color: #c9a35c; }
-        #gen-float .gf-stop { border-left-color: #332d25; }
+        #gen-modal .gen-bar { background: #1e1830; }
+        #gen-modal .gen-bar > div { background: linear-gradient(90deg, #7e22ce, #c084fc); }
+        #gen-modal .gen-pct { color: #c084fc; font-family: 'Playfair Display', Georgia, serif; }
+        #gen-modal .gen-item { background: #151022; border-color: #2b2342; color: #9a8fc4; }
+        #gen-modal .gen-item .gi-w { color: #6f6396; }
+        #gen-modal .gen-item.done { color: #ede9f7; }
+        #gen-modal .gen-item.cur { border-color: rgba(168, 85, 247, .55); background: rgba(168, 85, 247, .10); color: #f3eefa; }
+        #gen-modal .gen-item.cur i { color: #c084fc; }
+        #gen-modal .gen-item .gi-fill { background: #a855f7; }
+        #gen-modal .gen-ch-row { background: #151022; border-color: #2e2547; }
+        #gen-modal .gen-live { border-color: rgba(168, 85, 247, .4); background: rgba(168, 85, 247, .06); }
+        #gen-modal .gen-live .gl-dot { background: #a855f7; }
+        #gen-modal .gen-live .gl-t { color: #ede9f7; }
+        #gen-modal .gen-live .gl-c { color: #c084fc; }
+        #gen-modal .gen-live .gl-track { background: #1e1830; }
+        #gen-modal .gen-live .gl-track > div { background: linear-gradient(90deg, #7e22ce, #c084fc); }
+        #gen-modal .gen-live .gl-text { color: #c9bfe6; }
+        #gen-modal .gen-live .gl-text::after { background: #a855f7; }
+        #gen-float { background: #100d1a; border-color: #2e2547; }
+        #gen-float .gf-main { color: #ede9f7; }
+        #gen-float .gf-main i { color: #a855f7; }
+        #gen-float .gf-stop { border-left-color: #2e2547; }
         /* --- Rak Buku --- */
         #shelf-modal .shelf-grid { gap: 1.1rem; }
-        #shelf-modal .shelf-cover { border-color: #332d25; background: #1b1813; }
-        #shelf-modal .shelf-cover-wrap:hover .shelf-cover { border-color: #c9a35c; box-shadow: 0 10px 28px rgba(0, 0, 0, .5); }
-        #shelf-modal .shelf-badge { background: rgba(18, 16, 13, .88); border-color: #3a332a; color: #d8cfbf; }
-        #shelf-modal .shelf-badge.active { color: #d8b877; border-color: rgba(201, 163, 92, .55); }
-        #shelf-modal .shelf-title { color: #ece4d3; font-family: 'Playfair Display', Georgia, serif; font-size: .92rem; font-weight: 700; }
-        #shelf-modal .shelf-meta { color: #a89c87; }
-        #shelf-modal .text-brand-400 { color: #c9a35c; }
+        #shelf-modal .shelf-cover { border-color: #2e2547; background: #151022; }
+        #shelf-modal .shelf-cover-wrap:hover .shelf-cover { border-color: #a855f7; box-shadow: 0 10px 28px rgba(0, 0, 0, .5); }
+        #shelf-modal .shelf-badge { background: rgba(11, 10, 18, .88); border-color: #453a6b; color: #d5cdeb; }
+        #shelf-modal .shelf-badge.active { color: #c084fc; border-color: rgba(168, 85, 247, .55); }
+        #shelf-modal .shelf-title { color: #ede9f7; font-family: 'Playfair Display', Georgia, serif; font-size: .92rem; font-weight: 700; }
+        #shelf-modal .shelf-meta { color: #9a8fc4; }
+        #shelf-modal .text-brand-400 { color: #a855f7; }
         @media (max-width: 639px) {
             #gen-modal .modal-card, #skill-modal .modal-card, #shelf-modal .modal-card { border-radius: 1.1rem 1.1rem 0 0; }
         }
@@ -1062,19 +1062,19 @@
             <div class="modal-body">
                 <div class="skill-grid">
                     <button type="button" class="skill-card" onclick="pickSkill('generator')">
-                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                        <span class="skill-ico" style="background:rgba(168,85,247,.14);color:#e9d5ff"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Buat Novel AI</span><span class="skill-dsc block">Dari ide singkat jadi kerangka, lalu naskah novel utuh bab demi bab.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('editor')">
-                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-pen-nib"></i></span>
+                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#d8b4fe"><i class="fa-solid fa-pen-nib"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Editor Novel AI</span><span class="skill-dsc block">Tulis dan sunting novelmu dibantu AI: lanjutkan adegan, perbaiki bab, cek kontinuitas.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('ebook')">
-                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-book-open"></i></span>
+                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#c084fc"><i class="fa-solid fa-book-open"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Buat eBook AI</span><span class="skill-dsc block">Dari topik jadi buku non-fiksi: kerangka bab, lalu isi bab demi bab yang jelas dan praktis.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('storybook')">
-                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-child"></i></span>
+                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#f0abfc"><i class="fa-solid fa-child"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Buat Cerita Anak</span><span class="skill-dsc block">Dari ide jadi buku cerita anak: tokoh, pesan moral, dan cerita pendek yang hangat dan aman.</span></span>
                     </button>
                 </div>
