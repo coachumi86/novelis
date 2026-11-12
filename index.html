@@ -532,7 +532,7 @@
         .proj-actions { display: flex; flex-shrink: 0; }
         @media (max-width: 480px) { .proj-badge { display: none; } }
         /* ===== Rak Buku ===== */
-        .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 1rem; }
+        .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.25rem; }
         .shelf-book { display: flex; flex-direction: column; gap: .35rem; }
         .shelf-cover-wrap { position: relative; padding: 0; background: none; border: 0; cursor: pointer; text-align: left; }
         .shelf-cover { width: 100%; aspect-ratio: 840 / 1188; object-fit: cover; border-radius: .6rem; border: 1px solid #4a3a6b; background: #2e2547; display: block; }
@@ -573,6 +573,116 @@
         .gen-item.done { color: #ddd6fe; } .gen-item.done i { color: #6ee7b7; }
         .gen-item.cur { color: #fff; border-color: rgba(168,85,247,.6); background: rgba(168,85,247,.12); } .gen-item.cur i { color: #c084fc; }
         .gen-item i { width: 1rem; text-align: center; flex-shrink: 0; }
+
+/* ===== Redesain Gelap Elegan: Wizard Generate, Pilih Skill & Rak Buku (PR #25) ===== */
+        /* Palet: tinta hangat + kuningan, tanpa ungu. Hanya tiga permukaan ini yang berubah;
+           editor, Pengaturan, dan permukaan lain tetap seperti semula. */
+        #gen-modal .modal-card, #skill-modal .modal-card, #shelf-modal .modal-card {
+            background: #12100d; border-color: #2f2a22; border-radius: 1.1rem;
+            box-shadow: 0 30px 70px -12px rgba(0, 0, 0, .75);
+        }
+        #gen-modal .modal-card::before, #skill-modal .modal-card::before, #shelf-modal .modal-card::before {
+            content: ''; display: block; height: 3px; flex-shrink: 0;
+            background: linear-gradient(90deg, #9c7f45, #d8b877, #9c7f45);
+        }
+        #gen-modal .modal-head, #skill-modal .modal-head, #shelf-modal .modal-head {
+            border-bottom-color: #26211a; padding: .85rem 1.1rem .85rem 1.25rem;
+        }
+        #gen-modal .modal-foot, #skill-modal .modal-foot, #shelf-modal .modal-foot {
+            border-top-color: #26211a; background: #171410;
+        }
+        #gen-modal .modal-title, #skill-modal .modal-title, #shelf-modal .modal-title {
+            font-family: 'Playfair Display', Georgia, serif; font-size: 1.05rem; font-weight: 700;
+            letter-spacing: .01em; color: #ece4d3;
+        }
+        #gen-modal .modal-title i, #skill-modal .modal-title i, #shelf-modal .modal-title i { color: #c9a35c; font-size: .95rem; }
+        #gen-modal .modal-body, #skill-modal .modal-body, #shelf-modal .modal-body { padding: 1.25rem; }
+        #gen-modal .icon-btn, #skill-modal .icon-btn, #shelf-modal .icon-btn { color: #a89c87; }
+        #gen-modal .icon-btn:hover, #skill-modal .icon-btn:hover, #shelf-modal .icon-btn:hover { background: #221e18; color: #ece4d3; }
+        #gen-modal .btn-primary, #skill-modal .btn-primary, #shelf-modal .btn-primary {
+            background: #c9a35c; border: 1px solid #c9a35c; color: #1c150a; font-weight: 600;
+        }
+        #gen-modal .btn-primary:hover, #skill-modal .btn-primary:hover, #shelf-modal .btn-primary:hover { background: #d8b877; border-color: #d8b877; }
+        #gen-modal .btn-ghost, #skill-modal .btn-ghost, #shelf-modal .btn-ghost {
+            background: transparent; color: #d8cfbf; border-color: #3a332a;
+        }
+        #gen-modal .btn-ghost:hover, #skill-modal .btn-ghost:hover, #shelf-modal .btn-ghost:hover { background: #221e18; color: #ece4d3; border-color: #4a4234; }
+        #gen-modal .field, #skill-modal .field, #shelf-modal .field {
+            background: #1b1813; border-color: #38322a; color: #ece4d3;
+        }
+        #gen-modal .field:focus, #skill-modal .field:focus, #shelf-modal .field:focus {
+            border-color: #c9a35c; box-shadow: 0 0 0 3px rgba(201, 163, 92, .15);
+        }
+        #gen-modal .field::placeholder, #skill-modal .field::placeholder, #shelf-modal .field::placeholder { color: #7e7466; }
+        #gen-modal .label, #skill-modal .label, #shelf-modal .label {
+            color: #b3a78f; font-weight: 600; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase;
+        }
+        #gen-modal .text-slate-500, #skill-modal .text-slate-500, #shelf-modal .text-slate-500 { color: #8a7f6e; }
+        #gen-modal .text-slate-400, #skill-modal .text-slate-400, #shelf-modal .text-slate-400 { color: #a89c87; }
+        #gen-modal .text-slate-200 { color: #e6ddcb; }
+        #gen-modal button:focus-visible, #gen-modal select:focus-visible, #skill-modal button:focus-visible, #skill-modal select:focus-visible, #shelf-modal button:focus-visible { outline-color: rgba(201, 163, 92, .8); }
+        /* --- Kartu Pilih AI Skill --- */
+        #skill-modal .skill-card { background: #1b1813; border-color: #332d25; }
+        #skill-modal .skill-card:hover, #skill-modal .skill-card:focus-visible { border-color: #c9a35c; background: #211d17; }
+        #skill-modal .skill-ttl { color: #ece4d3; font-family: 'Playfair Display', Georgia, serif; font-size: .95rem; }
+        #skill-modal .skill-dsc { color: #a89c87; }
+        #skill-modal .toggle-row { background: #1b1813; border-color: #332d25; color: #d8cfbf; }
+        #skill-modal .toggle-row input { accent-color: #c9a35c; }
+        #skill-modal .ns-trigger .ns-caret, #gen-modal .ns-trigger .ns-caret { color: #c9a35c; }
+        #skill-modal .ns-trigger[aria-expanded="true"], #gen-modal .ns-trigger[aria-expanded="true"] { border-color: #c9a35c; }
+        .ns-menu-elegan { background: #1b1813; border-color: #332d25; }
+        .ns-menu-elegan .ns-item { color: #cfc3ab; }
+        .ns-menu-elegan .ns-item .ns-check { color: #c9a35c; }
+        .ns-menu-elegan .ns-item[aria-selected="true"] { color: #f2ead8; background: rgba(201, 163, 92, .12); }
+        .ns-menu-elegan .ns-item.ns-active { background: #26211a; color: #ece4d3; }
+        .ns-menu-elegan .ns-item[aria-selected="true"].ns-active { background: rgba(201, 163, 92, .18); color: #f2ead8; }
+        /* --- Progres & pratinjau generator --- */
+        #gen-modal .gen-bar { background: #26211a; }
+        #gen-modal .gen-bar > div { background: linear-gradient(90deg, #9c7f45, #d8b877); }
+        #gen-modal .gen-pct { color: #d8b877; font-family: 'Playfair Display', Georgia, serif; }
+        #gen-modal .gen-item { background: #1b1813; border-color: #2e2822; color: #a89c87; }
+        #gen-modal .gen-item .gi-w { color: #7e7466; }
+        #gen-modal .gen-item.done { color: #ece4d3; }
+        #gen-modal .gen-item.cur { border-color: rgba(201, 163, 92, .55); background: rgba(201, 163, 92, .10); color: #f2ead8; }
+        #gen-modal .gen-item.cur i { color: #d8b877; }
+        #gen-modal .gen-item .gi-fill { background: #c9a35c; }
+        #gen-modal .gen-ch-row { background: #1b1813; border-color: #332d25; }
+        #gen-modal .gen-live { border-color: rgba(201, 163, 92, .4); background: rgba(201, 163, 92, .06); }
+        #gen-modal .gen-live .gl-dot { background: #c9a35c; }
+        #gen-modal .gen-live .gl-t { color: #ece4d3; }
+        #gen-modal .gen-live .gl-c { color: #d8b877; }
+        #gen-modal .gen-live .gl-track { background: #26211a; }
+        #gen-modal .gen-live .gl-track > div { background: linear-gradient(90deg, #9c7f45, #d8b877); }
+        #gen-modal .gen-live .gl-text { color: #cfc3ab; }
+        #gen-modal .gen-live .gl-text::after { background: #c9a35c; }
+        #gen-float { background: #171410; border-color: #332d25; }
+        #gen-float .gf-main { color: #ece4d3; }
+        #gen-float .gf-main i { color: #c9a35c; }
+        #gen-float .gf-stop { border-left-color: #332d25; }
+        /* --- Rak Buku --- */
+        #shelf-modal .shelf-grid { gap: 1.1rem; }
+        #shelf-modal .shelf-cover { border-color: #332d25; background: #1b1813; }
+        #shelf-modal .shelf-cover-wrap:hover .shelf-cover { border-color: #c9a35c; box-shadow: 0 10px 28px rgba(0, 0, 0, .5); }
+        #shelf-modal .shelf-badge { background: rgba(18, 16, 13, .88); border-color: #3a332a; color: #d8cfbf; }
+        #shelf-modal .shelf-badge.active { color: #d8b877; border-color: rgba(201, 163, 92, .55); }
+        #shelf-modal .shelf-title { color: #ece4d3; font-family: 'Playfair Display', Georgia, serif; font-size: .92rem; font-weight: 700; }
+        #shelf-modal .shelf-meta { color: #a89c87; }
+        #shelf-modal .text-brand-400 { color: #c9a35c; }
+        @media (max-width: 639px) {
+            #gen-modal .modal-card, #skill-modal .modal-card, #shelf-modal .modal-card { border-radius: 1.1rem 1.1rem 0 0; }
+        }
+        /* --- Wizard langkah-demi-langkah: satu pertanyaan per layar --- */
+        .gen-q-off { display: none; }
+        .gen-q-progress { display: flex; align-items: center; gap: .6rem; padding-bottom: .1rem; }
+        .gen-q-dots { display: flex; gap: .35rem; }
+        .gen-q-dot { width: .5rem; height: .5rem; border-radius: 9999px; background: #3a332a; display: block; }
+        .gen-q-dot.on { background: #c9a35c; }
+        .gen-q-dot.done { background: #9c7f45; }
+        .gen-q-label { font-size: .72rem; color: #a89c87; letter-spacing: .04em; }
+        #gen-modal .gen-q .label { font-family: 'Playfair Display', Georgia, serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 0; text-transform: none; color: #ece4d3; margin-bottom: .6rem; }
+        #gen-modal .gen-q .field { padding: .8rem .9rem; font-size: .95rem; }
+        #gen-modal .gen-q textarea.field { min-height: 9rem; line-height: 1.7; }
+
             /* ===== Pembuka animasi (splash) ===== */
         #intro-splash {
             position: fixed; inset: 0; z-index: 10000; cursor: pointer;
@@ -963,19 +1073,19 @@
             <div class="modal-body">
                 <div class="skill-grid">
                     <button type="button" class="skill-card" onclick="pickSkill('generator')">
-                        <span class="skill-ico" style="background:rgba(168,85,247,.14);color:#e9d5ff"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Buat Novel AI</span><span class="skill-dsc block">Dari ide singkat jadi kerangka, lalu naskah novel utuh bab demi bab.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('editor')">
-                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#d8b4fe"><i class="fa-solid fa-pen-nib"></i></span>
+                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-pen-nib"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Editor Novel AI</span><span class="skill-dsc block">Tulis dan sunting novelmu dibantu AI: lanjutkan adegan, perbaiki bab, cek kontinuitas.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('ebook')">
-                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#c084fc"><i class="fa-solid fa-book-open"></i></span>
+                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-book-open"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Buat eBook AI</span><span class="skill-dsc block">Dari topik jadi buku non-fiksi: kerangka bab, lalu isi bab demi bab yang jelas dan praktis.</span></span>
                     </button>
                     <button type="button" class="skill-card" onclick="pickSkill('storybook')">
-                        <span class="skill-ico" style="background:rgba(168,85,247,.16);color:#f0abfc"><i class="fa-solid fa-child"></i></span>
+                        <span class="skill-ico" style="background:rgba(201,163,92,.13);color:#d8b877"><i class="fa-solid fa-child"></i></span>
                         <span class="min-w-0"><span class="skill-ttl block">Buat Cerita Anak</span><span class="skill-dsc block">Dari ide jadi buku cerita anak: tokoh, pesan moral, dan cerita pendek yang hangat dan aman.</span></span>
                     </button>
                 </div>
@@ -992,7 +1102,7 @@
                 <div class="modal-title" id="gen-modal-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Buat Novel AI</div>
                 <button onclick="closeGenModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <!-- Langkah 1: form ide -->
+            <!-- Langkah 1: form ide, satu pertanyaan per layar -->
             <div id="gen-step-1" class="modal-body">
                 <div id="gen-no-key" class="hidden p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
                     API key belum diisi. <button onclick="closeGenModal(); openSettingsModal('ai');" class="underline font-medium">Isi di Pengaturan</button>
@@ -1001,31 +1111,33 @@
                     <span id="gen-resume-text" class="mr-auto"></span>
                     <button type="button" class="btn-primary" style="height:2rem" onclick="genResume()">Lanjutkan</button>
                 </div>
-                <div>
+                <div id="gen-q-progress" class="gen-q-progress">
+                    <span id="gen-q-dots" class="gen-q-dots"></span>
+                    <span id="gen-q-label" class="gen-q-label"></span>
+                </div>
+                <div class="gen-q" data-q="idea">
                     <label class="label" for="gen-idea">Ide cerita</label>
-                    <textarea id="gen-idea" rows="4" class="field" placeholder="Contoh: Seorang arsiparis muda menemukan surat dari ibunya yang sudah meninggal 20 tahun, dan surat itu menunjuk ke sebuah desa yang tidak ada di peta."></textarea>
+                    <textarea id="gen-idea" rows="6" class="field" placeholder="Contoh: Seorang arsiparis muda menemukan surat dari ibunya yang sudah meninggal 20 tahun, dan surat itu menunjuk ke sebuah desa yang tidak ada di peta."></textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="label" for="gen-genre">Genre</label>
-                        <select id="gen-genre" class="field">
-                            <option>Romansa</option><option>Fantasi</option><option>Misteri / Thriller</option><option>Drama keluarga</option><option>Fiksi ilmiah</option><option>Horor</option><option>Petualangan</option><option>Slice of life</option><option>Sejarah</option>
-                        </select></div>
-                    <div><label class="label" for="gen-tone">Nuansa</label>
-                        <select id="gen-tone" class="field">
-                            <option>Hangat dan emosional</option><option>Gelap dan tegang</option><option>Ringan dan jenaka</option><option>Puitis dan reflektif</option><option>Epik dan megah</option>
-                        </select></div>
-                    <div><label class="label" for="gen-pov">Sudut pandang</label>
-                        <select id="gen-pov" class="field">
-                            <option value="orang ketiga terbatas">Orang ketiga</option><option value="orang pertama (aku)">Orang pertama (aku)</option><option value="orang ketiga serba tahu">Serba tahu</option>
-                        </select></div>
-                    <div><label class="label" for="gen-lang">Bahasa</label>
-                        <select id="gen-lang" class="field"><option>Indonesia</option><option>English</option></select></div>
-                    <div><label class="label" for="gen-chcount">Jumlah bab</label>
-                        <input type="number" id="gen-chcount" class="field" min="3" max="40" value="10"></div>
-                    <div><label class="label" for="gen-words">Panjang tiap bab</label>
-                        <select id="gen-words" class="field"><option value="700">Pendek (~700 kata)</option><option value="1300">Sedang (~1.300 kata)</option><option value="2200" selected>Panjang (~2.200 kata)</option><option value="3000">Sangat panjang (~3.000 kata)</option></select></div>
-                </div>
-                <p class="text-[11px] text-slate-500">Langkah berikutnya: kerangka dibuat dulu dan bisa kamu ubah sebelum naskah ditulis. Hasil disimpan sebagai proyek baru.</p>
+                <div class="gen-q" data-q="genre"><label class="label" for="gen-genre">Genre</label>
+                    <select id="gen-genre" class="field">
+                        <option>Romansa</option><option>Fantasi</option><option>Misteri / Thriller</option><option>Drama keluarga</option><option>Fiksi ilmiah</option><option>Horor</option><option>Petualangan</option><option>Slice of life</option><option>Sejarah</option>
+                    </select></div>
+                <div class="gen-q" data-q="tone"><label class="label" for="gen-tone">Nuansa</label>
+                    <select id="gen-tone" class="field">
+                        <option>Hangat dan emosional</option><option>Gelap dan tegang</option><option>Ringan dan jenaka</option><option>Puitis dan reflektif</option><option>Epik dan megah</option>
+                    </select></div>
+                <div class="gen-q" data-q="pov"><label class="label" for="gen-pov">Sudut pandang</label>
+                    <select id="gen-pov" class="field">
+                        <option value="orang ketiga terbatas">Orang ketiga</option><option value="orang pertama (aku)">Orang pertama (aku)</option><option value="orang ketiga serba tahu">Serba tahu</option>
+                    </select></div>
+                <div class="gen-q" data-q="lang"><label class="label" for="gen-lang">Bahasa</label>
+                    <select id="gen-lang" class="field"><option>Indonesia</option><option>English</option></select></div>
+                <div class="gen-q" data-q="chcount"><label class="label" for="gen-chcount">Jumlah bab</label>
+                    <input type="number" id="gen-chcount" class="field" min="3" max="40" value="10"></div>
+                <div class="gen-q" data-q="words"><label class="label" for="gen-words">Panjang tiap bab</label>
+                    <select id="gen-words" class="field"><option value="700">Pendek (~700 kata)</option><option value="1300">Sedang (~1.300 kata)</option><option value="2200" selected>Panjang (~2.200 kata)</option><option value="3000">Sangat panjang (~3.000 kata)</option></select>
+                    <p class="text-[11px] text-slate-500 mt-3">Langkah berikutnya: kerangka dibuat dulu dan bisa kamu ubah sebelum naskah ditulis. Hasil disimpan sebagai proyek baru.</p></div>
             </div>
             <!-- Langkah 2: kerangka -->
             <div id="gen-step-2" class="modal-body hidden">
@@ -1064,7 +1176,7 @@
             </div>
             <div class="modal-foot">
                 <span id="gen-status" class="text-xs text-slate-400 mr-auto truncate"></span>
-                <button type="button" id="gen-back-btn" class="btn-ghost hidden" onclick="genBackToForm()">Kembali</button>
+                <button type="button" id="gen-back-btn" class="btn-ghost hidden" onclick="genBackAction()">Kembali</button>
                 <button type="button" id="gen-stop-btn" class="btn-ghost hidden" style="color:#fca5a5;border-color:rgba(244,63,94,.45)" onclick="genStop()"><i class="fa-solid fa-stop"></i> Hentikan</button>
                 <button type="button" id="gen-close-btn" class="btn-ghost hidden" onclick="closeGenModal()">Tutup</button>
                 <button type="button" id="gen-resume-btn" class="btn-primary hidden" onclick="genResume()"><i class="fa-solid fa-play"></i> Lanjutkan</button>
@@ -1179,7 +1291,7 @@
     </div>
     <!-- ===== Modal: Rak Buku ===== -->
     <div id="shelf-modal" class="overlay hidden" onclick="if (event.target === this) closeShelfModal()">
-        <div class="modal-card max-w-2xl" role="dialog" aria-label="Rak buku">
+        <div class="modal-card max-w-3xl" role="dialog" aria-label="Rak buku">
             <div class="modal-head">
                 <div class="modal-title"><i class="fa-solid fa-book-open"></i> Rak Buku</div>
                 <button onclick="closeShelfModal()" class="icon-btn sm" title="Tutup" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
@@ -7363,7 +7475,7 @@ ${bodyContent}
                 closeMenu();
                 const sel = inst.select;
                 menu = document.createElement('div');
-                menu.className = 'ns-menu';
+                menu.className = 'ns-menu' + (inst.trigger.closest('#gen-modal, #skill-modal, #shelf-modal') ? ' ns-menu-elegan' : '');
                 menu.setAttribute('role', 'listbox');
                 Array.from(sel.options).forEach((o, i) => {
                     const b = document.createElement('button');
@@ -10296,7 +10408,8 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             [1, 2, 3].forEach(i => genEl('gen-step-' + i).classList.toggle('hidden', i !== n));
             const main = genEl('gen-main-btn');
             const working = genRunning || genOutlining();
-            genEl('gen-back-btn').classList.toggle('hidden', n !== 2);
+            if (n !== 1) genEl('gen-back-btn').classList.toggle('hidden', n !== 2);
+            else genEl('gen-back-btn').classList.toggle('hidden', working || genQ === 0);
             // Tombol Hentikan: saat naskah ditulis (langkah 3) ATAU saat kerangka sedang dibuat (langkah 1).
             const stop = genEl('gen-stop-btn');
             stop.classList.toggle('hidden', !((n === 3 && genRunning) || (n !== 3 && genOutlining())));
@@ -10307,7 +10420,44 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
               if (showB) { genBatchPref = parseInt(novelData.gen && novelData.gen.batch, 10) || 0; genEl('gen-batch2').value = String(genBatchPref); } }
             genEl('gen-resume-btn').classList.toggle('hidden', !(n === 3 && !genRunning && genUnfinished() > 0));
             main.classList.toggle('hidden', n === 3);
-            if (!working) main.innerHTML = n === 1 ? '<i class="fa-solid fa-list-ol"></i> Buat kerangka' : '<i class="fa-solid fa-wand-magic-sparkles"></i> Mulai menulis naskah';
+            if (!working) { if (n === 1) genShowQuestion(genQ); else main.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Mulai menulis naskah'; }
+        }
+        // ===== Wizard langkah-demi-langkah: satu pertanyaan per layar (langkah 1) =====
+        let genQ = 0;
+        function genQuestions() {
+            return Array.from(document.querySelectorAll('#gen-step-1 .gen-q')).filter(el => !el.classList.contains('hidden'));
+        }
+        function genShowQuestion(i) {
+            const qs = genQuestions();
+            if (!qs.length) return;
+            genQ = Math.max(0, Math.min(i, qs.length - 1));
+            qs.forEach((el, idx) => el.classList.toggle('gen-q-off', idx !== genQ));
+            const dots = genEl('gen-q-dots');
+            if (dots) dots.innerHTML = qs.map((_, idx) => '<span class="gen-q-dot' + (idx < genQ ? ' done' : idx === genQ ? ' on' : '') + '"></span>').join('');
+            const lb = genEl('gen-q-label');
+            if (lb) lb.textContent = 'Langkah ' + (genQ + 1) + ' dari ' + qs.length;
+            const main = genEl('gen-main-btn');
+            if (main && !genRunning && !genOutlining()) main.innerHTML = genQ === qs.length - 1 ? '<i class="fa-solid fa-list-ol"></i> Buat kerangka' : 'Lanjut <i class="fa-solid fa-arrow-right"></i>';
+            genEl('gen-back-btn').classList.toggle('hidden', genQ === 0);
+        }
+        function genValidateQuestion() {
+            const qs = genQuestions();
+            const cur = qs[genQ];
+            if (!cur) return true;
+            if (cur.dataset.q === 'idea') {
+                const v = (genEl('gen-idea').value || '').trim();
+                if (v.length < 10) {
+                    genEl('gen-status').textContent = genKind === 'ebook' ? 'Tulis topik bukunya dulu (minimal satu-dua kalimat).' : 'Tulis ide ceritanya dulu (minimal satu-dua kalimat).';
+                    genEl('gen-idea').focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+        function genBackAction() {
+            if (genRunning || genOutlining()) return;
+            if (genStep === 1 && genQ > 0) genShowQuestion(genQ - 1);
+            else if (genStep === 2) genBackToForm();
         }
         function genUnfinished() {
             const g = novelData && novelData.gen;
@@ -10340,6 +10490,7 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             genEl('gen-resume').classList.toggle('hidden', !left);
             if (left) genEl('gen-resume-text').textContent = `Proyek "${novelData.title}" masih punya ${left} ${unitWordLower()} kosong dari generator.`;
             if (!genOutlining()) genEl('gen-status').textContent = '';
+            genQ = 0;
             genShowStep(1);
             genEl('gen-modal').classList.remove('hidden');
             genFloatUpdate();
@@ -10351,10 +10502,17 @@ Jawab HANYA dengan JSON valid: {"pisah":[{"mulai":"kalimat pertama paragraf, per
             if (!genRunning) { genEnded = null; setTimeout(maybeAutoStartTour, 300); }
             genFloatUpdate();
         }
-        function genBackToForm() { genShowStep(1); genEl('gen-status').textContent = ''; }
+        function genBackToForm() { genQ = genQuestions().length - 1; genShowStep(1); genEl('gen-status').textContent = ''; }
         function genMainAction() {
             if (genBusy) return;
-            if (genStep === 1) genBuildOutline();
+            if (genStep === 1) {
+                const qs = genQuestions();
+                if (genQ < qs.length - 1) {
+                    if (!genValidateQuestion()) return;
+                    genEl('gen-status').textContent = '';
+                    genShowQuestion(genQ + 1);
+                } else genBuildOutline();
+            }
             else if (genStep === 2) genStart();
         }
         // Menghentikan proses AI generator yang sedang aktif (pembuatan kerangka atau penulisan bab).
